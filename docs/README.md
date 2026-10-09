@@ -1,0 +1,7 @@
+# Registro de cambios — Rosso Inmobiliaria
+
+- **2026-10-08 — Instalación de Impeccable** — Skills, agentes y hooks de diseño web instalados a nivel proyecto para Claude Code, Codex, Gemini y Antigravity. Pendiente: `/impeccable init`. → [0001-instalacion-impeccable.md](0001-instalacion-impeccable.md)
+- **2026-10-08 — Contexto de producto (PRODUCT.md)** — `/impeccable init`: web solo de Campiña (lotes), 3 tipos de comprador, 4 canales de contacto, Next.js en Vercel. Datos comerciales pendientes. → [0002-contexto-producto-impeccable-init.md](0002-contexto-producto-impeccable-init.md)
+- **2026-10-08 — PRODUCT.md con datos reales del Drive** — Precios, lotes, financiamiento, ubicación, entrega, marca y perfiles de comprador leídos del Drive de Rosso. 3 inconsistencias comerciales por resolver. → [0003-product-md-datos-drive.md](0003-product-md-datos-drive.md)
+- **2026-10-08 — Landing La Campiña v1** — Next.js en el mundo "pila HyperCard" en tinta de marca: 8 tarjetas, pila de 132 lotes con ficha y enlace propio, avance de obra con fechas reales y cal dibujada en tinta, formulario a CRM. Revisión final: ship. → [0004-landing-la-campina-v1.md](0004-landing-la-campina-v1.md)
+- **2026-10-08 — Cartel de obra con dos paletas** — Nuevo estilo "cartel de obra" para presentar al cliente en dos paletas (Proyecto y Rosso), intercambiables en vivo. Cronograma de obra con fechas reales y placa del promotor ROSSO. Revisión final: ship. → [0005-cartel-de-obra-dos-paletas.md](0005-cartel-de-obra-dos-paletas.md)

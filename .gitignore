@@ -1,0 +1,15 @@
+node_modules/
+.next/
+out/
+.cache/
+.env*.local
+.env
+next-env.d.ts
+*.tsbuildinfo
+Recursos/
+.impeccable/
+.claude/
+.agent/
+.agents/
+.gemini/
+.codex/

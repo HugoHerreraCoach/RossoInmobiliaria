@@ -1,0 +1,56 @@
+/* La Campiña — mundo "cartel de obra". Un solo sistema, dos paletas intercambiables.
+   Solo cambian las pinturas; la estructura del cartel es la misma. */
+
+:root {
+  --font-display: var(--font-archivo), "Arial Narrow", sans-serif;
+  --font-body: var(--font-archivo), system-ui, sans-serif;
+
+  /* Anchos de Archivo: rótulo condensado, texto normal, titular expandido. */
+  --w-label: 72;
+  --w-text: 100;
+  --w-display: 125;
+
+  --line: 2px;
+  --line-heavy: 3px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --max: 1200px;
+  --strip-h: 64px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Paleta 1 — Proyecto La Campiña (manual de marca del proyecto). */
+:root,
+:root[data-paleta="proyecto"] {
+  --band: #006f55;
+  --band-fill: #006f55;
+  --band-ink: #ffffff;
+  --accent: #a6c138; /* solo la acción principal */
+  --accent-ink: #00402f;
+  --accent-hover: #b7d24a;
+  --ink: #10261f;
+  --ink-soft: #3c5249;
+  --mark: #349c80; /* tramas y marcadores secundarios */
+  --ground: #edf2ef;
+  --paper: #ffffff;
+  --sold: #10261f;
+  --selection: #a6c138;
+}
+
+/* Paleta 2 — Marca Rosso Inmobiliaria (degradado naranja → coral, gris del edificio).
+   El degradado se profundiza un paso respecto del logo para que el texto blanco
+   cumpla contraste en titulares (≥3:1). */
+:root[data-paleta="rosso"] {
+  --band: #e4433a;
+  --band-fill: linear-gradient(115deg, #e8601a 0%, #e0284f 100%);
+  --band-ink: #ffffff;
+  --accent: #d7263d;
+  --accent-ink: #ffffff;
+  --accent-hover: #c01f35;
+  --ink: #222326;
+  --ink-soft: #52565c;
+  --mark: #9aa3a6; /* gris del edificio del logo */
+  --ground: #f1f2f3;
+  --paper: #ffffff;
+  --sold: #3a3d42;
+  --selection: #ffcfb8;
+}
