@@ -1,24 +1,37 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo } from "next/font/google";
+import { Cormorant_Garamond, Outfit, Plus_Jakarta_Sans } from "next/font/google";
 import { PROYECTO, SITE_URL } from "@/content/proyecto";
 import { DESDE, soles } from "@/content/lotes";
 import "./globals.css";
 
-// Una sola familia con eje de ancho: rótulos condensados, texto normal, titulares expandidos.
-const archivo = Archivo({
+const outfit = Outfit({
   subsets: ["latin"],
-  weight: "variable",
-  axes: ["wdth"],
-  variable: "--font-archivo",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-outfit",
   display: "swap",
 });
 
-const descripcion = `Lotes campestres desde 510 m² en el ${PROYECTO.valle}, a 35 minutos de Chiclayo. ${soles(DESDE.precio!.cuota)} al mes en 48 cuotas sin intereses. Escritura pública. Entrega ${PROYECTO.entrega}.`;
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-cormorant",
+  display: "swap",
+});
+
+const descripcion = `Lotes campestres desde 510 m² en el ${PROYECTO.valle}, a 35 minutos de Chiclayo. Desde ${soles(DESDE.precio!.cuota)} al mes en 48 cuotas sin intereses. Escritura pública. Entrega ${PROYECTO.entrega}.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${PROYECTO.nombre} · Lotes en el ${PROYECTO.valle}`,
+    default: `${PROYECTO.nombre} · Lotes Campestres Exclusivos en el ${PROYECTO.valle} | Rosso Inmobiliaria`,
     template: `%s · ${PROYECTO.nombre}`,
   },
   description: descripcion,
@@ -26,9 +39,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_PE",
     siteName: PROYECTO.nombre,
-    title: `${PROYECTO.nombre} · Tu lote en el ${PROYECTO.valle} ya tiene calles`,
+    title: `${PROYECTO.nombre} · Lotes Campestres en el ${PROYECTO.valle}`,
     description: descripcion,
-    images: [{ url: "/media/hero.webp", alt: "Vista de drone de los lotes trazados con cal en La Campiña, 25 de junio de 2026" }],
+    images: [
+      {
+        url: "/media/hero.webp",
+        alt: "Vista aérea de drone de los lotes trazados en La Campiña, Valle de Zaña",
+      },
+    ],
   },
 };
 
@@ -42,7 +60,12 @@ const PALETA_SCRIPT = `(function(){try{var q=new URLSearchParams(location.search
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es-PE" data-paleta="proyecto" className={archivo.variable} suppressHydrationWarning>
+    <html
+      lang="es-PE"
+      data-paleta="proyecto"
+      className={`${outfit.variable} ${jakarta.variable} ${cormorant.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: PALETA_SCRIPT }} />
       </head>
