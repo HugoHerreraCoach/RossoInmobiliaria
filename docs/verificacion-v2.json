@@ -1,0 +1,175 @@
+{
+  "mode": "offline-source-and-contract-tests",
+  "compiler": "5.8.3",
+  "checks": [
+    {
+      "name": "TS/TSX: complete source syntax (not a framework typecheck)",
+      "passed": true
+    },
+    {
+      "name": "132 original lots, unique IDs, consistent prices and referenced media",
+      "passed": true
+    },
+    {
+      "name": "Panel and CSV reject visitors without a signed administrator session",
+      "passed": true
+    },
+    {
+      "name": "Consent rejects cross-origin requests and sets signed HttpOnly cookie",
+      "passed": true
+    },
+    {
+      "name": "Global Privacy Control forces marketing off",
+      "passed": true
+    },
+    {
+      "name": "Public tracking rejects missing consent, forged conversions and forged form success",
+      "passed": true
+    },
+    {
+      "name": "Event retries are idempotent; names, phones, passwords and URL queries are stripped",
+      "passed": true
+    },
+    {
+      "name": "Batch/body size limits and malformed JSON are enforced",
+      "passed": true
+    },
+    {
+      "name": "WhatsApp intention gets a stable exact R-code, attribution and timestamp, never a Lead",
+      "passed": true
+    },
+    {
+      "name": "Intent IDs cannot be overwritten by another signed visitor",
+      "passed": true
+    },
+    {
+      "name": "CRM refuses invalid HMAC, wrong tenant, missing identity, old timestamp and mismatched references",
+      "passed": true
+    },
+    {
+      "name": "Confirmed first incoming message creates exactly one Lead and two provider jobs",
+      "passed": true
+    },
+    {
+      "name": "Webhook retries and new conversions for the same contact do not increase Leads",
+      "passed": true
+    },
+    {
+      "name": "Concurrent local confirmations deduplicate by contact atomically",
+      "passed": true
+    },
+    {
+      "name": "Unknown valid references stay unattributed and produce no advertising jobs",
+      "passed": true
+    },
+    {
+      "name": "Legacy code-only webhook cannot bypass canonical conversion verification",
+      "passed": true
+    },
+    {
+      "name": "CAPI payloads use Lead with stable event ID, separate SHA256 phone, and no form text",
+      "passed": true
+    },
+    {
+      "name": "Provider sends persist success; repeated drains do not send twice (mock providers)",
+      "passed": true
+    },
+    {
+      "name": "CONVERSION_SENDER=crm prevents a second CAPI sender",
+      "passed": true
+    },
+    {
+      "name": "Queue leases prevent stale workers from overriding delivery status",
+      "passed": true
+    },
+    {
+      "name": "Provider rejection does not become a fake success and keeps the same event ID for retry",
+      "passed": true
+    },
+    {
+      "name": "Withdrawing consent cancels pending jobs, rejects stale tracking and does not resurrect on retry",
+      "passed": true
+    },
+    {
+      "name": "A later CRM receipt for a withdrawn visitor can be counted but never advertised",
+      "passed": true
+    },
+    {
+      "name": "Form validation and honeypot reject malformed input without dispatch",
+      "passed": true
+    },
+    {
+      "name": "Missing CRM destination returns 503 with no fabricated confirmation",
+      "passed": true
+    },
+    {
+      "name": "Form still works after rejecting analytics; retries forward only once",
+      "passed": true
+    },
+    {
+      "name": "CRM failure is 502 and a retry can subsequently complete (same submission ID)",
+      "passed": true
+    },
+    {
+      "name": "Consented form forwards intent and attribution but records FormSubmitted, never Lead",
+      "passed": true
+    },
+    {
+      "name": "Form idempotency rejects changed body with the same submission ID",
+      "passed": true
+    },
+    {
+      "name": "Password hash, login, tamper protection, logout and password rotation",
+      "passed": true
+    },
+    {
+      "name": "Authenticated panel returns real stored events without secrets or matching cookies",
+      "passed": true
+    },
+    {
+      "name": "Date ranges use Peru business days; invalid and over-31-day ranges are rejected",
+      "passed": true
+    },
+    {
+      "name": "CSV protects formula cells and exports only after authentication",
+      "passed": true
+    },
+    {
+      "name": "Rate limits persist and private production never falls back to a JSON file",
+      "passed": true
+    },
+    {
+      "name": "SQL installer denies public access, isolates site and includes unique conversion/lease controls (static review)",
+      "passed": true
+    },
+    {
+      "name": "Browser client requires consent, names form intent as a custom event, and never emits Lead",
+      "passed": true
+    },
+    {
+      "name": "Motion, pause, reduced-motion and consent widgets are connected to the real layout (static review)",
+      "passed": true
+    }
+  ],
+  "fullNextBuild": "not-tested",
+  "liveSupabase": "not-tested",
+  "liveMetaTikTok": "not-tested",
+  "sourceFiles": 43,
+  "catalogLots": 132,
+  "passed": 37,
+  "failed": 0,
+  "timestamp": "2026-10-13T17:22:15.498Z",
+  "additionalReview": {
+    "backendAndTrackingTypes": "passed; TypeScript 5.8.3 with installed Node types and a temporary next/server.after declaration; not full Next typecheck",
+    "componentTypes": "review with temporary React/Next declarations and implicit-any checks disabled; not a real framework typecheck",
+    "dependencyInstallation": "npm ci --offline --ignore-scripts: ENOTCACHED (undici-types 8.9.0 not available); no registry network access",
+    "browserEndToEnd": "not executed with real React/Next runtime",
+    "remoteDeployment": "not performed"
+  },
+  "originalPreservation": {
+    "catalogBytesUnchanged": true,
+    "publicAssetsBytesUnchanged": true,
+    "publicAssetsCount": 24,
+    "lots": 132
+  }
+}

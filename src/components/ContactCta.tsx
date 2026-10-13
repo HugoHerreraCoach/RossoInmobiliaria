@@ -13,7 +13,7 @@ export function ContactCta({
 }) {
   const wa = whatsappHref(mensaje);
   return (
-    <a className={className} href={wa ?? "#contacto"} {...(wa ? { target: "_blank", rel: "noopener" } : {})}>
+    <a data-track="contact-whatsapp" className={className} href={wa ?? "#contacto"} {...(wa ? { target: "_blank", rel: "noopener" } : {})}>
       <Icon name="chat" />
       {children}
     </a>

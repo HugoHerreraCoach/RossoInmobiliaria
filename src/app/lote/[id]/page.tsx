@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CUOTAS, LOTES, loteById, m2, soles } from "@/content/lotes";
+import { CUOTAS, LISTA_FECHA, LOTES, loteById, m2, soles } from "@/content/lotes";
 import { PROYECTO } from "@/content/proyecto";
 import { Ficha } from "@/components/Ficha";
 import { Icon } from "@/components/Icon";
@@ -35,23 +35,15 @@ export default async function LotePage({ params }: Props) {
 
   return (
     <>
-      <header className="strip">
-        <div className="strip__in">
-          <a className="brand" href="/">
-            <div className="brand__emblem" aria-hidden="true">
-              <span>LC</span>
-            </div>
-            <div className="brand__txt">
-              <b>{PROYECTO.nombre}</b>
-              <span className="label">Rosso Inmobiliaria · {PROYECTO.valle}</span>
-            </div>
+      <header className="site-header">
+        <div className="site-container site-header__in">
+          <a className="estate-brand" href="/">
+            <span className="estate-brand__name">La Campiña<span>·</span></span>
+            <span className="estate-brand__sub">Valle de Zaña · Rosso Inmobiliaria</span>
           </a>
-          <div className="strip__right">
-            <PaletaSwitch />
-            <a className="btn btn--small" href={`/?vista=${lote.manzana}&lote=${lote.id}#lotes`}>
-              <Icon name="plano" size={16} /> Ver en Masterplan
-            </a>
-          </div>
+          <a className="btn btn--forest btn--small" href={`/?vista=${lote.manzana}&lote=${lote.id}#lotes`}>
+            <Icon name="izq" size={16} /> Ver lotes
+          </a>
         </div>
       </header>
 
@@ -59,7 +51,7 @@ export default async function LotePage({ params }: Props) {
         <div className="lotpage__nav">
           <a className="back" href={`/?vista=${lote.manzana}&lote=${lote.id}#lotes`}>
             <Icon name="izq" size={18} />
-            Volver al Masterplan Interactivo (Manzana {lote.manzana})
+            Volver al explorador · Manzana {lote.manzana}
           </a>
         </div>
 
@@ -67,8 +59,8 @@ export default async function LotePage({ params }: Props) {
           <section className="ficha panel" aria-labelledby="t-ficha">
             <div className="band ficha__band">
               <div>
-                <span className="ficha__band-eyebrow">Expediente Oficial de Unidad</span>
-                <h1 id="t-ficha">Ficha Técnica · Lote {lote.id}</h1>
+                <span className="ficha__band-eyebrow">Información de referencia</span>
+                <h1 id="t-ficha">Ficha del lote {lote.id}</h1>
               </div>
               <span className="ficha__band-code">{lote.id}</span>
             </div>
@@ -77,13 +69,13 @@ export default async function LotePage({ params }: Props) {
 
           <aside className="lotpage__aside">
             <MiniMasterplan loteActivo={lote} />
+            <p className="section-disclaimer">Esquema ilustrativo, no plano técnico. Datos de la lista del {LISTA_FECHA}. Confirma ubicación, perímetro y disponibilidad con un asesor.</p>
             <div className="lotpage__project-summary">
               <span className="eyebrow">Sobre el desarrollo</span>
               <h2>{PROYECTO.nombre} · {PROYECTO.valle}</h2>
               <p>
-                Proyecto de lotes campestres de {PROYECTO.empresa} con pórtico construido, cerco vivo, calles trazadas y
-                9 áreas comunes proyectadas para entrega en <strong>{PROYECTO.entrega}</strong> con{" "}
-                <strong>{PROYECTO.titulo.toLowerCase()}</strong>.
+                Club de campo privado y ecológico de {PROYECTO.empresa}. Consulta los registros de obra,
+                las áreas comunes proyectadas y la entrega programada para <strong>{PROYECTO.entrega}</strong>.
               </p>
               <a className="btn btn--primary" href={`/?vista=${lote.manzana}&lote=${lote.id}#contacto`}>
                 <Icon name="chat" size={18} />
@@ -92,6 +84,7 @@ export default async function LotePage({ params }: Props) {
             </div>
           </aside>
         </div>
+        <div style={{ marginTop: 30 }}><PaletaSwitch /></div>
       </main>
     </>
   );

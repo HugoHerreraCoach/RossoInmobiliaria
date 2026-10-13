@@ -15,7 +15,8 @@ export function NavCurrent({ ids }: { ids: string[] }) {
         if (el && el.getBoundingClientRect().top <= line) actual = id;
       }
       document.querySelectorAll<HTMLAnchorElement>(".nav a").forEach((a) => {
-        a.setAttribute("aria-current", String(a.hash === `#${actual}`));
+        if (a.hash === `#${actual}`) a.setAttribute("aria-current", "location");
+        else a.removeAttribute("aria-current");
       });
     };
     const on = () => {

@@ -13,6 +13,11 @@ Recursos/
 .agents/
 .gemini/
 .codex/
+
+# Datos locales y resultados de pruebas, nunca versionarlos.
+.data/
+playwright-report/
+test-results/
+
 .vercel
-.supabase/
-supabase/.temp/
+.env*

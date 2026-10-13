@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { MEDIA, type Toma } from "@/content/avance";
 import { Icon } from "./Icon";
+import { track } from "@/lib/tracking/client";
 
 type Slide = {
   toma: Toma;
@@ -16,37 +17,37 @@ type Slide = {
 const SLIDES: Slide[] = [
   {
     toma: "hero",
-    fecha: "25 jun 2026",
-    tag: "Drone HD · Obra Real",
-    titulo: "Lotes y calles ya trazados con cal en el terreno",
-    subtitulo: "Vista aérea verificable de las 8 manzanas y la alameda principal frente a los cerros del Valle de Zaña.",
+    fecha: "junio 2026",
+    tag: "Vista aérea",
+    titulo: "Tu próximo lugar, desde arriba.",
+    subtitulo: "Toma de drone del trazado de lotes y vías frente a los cerros del Valle de Zaña.",
   },
   {
     toma: "portico",
     fecha: "11 abr 2026",
-    tag: "Ingreso Principal",
-    titulo: "Pórtico arquitectónico y cerco vivo de ingreso",
+    tag: "El ingreso",
+    titulo: "La bienvenida a La Campiña.",
     subtitulo: "Acceso principal construido sobre la vía a San Nicolás con palmeras y áreas verdes en crecimiento.",
   },
   {
     toma: "general-jul",
-    fecha: "18 jul 2026",
-    tag: "Vuelo Panorámico",
-    titulo: "Microclima cálido todo el año a 35 min de Chiclayo",
+    fecha: "21 jul 2026",
+    tag: "El entorno",
+    titulo: "El valle, visto desde otra perspectiva.",
     subtitulo: "Ubicación privilegiada a 6 minutos de Saltur y 8 minutos de Cayaltí.",
   },
   {
     toma: "cerco-jun",
-    fecha: "25 jun 2026",
-    tag: "Frente de Proyecto",
-    titulo: "Frente consolidado con cerco de caña y grass natural",
-    subtitulo: "Avance físico documentado fecha por fecha para que compres con total seguridad desde cualquier ciudad.",
+    fecha: "junio 2026",
+    tag: "El frente",
+    titulo: "Así se ve el frente del proyecto.",
+    subtitulo: "Un registro real para conocer el proyecto antes de tu visita.",
   },
   {
     toma: "trazado-jun",
-    fecha: "25 jun 2026",
-    tag: "Vías Internas",
-    titulo: "Manzanas delimitadas listas para visita guiada",
+    fecha: "junio 2026",
+    tag: "Los lotes",
+    titulo: "Acércate a conocer tu próximo lote.",
     subtitulo: "Recorre y elige tu lote en persona o mediante videollamada en vivo desde el proyecto.",
   },
 ];
@@ -55,6 +56,26 @@ export function HeroCarousel() {
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [auto, setAuto] = useState(true);
+  const [motion, setMotion] = useState(false);
+  const [interacting, setInteracting] = useState(false);
+  const [inView, setInView] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    const update = () => setMotion(document.documentElement.dataset.motion === "running" && !matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const visibility = () => setHidden(document.hidden);
+    update(); visibility(); window.addEventListener("rosso:motion", update); document.addEventListener("visibilitychange", visibility);
+    const observer = new IntersectionObserver(entries => setInView(entries[0]?.isIntersecting ?? false), { threshold: .25 });
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => { observer.disconnect(); window.removeEventListener("rosso:motion", update); document.removeEventListener("visibilitychange", visibility); };
+  }, []);
+  const rotating = auto && motion && inView && !playing && !interacting && !hidden;
+  useEffect(() => { if (!rotating) return; const timer = setInterval(() => setIdx(i => (i + 1) % SLIDES.length), 6000); return () => clearInterval(timer); }, [rotating, idx]);
+  const select = (next: number) => { setAuto(false); setIdx(next); };
+
+  useEffect(()=>{if(inView)track("gallery_view",{slide:idx+1});},[idx,inView]);
+  useEffect(()=>{if(hidden || !inView || !motion)setPlaying(false);},[hidden,inView,motion]);
 
   const slide = SLIDES[idx];
   const media = MEDIA[slide.toma];
@@ -74,7 +95,9 @@ export function HeroCarousel() {
   }, [playing]);
 
   return (
-    <div className="hero-showcase">
+    <div className="hero-showcase" ref={containerRef}
+      onMouseEnter={() => setInteracting(true)} onMouseLeave={() => setInteracting(false)}
+      onFocusCapture={() => setInteracting(true)} onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setInteracting(false); }}>
       <div className="hero-showcase__stage">
         <div className="hero-showcase__badges">
           <span className="hero-showcase__live-pill">
@@ -86,10 +109,11 @@ export function HeroCarousel() {
         </div>
 
         <Image
+          key={slide.toma}
           src={media.color}
           alt={`${slide.titulo} — ${slide.subtitulo}`}
           fill
-          priority={idx === 0}
+          loading="lazy"
           sizes="(max-width: 1024px) 100vw, 720px"
           className="hero-showcase__img"
         />
@@ -103,13 +127,14 @@ export function HeroCarousel() {
             loop
             playsInline
             autoPlay
+            preload="none"
             className="hero-showcase__video"
             aria-label={`Video de drone: ${slide.titulo}`}
           />
         ) : null}
 
         <div className="hero-showcase__overlay">
-          <div className="hero-showcase__caption">
+          <div className="hero-showcase__caption" aria-live={auto ? "off" : "polite"}>
             <strong>{slide.titulo}</strong>
             <p>{slide.subtitulo}</p>
           </div>
@@ -117,7 +142,7 @@ export function HeroCarousel() {
             <button
               type="button"
               className="hero-showcase__play-btn"
-              onClick={() => setPlaying((p) => !p)}
+              onClick={() => { if (!playing) track("video_play", { slide: idx + 1 }); setPlaying(p => !p); setAuto(false); }}
               aria-pressed={playing}
             >
               <Icon name={playing ? "pausa" : "play"} size={16} />
@@ -126,17 +151,18 @@ export function HeroCarousel() {
           ) : null}
         </div>
 
+        {rotating ? <span key={idx} className="hero-showcase__progress" aria-hidden="true" /> : null}
         <div className="hero-showcase__arrows">
           <button
             type="button"
-            onClick={() => setIdx((i) => (i - 1 + SLIDES.length) % SLIDES.length)}
+            onClick={() => select((idx - 1 + SLIDES.length) % SLIDES.length)}
             aria-label="Toma anterior"
           >
             <Icon name="izq" size={18} />
           </button>
           <button
             type="button"
-            onClick={() => setIdx((i) => (i + 1) % SLIDES.length)}
+            onClick={() => select((idx + 1) % SLIDES.length)}
             aria-label="Toma siguiente"
           >
             <Icon name="der" size={18} />
@@ -144,8 +170,9 @@ export function HeroCarousel() {
         </div>
       </div>
 
+      <div className="hero-showcase__auto"><span>Recorre La Campiña · {idx + 1} / {SLIDES.length}</span><button type="button" onClick={() => setAuto(a => !a)} aria-pressed={!auto} disabled={!motion}>{!motion ? "Recorrido manual" : auto ? "Pausar recorrido" : "Activar recorrido automático"}</button></div>
       {/* Tira de miniaturas interactivas estilo Grupo DLC */}
-      <div className="hero-showcase__thumbs" role="tablist" aria-label="Galería de tomas aéreas en el Hero">
+      <div className="hero-showcase__thumbs" role="group" aria-label="Elegir una fotografía del proyecto">
         {SLIDES.map((s, i) => {
           const m = MEDIA[s.toma];
           const active = i === idx;
@@ -153,10 +180,10 @@ export function HeroCarousel() {
             <button
               key={s.toma}
               type="button"
-              role="tab"
-              aria-selected={active}
+              aria-pressed={active}
+              aria-label={`Ver toma ${i + 1} de ${SLIDES.length}: ${s.tag}`}
               className={`hero-showcase__thumb ${active ? "is-active" : ""}`}
-              onClick={() => setIdx(i)}
+              onClick={() => select(i)}
             >
               <div className="hero-showcase__thumb-img">
                 <Image src={m.color} alt={s.titulo} fill sizes="140px" />

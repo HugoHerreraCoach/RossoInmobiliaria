@@ -1,3 +1,5 @@
+> Documento histórico anterior al rediseño. La especificación vigente para esta entrega está en `docs/0007-rediseno-editorial.md` y `src/app/redesign.css`.
+
 # DESIGN.md — La Campiña · Rosso Inmobiliaria
 
 ## 1. Dirección estética: Arquitectura Residencial & Editorial Contemporánea

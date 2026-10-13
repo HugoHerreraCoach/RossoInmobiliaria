@@ -4,3 +4,7 @@ Recursos
 .agents
 .gemini
 .codex
+
+.data
+tests
+.env.local

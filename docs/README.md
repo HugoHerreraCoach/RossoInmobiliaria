@@ -6,3 +6,12 @@
 - **2026-10-08 — Landing La Campiña v1** — Next.js en el mundo "pila HyperCard" en tinta de marca: 8 tarjetas, pila de 132 lotes con ficha y enlace propio, avance de obra con fechas reales y cal dibujada en tinta, formulario a CRM. Revisión final: ship. → [0004-landing-la-campina-v1.md](0004-landing-la-campina-v1.md)
 - **2026-10-08 — Cartel de obra con dos paletas** — Nuevo estilo "cartel de obra" para presentar al cliente en dos paletas (Proyecto y Rosso), intercambiables en vivo. Cronograma de obra con fechas reales y placa del promotor ROSSO. Revisión final: ship. → [0005-cartel-de-obra-dos-paletas.md](0005-cartel-de-obra-dos-paletas.md)
 - **2026-10-12 — Rediseño Luxury Real Estate + Masterplan Interactivo SVG** — Rediseño completo inspirado en Grupo DLC (Finca Algarrobo) y Grupo GEA, con Masterplan vectorial interactivo de los 132 lotes (zoom/pan, superposición de drone real, filtros y mapa de calor), simulador financiero de cuotas 0% interés en vivo, carrusel de drone en el Hero y pestañas de valor. → [0006-rediseno-luxury-masterplan-svg.md](0006-rediseno-luxury-masterplan-svg.md)
+
+
+## Última entrega
+
+[0007 · Rediseño editorial y responsive](0007-rediseno-editorial.md)
+
+## Actualización: rastros, panel y movimiento
+
+Ver `0008-rastros-panel-movimiento.md`, `CONEXIGO-INTEGRACION.md` y `verificacion-v2.json`. Esta es la documentación vigente para tracking y formularios; las verificaciones de 0007 describen únicamente la entrega anterior.

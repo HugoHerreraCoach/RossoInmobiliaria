@@ -1,0 +1,51 @@
+{
+  "mode": "source-and-api-mocks",
+  "compilerVersion": "5.8.3",
+  "checks": [
+    {
+      "test": "Sintaxis de todos los archivos TS/TSX (no equivale a typecheck)",
+      "passed": true
+    },
+    {
+      "test": "Identificadores únicos y relaciones de manzanas",
+      "passed": true
+    },
+    {
+      "test": "Consistencia de precios, iniciales y cuotas de referencia",
+      "passed": true
+    },
+    {
+      "test": "Todos los recursos /media referenciados existen",
+      "passed": true
+    },
+    {
+      "test": "API: JSON inválido, nulo y arrays devuelven 400",
+      "passed": true
+    },
+    {
+      "test": "API: datos incompletos o sin consentimiento devuelven 422",
+      "passed": true
+    },
+    {
+      "test": "API: sin webhook devuelve 503 sin falsa confirmación",
+      "passed": true
+    },
+    {
+      "test": "API: destino con error devuelve 502",
+      "passed": true
+    },
+    {
+      "test": "API: contrato, autorización y confirmación 200 con destino simulado",
+      "passed": true
+    }
+  ],
+  "catalog": {
+    "lots": 132,
+    "blocks": 8,
+    "available": 70,
+    "sold": 61,
+    "reserved": 1
+  },
+  "fullNextBuild": "not-tested",
+  "scope": "HISTORICAL: redesigned ZIP v1, prior to tracking/panel. Current results: verificacion-v2.json"
+}

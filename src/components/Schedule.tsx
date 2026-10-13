@@ -90,6 +90,8 @@ export function Schedule() {
         </div>
       </div>
 
+      <p className="section-disclaimer">La línea de tiempo indica fechas, no un porcentaje de avance físico de obra.</p>
+
       {/* Visor de Hito Activo + Selector de Bitácora */}
       <div className="sched__detail" aria-live="polite">
         <div className="sched__viewer">

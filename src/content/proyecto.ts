@@ -16,13 +16,13 @@ export const PROYECTO = {
       { lugar: "Chiclayo", minutos: 35 },
     ],
     /** PENDIENTE: enlace exacto de Google Maps (el documento comercial lo trae cortado). */
-    mapsUrl: null as string | null,
+    mapsUrl: (process.env.NEXT_PUBLIC_MAPS_URL?.trim() || null) as string | null,
   },
   contacto: {
     /** PENDIENTE: número de WhatsApp de asesores, formato internacional sin "+" (ej. 51987654321). */
-    whatsapp: null as string | null,
+    whatsapp: (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/\D/g, "") || null) as string | null,
     /** PENDIENTE: teléfono para llamadas, formato internacional (ej. +51987654321). */
-    telefono: null as string | null,
+    telefono: (process.env.NEXT_PUBLIC_CONTACT_PHONE?.trim() || null) as string | null,
   },
   /** Lo que incluye el proyecto (entrega julio 2027). */
   areas: [
@@ -44,7 +44,4 @@ export function whatsappHref(mensaje: string): string | null {
   return n ? `https://wa.me/${n}?text=${encodeURIComponent(mensaje)}` : null;
 }
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL && process.env.NEXT_PUBLIC_SITE_URL.trim() !== ""
-    ? process.env.NEXT_PUBLIC_SITE_URL
-    : "https://rosso-inmobiliaria-eight.vercel.app";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";

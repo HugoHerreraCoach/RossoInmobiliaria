@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { track } from "@/lib/tracking/client";
 import { CUOTAS, LISTA_FECHA, m2, soles, soles0, type Lote } from "@/content/lotes";
 import { PROYECTO, whatsappHref } from "@/content/proyecto";
 import { Icon } from "./Icon";
@@ -26,6 +27,9 @@ export function Ficha({
   showFullLink?: boolean;
 }) {
   const [copiado, setCopiado] = useState(false);
+  const [errorCompartir, setErrorCompartir] = useState("");
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (copyTimer.current) clearTimeout(copyTimer.current); }, []);
   const [modoPago, setModoPago] = useState<"financiado" | "contado">("financiado");
   const p = lote.precio;
 
@@ -44,22 +48,29 @@ export function Ficha({
 
   const cuotaSimulada = p ? Math.max(0, (p.financiado - inicial) / plazo) : 0;
   const ahorroContado = p ? p.financiado - (p.promoContado ?? p.contado) : 0;
-  const wa = whatsappHref(mensajeLote(lote, inicial, plazo));
+  const wa = whatsappHref(modoPago === "contado" && p
+    ? `Hola, me interesa el lote ${lote.id} de ${PROYECTO.nombre} (${m2(lote.m2)}). Vi el precio de referencia al contado de ${soles(p.promoContado ?? p.contado)}. ¿Me confirman su vigencia y disponibilidad?`
+    : mensajeLote(lote, inicial, plazo));
 
   const compartir = async () => {
+    track("share_lot", { lot: lote.id });
+    setErrorCompartir("");
+    setCopiado(false);
     const url = `${window.location.origin}/lote/${lote.id}`;
     const data = { title: `Lote ${lote.id} · ${PROYECTO.nombre}`, text: mensajeLote(lote), url };
     if (navigator.share) {
-      try {
-        await navigator.share(data);
-        return;
-      } catch {
-        /* usuario cerró el diálogo */
-      }
+      try { await navigator.share(data); return; }
+      catch (error) { if (error instanceof Error && error.name === "AbortError") return; }
     }
-    await navigator.clipboard?.writeText(url).catch(() => {});
-    setCopiado(true);
-    setTimeout(() => setCopiado(false), 2400);
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(url);
+      setCopiado(true);
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopiado(false), 2400);
+    } catch {
+      setErrorCompartir("No se pudo copiar el enlace. Abre la ficha y copia la dirección desde tu navegador.");
+    }
   };
 
   return (
@@ -82,10 +93,10 @@ export function Ficha({
           <p className="ficha__subtitle">
             Superficie total de <strong>{m2(lote.m2)}</strong> ·{" "}
             {lote.m2 >= 1000
-              ? "Macrolote Esquinero / Cabecera"
+              ? "Lote de mayor superficie"
               : lote.manzana === "E"
-                ? "Ubicación Frente a Gran Parque"
-                : "Lote Residencial Campestre"}
+                ? "Consulta su ubicación en el plano oficial"
+                : "Club Privado La Campiña"}
           </p>
         </div>
         <div className="ficha__area-pill">
@@ -97,11 +108,10 @@ export function Ficha({
       {p ? (
         <>
           {/* Selector de modalidad: Financiado 0% vs Contado con Descuento */}
-          <div className="ficha__mode-tabs" role="tablist" aria-label="Modalidad de compra">
+          <div className="ficha__mode-tabs" role="group" aria-label="Modalidad de compra">
             <button
               type="button"
-              role="tab"
-              aria-selected={modoPago === "financiado"}
+              aria-pressed={modoPago === "financiado"}
               className={`ficha__mode-tab ${modoPago === "financiado" ? "is-active" : ""}`}
               onClick={() => setModoPago("financiado")}
             >
@@ -110,8 +120,7 @@ export function Ficha({
             </button>
             <button
               type="button"
-              role="tab"
-              aria-selected={modoPago === "contado"}
+              aria-pressed={modoPago === "contado"}
               className={`ficha__mode-tab ${modoPago === "contado" ? "is-active" : ""}`}
               onClick={() => setModoPago("contado")}
             >
@@ -126,7 +135,7 @@ export function Ficha({
                 <div>
                   <span className="ficha__kpi-label">Cuota mensual estimada ({plazo} meses)</span>
                   <div className="ficha__kpi-value">{soles(cuotaSimulada)}</div>
-                  <span className="ficha__kpi-sub">Crédito directo a sola firma · 0% interés bancario</span>
+                  <span className="ficha__kpi-sub">Simulación referencial · financiamiento directo al 0%</span>
                 </div>
                 <div className="ficha__kpi-tag">
                   <span>Precio lista</span>
@@ -154,6 +163,8 @@ export function Ficha({
                   step={500}
                   value={inicial}
                   onChange={(e) => setInicial(Number(e.target.value))}
+                  onPointerUp={() => track("simulator_change", { lot: lote.id, initial: inicial, months: plazo, mode: modoPago })}
+                  onKeyUp={() => track("simulator_change", { lot: lote.id, initial: inicial, months: plazo, mode: modoPago })}
                   className="ficha__slider"
                 />
                 <div className="ficha__slider-limits">
@@ -169,7 +180,8 @@ export function Ficha({
                         key={m}
                         type="button"
                         className={`ficha__plazo-btn ${plazo === m ? "is-active" : ""}`}
-                        onClick={() => setPlazo(m)}
+                        aria-pressed={plazo === m}
+                        onClick={() => { setPlazo(m); track("simulator_change", { lot: lote.id, initial: inicial, months: m, mode: modoPago }); }}
                       >
                         {m} cuotas
                       </button>
@@ -230,13 +242,14 @@ export function Ficha({
 
           <div className="ficha__actions">
             {wa ? (
-              <a className="btn btn--primary ficha__cta-main" href={wa} target="_blank" rel="noopener">
+              <a data-track="lot-whatsapp" data-lot={lote.id} className="btn btn--primary ficha__cta-main" href={wa} target="_blank" rel="noopener">
                 <Icon name="chat" size={20} />
                 Solicitar Lote {lote.id} por WhatsApp
               </a>
             ) : (
               <a
                 className="btn btn--primary ficha__cta-main"
+                data-track="lot-contact" data-lot={lote.id}
                 href={onPedir ? "#contacto" : `/?vista=${lote.manzana}&lote=${lote.id}#contacto`}
                 onClick={() => onPedir?.(lote)}
               >
@@ -258,9 +271,10 @@ export function Ficha({
             </div>
           </div>
 
+          {errorCompartir ? <p className="note" role="status">{errorCompartir}</p> : null}
           <p className="note">
-            Valores oficiales según lista vigente al {LISTA_FECHA}. Sujeto a disponibilidad en tiempo real al momento de
-            la separación.
+            Valores de referencia de la lista del {LISTA_FECHA}. Confirma la vigencia de precios, estado del lote,
+            documentación y condiciones antes de separar.
           </p>
         </>
       ) : (
@@ -270,12 +284,12 @@ export function Ficha({
           </div>
           <p>
             {lote.estado === "vendido"
-              ? `El lote ${lote.id} (${m2(lote.m2)}) en la Manzana ${lote.manzana} ya tiene propietario. Selecciona un lote en color verde dentro del Masterplan para cotizar unidades disponibles similares.`
-              : `El lote ${lote.id} (${m2(lote.m2)}) se encuentra actualmente reservado. Puedes dejar tus datos con un asesor por si se libera o para elegir un lote colindante en la Manzana ${lote.manzana}.`}
+              ? `El lote ${lote.id} (${m2(lote.m2)}) en la Manzana ${lote.manzana} figura como vendido en la lista de referencia. Selecciona un lote en color verde dentro del Masterplan para cotizar unidades disponibles similares.`
+              : `El lote ${lote.id} (${m2(lote.m2)}) figura como reservado en la lista de referencia. Puedes dejar tus datos con un asesor por si se libera o para elegir un lote colindante en la Manzana ${lote.manzana}.`}
           </p>
           <a
             className="btn btn--primary"
-            href="#contacto"
+            href={onPedir ? "#contacto" : `/?vista=${lote.manzana}&lote=${lote.id}#contacto`}
             onClick={() => onPedir?.(lote)}
           >
             <Icon name="chat" size={18} />

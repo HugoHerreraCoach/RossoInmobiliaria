@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "assets": "node scripts/build-assets.mjs"
+    "assets": "node scripts/build-assets.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/check-source.mjs",
+    "panel:password": "node scripts/panel-password.mjs"
   },
   "dependencies": {
     "next": "^16.4.0",

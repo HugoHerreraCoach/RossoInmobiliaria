@@ -3,6 +3,10 @@ import { Cormorant_Garamond, Outfit, Plus_Jakarta_Sans } from "next/font/google"
 import { PROYECTO, SITE_URL } from "@/content/proyecto";
 import { DESDE, soles } from "@/content/lotes";
 import "./globals.css";
+import "./redesign.css";
+import "./experience.css";
+import { MotionExperience } from "@/components/MotionExperience";
+import { TrackingProvider } from "@/components/tracking/TrackingProvider";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -26,12 +30,12 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
-const descripcion = `Lotes campestres desde 510 m² en el ${PROYECTO.valle}, a 35 minutos de Chiclayo. Desde ${soles(DESDE.precio!.cuota)} al mes en 48 cuotas sin intereses. Escritura pública. Entrega ${PROYECTO.entrega}.`;
+const descripcion = `Club de campo privado y ecológico con lotes desde 510 m² en el ${PROYECTO.valle}, a 35 minutos de Chiclayo. Desde ${soles(DESDE.precio!.cuota)} al mes en 48 cuotas sin intereses. Consulta condiciones y documentación. Entrega ${PROYECTO.entrega}.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${PROYECTO.nombre} · Lotes Campestres Exclusivos en el ${PROYECTO.valle} | Rosso Inmobiliaria`,
+    default: `${PROYECTO.nombre} · Club Privado en el ${PROYECTO.valle} | Rosso Inmobiliaria`,
     template: `%s · ${PROYECTO.nombre}`,
   },
   description: descripcion,
@@ -39,7 +43,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_PE",
     siteName: PROYECTO.nombre,
-    title: `${PROYECTO.nombre} · Lotes Campestres en el ${PROYECTO.valle}`,
+    title: `${PROYECTO.nombre} · Club de Campo en el ${PROYECTO.valle}`,
     description: descripcion,
     images: [
       {
@@ -69,7 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: PALETA_SCRIPT }} />
       </head>
-      <body>{children}</body>
+      <body>{children}<MotionExperience /><TrackingProvider /></body>
     </html>
   );
 }

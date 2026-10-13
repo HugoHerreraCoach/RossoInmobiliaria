@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import { track } from "@/lib/tracking/client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DISPONIBLES, LISTA_FECHA, LOTES, MANZANAS, loteById, m2, soles, soles0, type Lote } from "@/content/lotes";
+import { DESDE, DISPONIBLES, LISTA_FECHA, LOTES, MANZANAS, loteById, m2, soles, soles0, type Lote } from "@/content/lotes";
 import { Ficha } from "./Ficha";
 import { Icon } from "./Icon";
 
@@ -31,7 +32,7 @@ const porManzana = MANZANAS.map((mz) => ({
 
 const porPrecio = [...DISPONIBLES].sort((a, b) => a.precio!.cuota - b.precio!.cuota);
 
-/** Construye la geometría exacta en coordenadas SVG (1160x760) para los 132 lotes (Manzanas A–H). */
+/** Conserva el esquema ilustrativo heredado en coordenadas SVG (1160x760); no representa geometría catastral para los 132 lotes (Manzanas A–H). */
 export const MASTERPLAN_GEOM: Record<string, ParcelGeom> = (() => {
   const map: Record<string, ParcelGeom> = {};
 
@@ -164,10 +165,10 @@ export function MiniMasterplan({ loteActivo }: { loteActivo: Lote }) {
   return (
     <div className="mini-masterplan">
       <div className="mini-masterplan__head">
-        <span className="label">Ubicación en el Masterplan · Manzana {loteActivo.manzana}</span>
+        <span className="label">Esquema referencial · Manzana {loteActivo.manzana}</span>
         <span className="mini-masterplan__tag">Lote {loteActivo.id} resaltado</span>
       </div>
-      <svg viewBox="0 0 1160 720" className="mini-masterplan__svg" role="img" aria-label={`Ubicación del lote ${loteActivo.id} en la manzana ${loteActivo.manzana}`}>
+      <svg viewBox="0 0 1160 720" className="mini-masterplan__svg" role="img" aria-label={`Esquema referencial del lote ${loteActivo.id} en la manzana ${loteActivo.manzana}`}>
         <rect width="1160" height="720" rx="18" fill="#071913" />
         {/* Gran Parque Central */}
         <path
@@ -266,6 +267,7 @@ export function LotStack() {
   }, []);
 
   const elegirVista = (v: Vista) => {
+    track("lot_filter", { mode: v === PRECIO ? "precio" : "manzana" });
     setVista(v);
     setZoom(1);
     setPan({ x: 0, y: 0 });
@@ -276,6 +278,7 @@ export function LotStack() {
   };
 
   const elegirLote = (l: Lote) => {
+    track("lot_view", { lot: l.id });
     setSel(l);
     setFlip((n) => n + 1);
     anunciarLote(l.id);
@@ -342,22 +345,24 @@ export function LotStack() {
           <div className="mp-view-switch" role="group" aria-label="Modo de visualización">
             <button
               type="button"
+              aria-pressed={displayMode === "mapa"}
               className={`mp-view-btn ${displayMode === "mapa" ? "is-active" : ""}`}
               onClick={() => {
-                setDisplayMode("mapa");
+                setDisplayMode("mapa"); track("lot_filter", { mode: "mapa" });
                 if (vista === PRECIO) setVista(TODAS);
               }}
             >
               <Icon name="plano" size={18} />
-              Plano Masterplan SVG
+              Mapa referencial
             </button>
             <button
               type="button"
+              aria-pressed={displayMode === "cuadricula"}
               className={`mp-view-btn ${displayMode === "cuadricula" ? "is-active" : ""}`}
-              onClick={() => setDisplayMode("cuadricula")}
+              onClick={() => { setDisplayMode("cuadricula"); track("lot_filter", { mode: "cuadricula" }); }}
             >
               <Icon name="layers" size={18} />
-              Cuadrícula y Precios ({lotesFiltrados.length})
+              Lotes y precios ({lotesFiltrados.length})
             </button>
           </div>
 
@@ -373,19 +378,19 @@ export function LotStack() {
                   const val = e.target.value;
                   setBusqueda(val);
                   const exact = loteById(val.trim());
-                  if (exact) setSel(exact);
+                  if (exact) elegirLote(exact);
                 }}
                 aria-label="Buscar lote por código"
               />
             </div>
 
             <label className="mp-chip-toggle">
-              <input type="checkbox" checked={soloLibres} onChange={(e) => setSoloLibres(e.target.checked)} />
-              <span>Solo disponibles (70)</span>
+              <input type="checkbox" checked={soloLibres} onChange={(e) => { setSoloLibres(e.target.checked); track("lot_filter", { mode: "estado" }); }} />
+              <span>Solo disponibles ({DISPONIBLES.length})</span>
             </label>
 
             <label className="mp-chip-toggle mp-chip-toggle--gold">
-              <input type="checkbox" checked={soloPromo} onChange={(e) => setSoloPromo(e.target.checked)} />
+              <input type="checkbox" checked={soloPromo} onChange={(e) => { setSoloPromo(e.target.checked); track("lot_filter", { mode: "contado" }); }} />
               <span>Promo Contado</span>
             </label>
 
@@ -394,7 +399,7 @@ export function LotStack() {
               <select
                 id="mp-cuota-select"
                 value={maxCuota}
-                onChange={(e) => setMaxCuota(Number(e.target.value))}
+                onChange={(e) => { setMaxCuota(Number(e.target.value)); track("lot_filter", { mode: "cuota" }); }}
               >
                 <option value={1600}>Todas las cuotas</option>
                 <option value={420}>Hasta S/ 420 / mes</option>
@@ -406,24 +411,22 @@ export function LotStack() {
         </div>
 
         {/* Selector de Manzanas A–H */}
-        <div className="mp-manzanas" role="tablist" aria-label="Filtrar por Manzana">
+        <div className="mp-manzanas" role="group" aria-label="Filtrar por manzana">
           <button
             type="button"
-            role="tab"
-            aria-selected={vista === TODAS}
+            aria-pressed={vista === TODAS}
             className={`mp-mz-tab ${vista === TODAS ? "is-active" : ""}`}
             onClick={() => elegirVista(TODAS)}
           >
             <strong>Plano Completo</strong>
-            <small>132 lotes · 8 Mz</small>
+            <small>{LOTES.length} lotes · {MANZANAS.length} Mz</small>
           </button>
           {porManzana.map((m) => (
             <button
               key={m.mz}
               id={`tab-${m.mz}`}
               type="button"
-              role="tab"
-              aria-selected={vista === m.mz}
+                aria-pressed={vista === m.mz}
               className={`mp-mz-tab ${vista === m.mz ? "is-active" : ""}`}
               onClick={() => elegirVista(m.mz)}
             >
@@ -433,16 +436,17 @@ export function LotStack() {
           ))}
           <button
             type="button"
-            role="tab"
-            aria-selected={vista === PRECIO}
+            aria-pressed={vista === PRECIO}
             className={`mp-mz-tab mp-mz-tab--price ${vista === PRECIO ? "is-active" : ""}`}
             onClick={() => elegirVista(PRECIO)}
           >
             <strong>Menor Cuota</strong>
-            <small>Desde S/ 383.75</small>
+            <small>Desde {soles(DESDE.precio!.cuota)}</small>
           </button>
         </div>
       </div>
+
+      {lotesFiltrados.length === 0 ? <p className="lot-notice" role="status">No encontramos lotes con esos filtros. Prueba otro código o amplía la cuota máxima.</p> : null}
 
       {/* Cuerpo principal: Mapa/Cuadrícula a la izquierda + Ficha Técnica & Cotizador a la derecha */}
       <div className="lots">
@@ -481,10 +485,10 @@ export function LotStack() {
                     type="button"
                     className={`mp-pill mp-pill--drone ${droneOverlay ? "is-active" : ""}`}
                     onClick={() => setDroneOverlay((x) => !x)}
-                    title="Superponer fotografía aérea real de drone sobre el plano"
+                    title="Fotografía de referencia; no está georreferenciada ni alineada al esquema"
                   >
                     <Icon name="drone" size={15} />
-                    {droneOverlay ? "Ocultar Foto Drone" : "Ver Toma Drone Real"}
+                    {droneOverlay ? "Ocultar Foto Drone" : "Ver foto de referencia"}
                   </button>
 
                   {droneOverlay ? (
