@@ -44,4 +44,7 @@ export function whatsappHref(mensaje: string): string | null {
   return n ? `https://wa.me/${n}?text=${encodeURIComponent(mensaje)}` : null;
 }
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL && process.env.NEXT_PUBLIC_SITE_URL.trim() !== ""
+    ? process.env.NEXT_PUBLIC_SITE_URL
+    : "https://rosso-inmobiliaria-eight.vercel.app";

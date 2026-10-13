@@ -13,3 +13,6 @@ Recursos/
 .agents/
 .gemini/
 .codex/
+.vercel
+.supabase/
+supabase/.temp/
