@@ -32,8 +32,8 @@ Abrir `http://localhost:3000` y `http://localhost:3000/panel`. Aceptar la medici
 
 ## Activar en producción
 
-1. Seleccionar la base **Supabase destinada a Rosso**, ejecutar `db/schema.sql` y comprobar las consultas de permisos incluidas. No modifica tablas del CRM.
-2. Configurar `TRACKING_STORAGE=supabase`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `APP_SECRET`, `PANEL_PASSWORD_HASH` y el dominio HTTPS exacto en `NEXT_PUBLIC_SITE_URL`.
+1. La base es el esquema `landing_rosso` dentro de la base de ConexiGO, con su propio rol (ver `docs/0009-base-en-conexigo.md`). Ejecutar `db/schema.sql` conectado como `landing_rosso`. No toca tablas del CRM.
+2. Configurar `DATABASE_URL` (pooler de transacción, usuario `landing_rosso.<ref>`), `APP_SECRET`, `PANEL_PASSWORD_HASH` y el dominio HTTPS exacto en `NEXT_PUBLIC_SITE_URL`. Ya no se usan claves de Supabase.
 3. Configurar el WhatsApp de Rosso, el destino del formulario, su empresa en ConexiGO y el callback descrito en **`docs/CONEXIGO-INTEGRACION.md`**. Es necesario adaptar el emisor del CRM; subir este ZIP no cambia ConexiGO.
 4. Configurar los IDs y tokens de **Rosso**, no los de DLC, y elegir un solo emisor de conversiones. Completar el aviso de privacidad con el responsable legal y su canal verificado.
 5. Ejecutar las verificaciones y compilar. Programar la tarea autenticada `/api/tracking/drain` para reintentos y limpieza; detalles en la guía técnica.
@@ -45,7 +45,7 @@ npm run build
 npm start
 ```
 
-Los IDs `NEXT_PUBLIC_*` se incorporan al bundle: cambiar un ID o dominio exige recompilar. Nunca dar ese prefijo a tokens, contraseñas o claves de Supabase.
+Los IDs `NEXT_PUBLIC_*` se incorporan al bundle: cambiar un ID o dominio exige recompilar. Nunca dar ese prefijo a tokens, contraseñas o a `DATABASE_URL`.
 
 ## Qué incluye `/panel`
 

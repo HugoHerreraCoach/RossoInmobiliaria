@@ -1,5 +1,8 @@
-/** Production: an atomic Postgres RPC over Supabase REST. File mode is local development ONLY. */
+/** Production: the atomic Postgres function `landing_rosso.rosso_tracking`, called over a direct
+ * connection with Rosso's own role (schema `landing_rosso` in ConexiGO's database since 21-oct-2026;
+ * see docs/0009-base-en-conexigo.md). File mode is local development ONLY. */
 import { randomUUID } from "node:crypto";
+import postgres from "postgres";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Delivery, Intent, PanelSnapshot, TrackingEvent } from "@/lib/tracking/schema";
@@ -8,25 +11,34 @@ import { hash, HttpError } from "./security";
 type Row = { kind: string; id: string; data: Record<string, unknown>; created: string };
 type State = { rows: Row[] };
 let fileQueue: Promise<unknown> = Promise.resolve();
-export function storageMode() { return process.env.TRACKING_STORAGE === "file" && process.env.NODE_ENV !== "production" ? "file" : "supabase"; }
+export function storageMode() { return process.env.TRACKING_STORAGE === "file" && process.env.NODE_ENV !== "production" ? "file" : "postgres"; }
+// One small pool per server instance. `prepare: false` is required by Supabase's transaction pooler (6543).
+let pool: postgres.Sql | null = null;
+function connection(): postgres.Sql {
+  if (pool) return pool;
+  const raw = process.env.DATABASE_URL;
+  if (!raw) throw new HttpError(503, "Configura DATABASE_URL (rol landing_rosso) y ejecuta db/schema.sql.");
+  const url = new URL(raw.trim());
+  for (const p of ["pgbouncer", "supa", "connection_limit"]) url.searchParams.delete(p);
+  if (!["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) && !url.searchParams.has("sslmode")) url.searchParams.set("sslmode", "require");
+  pool = postgres(url.toString(), { max: 3, prepare: false, idle_timeout: 20, connect_timeout: 10, onnotice: () => {} });
+  return pool;
+}
 export function siteId() { const id = process.env.TRACKING_SITE_ID || "rosso-la-campina"; if (!/^[a-z0-9-]{3,80}$/.test(id)) throw new HttpError(503, "TRACKING_SITE_ID inválido."); return id; }
 export async function db<T>(action: string, data: Record<string, unknown> = {}): Promise<T> {
   if (storageMode() === "file") {
     const run = fileQueue.then(() => localOperation(action, data)); fileQueue = run.catch(() => undefined); return run as Promise<T>;
   }
-  const root = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!root || !key || !/^https:\/\//.test(root)) throw new HttpError(503, "Configura SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY y ejecuta db/schema.sql.");
-  const response = await fetch(`${root.replace(/\/$/, "")}/rest/v1/rpc/rosso_tracking`, {
-    method: "POST", cache: "no-store", signal: AbortSignal.timeout(8000),
-    headers: { "content-type": "application/json", apikey: key, ...(key.startsWith("sb_secret_") ? {} : { authorization: `Bearer ${key}` }) },
-    body: JSON.stringify({ p_site: siteId(), p_action: action, p_data: data }),
-  });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    if (error?.code === "P0001" && ["Intent owner mismatch", "References mismatch"].includes(error.message)) throw new HttpError(409, "Las referencias no coinciden o pertenecen a otra sesión.");
-    throw new HttpError(503, `Base de rastros no disponible (HTTP ${response.status}). Revisa db/schema.sql y las variables privadas.`);
+  const sql = connection();
+  try {
+    const [row] = await sql<{ r: T }[]>`select landing_rosso.rosso_tracking(${siteId()}, ${action}, ${sql.json(data as postgres.JSONValue)}) as r`;
+    return row.r;
+  } catch (e) {
+    if (e instanceof HttpError) throw e;
+    const message = e instanceof Error ? e.message : "";
+    if (["Intent owner mismatch", "References mismatch"].includes(message)) throw new HttpError(409, "Las referencias no coinciden o pertenecen a otra sesión.");
+    throw new HttpError(503, "Base de rastros no disponible. Revisa db/schema.sql y DATABASE_URL.");
   }
-  return response.json() as Promise<T>;
 }
 export async function rateLimit(req: Request, scope: string, max = 120, seconds = 60) {
   // Trust the IP header set by the hosting proxy. Never retain the raw IP.
