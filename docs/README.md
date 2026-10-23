@@ -15,3 +15,9 @@
 ## Actualización: rastros, panel y movimiento
 
 Ver `0008-rastros-panel-movimiento.md`, `CONEXIGO-INTEGRACION.md` y `verificacion-v2.json`. Esta es la documentación vigente para tracking y formularios; las verificaciones de 0007 describen únicamente la entrega anterior.
+
+## Cambios posteriores
+
+- **2026-10-23 — Rediseño inmersivo de la landing** — Reconstrucción completa de la presentación con el kit `web-inmersiva`: el nombre como monumento sobre fotos reales de la obra, plano de 132 lotes trazado como cal sobre tierra, precio en una frase, preguntas frecuentes y visita sobre la foto del ingreso. Medición, formulario, panel y APIs intactos. Rama `rediseno-inmersivo`, sin commit. → [0011-rediseno-inmersivo.md](0011-rediseno-inmersivo.md)
+- **2026-10-23 — Rediseño guiado por la landing de Grupo DLC** — Reemplaza la dirección visual de 0011 a pedido del usuario: estructura y experiencia de grupodlc.conexigo.com con la marca y los datos de La Campiña; formulario al principio (portada) y al final; botón flotante de asesor; pestañas para decidir. Lighthouse móvil 60 (antes 55) y accesibilidad 100. → [0012-rediseno-guiado-por-dlc.md](0012-rediseno-guiado-por-dlc.md)
+- **2026-10-23 — Formulario como DLC, plano en "El proyecto" y ficha del lote interactiva** — El formulario de la portada queda con nombres y apellidos, WhatsApp (+51) y "¿Con cuánto de inicial te gustaría empezar?", sin extras ni casilla (aviso junto al botón); se quitó el formulario de contacto y todo botón lleva a `#formulario` (WhatsApp solo en el flotante). El plano con la ficha reemplaza la tarjeta de "El proyecto"; la ficha pierde "Compartir" y gana "Ver detalle", y en `/lote/[id]` el plano sigue siendo interactivo. → [0014-formulario-dlc-y-plano-en-proyecto.md](0014-formulario-dlc-y-plano-en-proyecto.md)

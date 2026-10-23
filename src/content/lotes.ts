@@ -132,6 +132,7 @@ export const resumen = () => ({
 
 const pen = new Intl.NumberFormat("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const pen0 = new Intl.NumberFormat("es-PE", { maximumFractionDigits: 0 });
-export const soles = (n: number) => `S/ ${pen.format(n)}`;
-export const soles0 = (n: number) => `S/ ${pen0.format(n)}`;
-export const m2 = (n: number) => `${pen0.format(n)} m²`;
+// Espacio duro: el símbolo y la unidad no se separan de la cifra al partir la línea.
+export const soles = (n: number) => `S/\u00a0${pen.format(n)}`;
+export const soles0 = (n: number) => `S/\u00a0${pen0.format(n)}`;
+export const m2 = (n: number) => `${pen0.format(n)}\u00a0m²`;

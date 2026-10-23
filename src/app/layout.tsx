@@ -1,34 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Outfit, Plus_Jakarta_Sans } from "next/font/google";
+import { Outfit, Plus_Jakarta_Sans } from "next/font/google";
 import { PROYECTO, SITE_URL } from "@/content/proyecto";
 import { DESDE, soles } from "@/content/lotes";
 import "./globals.css";
-import "./redesign.css";
-import "./experience.css";
 import { MotionExperience } from "@/components/MotionExperience";
+import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { TrackingProvider } from "@/components/tracking/TrackingProvider";
 
-const outfit = Outfit({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-outfit",
-  display: "swap",
-});
-
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-jakarta",
-  display: "swap",
-});
-
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-cormorant",
-  display: "swap",
-});
+// Pareja tipográfica de la referencia (landing de Grupo DLC): una geométrica para titulares y cifras,
+// una humanista para el texto. next/font las aloja en el propio sitio al compilar.
+const outfit = Outfit({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--font-display", display: "optional" });
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-text", display: "optional" });
 
 const descripcion = `Club de campo privado y ecológico con lotes desde 510 m² en el ${PROYECTO.valle}, a 35 minutos de Chiclayo. Desde ${soles(DESDE.precio!.cuota)} al mes en 48 cuotas sin intereses. Consulta condiciones y documentación. Entrega ${PROYECTO.entrega}.`;
 
@@ -57,23 +39,25 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#06120e",
 };
 
-// Aplica la paleta antes del primer pintado: ?paleta= manda; si no, la última elegida.
-const PALETA_SCRIPT = `(function(){try{var q=new URLSearchParams(location.search).get('paleta');var p=q||localStorage.getItem('paleta');if(p==='rosso'||p==='proyecto'){document.documentElement.dataset.paleta=p;if(q)localStorage.setItem('paleta',p)}}catch(e){}})();`;
+// Marca que hay JS antes del primer pintado (los revelados y el hero dependen de html.js) y aplica
+// la pausa de movimiento guardada, para que nada arranque y se detenga de golpe.
+const BOOT = `(function(){var d=document.documentElement;d.classList.add('js');try{if(localStorage.getItem('rosso.motion.v1')==='paused')d.dataset.motion='paused'}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="es-PE"
-      data-paleta="proyecto"
-      className={`${outfit.variable} ${jakarta.variable} ${cormorant.variable}`}
-      suppressHydrationWarning
-    >
+    <html lang="es-PE" className={`${outfit.variable} ${jakarta.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: PALETA_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: BOOT }} />
       </head>
-      <body>{children}<MotionExperience /><TrackingProvider /></body>
+      <body>
+        {children}
+        <SmoothScroll />
+        <MotionExperience />
+        <TrackingProvider />
+      </body>
     </html>
   );
 }

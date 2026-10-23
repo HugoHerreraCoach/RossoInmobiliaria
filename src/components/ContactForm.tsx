@@ -1,21 +1,30 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { loteById, m2, soles } from "@/content/lotes";
+import { DESDE_CONTADO, DISPONIBLES, loteById, m2, soles } from "@/content/lotes";
+import { PROYECTO } from "@/content/proyecto";
 import { Icon } from "./Icon";
 import { track, trackingContext, pixelEvent } from "@/lib/tracking/client";
 
 type Estado = { t: "idle" | "enviando" | "ok" } | { t: "error"; msg: string } | { t: "sin-destino" };
-const CIUDADES = ["Chiclayo", "Lima", "Trujillo", "Piura", "José Leonardo Ortiz", "Otra ciudad"];
-const PERFILES = [{ id: "Invertir", label: "Invertir" }, { id: "Para mi familia", label: "Para mi familia" }, { id: "Desde otra ciudad", label: "A distancia" }];
 
-/** Comparte el contrato original de /api/lead. El modo compacto no elimina campos. */
-export function ContactForm({ idPrefix = "f", compact = false }: { idPrefix?: string; compact?: boolean }) {
+// Montos de la lista de precios, redondeados a miles como en la referencia DLC ("Desde S/ 3 mil").
+// En pantalla, con espacio duro para que "S/" no quede solo al final de la l\u00ednea.
+const mil = (n: number) => `S/ ${Math.round(n / 1000)} mil`;
+const pegado = (s: string) => s.replace(/S\/ (\d+) mil/, "S/\u00a0$1\u00a0mil");
+const INICIAL_MIN = Math.min(...DISPONIBLES.map((l) => l.precio!.inicial));
+// La respuesta viaja en `busca` (texto libre, 40 caracteres) para no cambiar el contrato de /api/lead.
+const INICIALES = [
+  { id: `Inicial desde ${mil(INICIAL_MIN)}`, label: pegado(`Desde ${mil(INICIAL_MIN)}`) },
+  { id: `Pago al contado ${mil(DESDE_CONTADO)}`, label: pegado(`Pago al contado ${mil(DESDE_CONTADO)}`) },
+];
+
+/** Formulario de la portada: nombre, WhatsApp y la inicial con la que quiere empezar. */
+export function ContactForm({ idPrefix = "f" }: { idPrefix?: string }) {
   const [estado, setEstado] = useState<Estado>({ t: "idle" });
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [lote, setLote] = useState("");
-  const [busca, setBusca] = useState("Para mi familia");
-  const [visita, setVisita] = useState(false);
+  const [busca, setBusca] = useState("");
   const form = useRef<HTMLFormElement>(null);
   const abort = useRef<AbortController | null>(null);
   const submission = useRef<{ id: string; signature: string } | null>(null);
@@ -41,7 +50,7 @@ export function ContactForm({ idPrefix = "f", compact = false }: { idPrefix?: st
       const firstKey = Object.keys(errors)[0];
       if (!firstKey) return;
       const element = form.current?.elements.namedItem(firstKey);
-      if (element instanceof HTMLElement) { const details = element.closest("details"); if (details) details.open = true; element.focus(); }
+      if (element instanceof HTMLElement) element.focus();
     });
   };
 
@@ -49,16 +58,15 @@ export function ContactForm({ idPrefix = "f", compact = false }: { idPrefix?: st
     event.preventDefault();
     if (estado.t === "enviando") return;
     const data = new FormData(event.currentTarget);
+    // El aviso junto al botón informa el uso de los datos; enviar es la autorización que pide la API.
     const datos = {
       nombre: String(data.get("nombre") ?? "").trim(),
       celular: String(data.get("celular") ?? "").replace(/[^\d+]/g, ""),
-      ciudad: String(data.get("ciudad") ?? ""), busca, lote, visita,
-      dia: String(data.get("dia") ?? ""), consentimiento: data.get("consentimiento") === "on",
+      ciudad: "", busca, lote, visita: false, dia: "", consentimiento: true,
     };
     const errors: Record<string, string> = {};
-    if (datos.nombre.length < 2) errors.nombre = "Escribe tu nombre completo.";
-    if (!/^\+?\d{9,15}$/.test(datos.celular)) errors.celular = "Ingresa de 9 a 15 dígitos, con código de país si estás fuera de Perú.";
-    if (!datos.consentimiento) errors.consentimiento = "Autoriza el contacto para poder enviar tu solicitud.";
+    if (datos.nombre.length < 2) errors.nombre = "Escribe tus nombres y apellidos.";
+    if (!/^\+?\d{9,15}$/.test(datos.celular)) errors.celular = "Ingresa tu número de WhatsApp de 9 dígitos, o con código de país si estás fuera de Perú.";
     if (Object.keys(errors).length) { track("form_error", { source, error: "validation" }); return mostrarErrores(errors); }
     const signature = JSON.stringify(datos);
     if (!submission.current || submission.current.signature !== signature) submission.current = { id: crypto.randomUUID(), signature };
@@ -69,6 +77,7 @@ export function ContactForm({ idPrefix = "f", compact = false }: { idPrefix?: st
     try {
       const response = await fetch("/api/lead", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...datos, website: data.get("website") || "", source, submission_id: submission.current.id, tracking: trackingContext() }), signal: controller.signal });
       const json = await response.json().catch(() => ({}));
+      // Registro guardado (fila en la hoja): recién ahora va CompleteRegistration a Meta y TikTok, con el id del envío.
       if (response.ok) { if (json.event_id) pixelEvent("form_submit", json.event_id, { source, lot: lote }); setEstado({ t: "ok" }); return; }
       if (response.status === 422 && json.errores && Object.keys(json.errores).length) { mostrarErrores(json.errores); return; }
       if (json.error === "sin-destino") { track("form_error", { source, error: "unconfigured" }); setEstado({ t: "sin-destino" }); return; }
@@ -80,27 +89,17 @@ export function ContactForm({ idPrefix = "f", compact = false }: { idPrefix?: st
     } finally { clearTimeout(timeout); abort.current = null; }
   };
 
-  if (estado.t === "ok") return <div className="status status--ok" role="status"><div className="status__icon"><Icon name="check" size={24} /></div><div><h4>Solicitud recibida.</h4><p>El equipo de Rosso Inmobiliaria recibió tus datos{lote ? ` y tu interés en el lote ${lote}` : ""} para contactarte.</p></div></div>;
+  if (estado.t === "ok") return <div className="status status--ok" role="status"><div className="status__icon"><Icon name="check" size={24} /></div><div><h4>Solicitud recibida.</h4><p>El equipo de {PROYECTO.empresa} recibió tus datos{lote ? ` y tu interés en el lote ${lote}` : ""} para contactarte por WhatsApp.</p></div></div>;
 
-  const extraFields = <>
-    <div className="row2"><div className="field"><label htmlFor={`${idPrefix}-ciudad`}>Tu ciudad</label><select id={`${idPrefix}-ciudad`} name="ciudad" defaultValue="Chiclayo">{CIUDADES.map((c) => <option key={c}>{c}</option>)}</select></div><div className="field"><label htmlFor={`${idPrefix}-lote`}>Lote de interés <span>(opcional)</span></label><input id={`${idPrefix}-lote`} name="lote" type="text" placeholder="Ej. G18" value={lote} onChange={(e) => setLote(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4))} /></div></div>
-    <label className="check"><input type="checkbox" checked={visita} onChange={(e) => setVisita(e.target.checked)} /><span>También deseo coordinar una visita o videollamada.</span></label>
-    {visita ? <div className="field"><label htmlFor={`${idPrefix}-dia`}>¿Cuándo te gustaría?</label><select id={`${idPrefix}-dia`} name="dia" defaultValue="Sábado por la mañana"><option>Sábado por la mañana</option><option>Domingo por la mañana</option><option>Entre semana</option><option>Videollamada desde mi ciudad</option></select><small>El horario se confirma con un asesor.</small></div> : null}
-  </>;
-
-  return <form ref={form} data-track-form={source} className={`form ${compact ? "form--compact" : ""}`} onSubmit={enviar} noValidate aria-busy={estado.t === "enviando"}>
+  return <form ref={form} data-track-form={source} className="form" onSubmit={enviar} noValidate aria-busy={estado.t === "enviando"}>
     <div className="form-honeypot" aria-hidden="true"><label>Deja este campo vacío<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
-    {loteInfo ? <div className="form__lot-banner"><div><span className="label">Tu lote seleccionado</span><strong>{loteInfo.id} · {m2(loteInfo.m2)}</strong>{loteInfo.precio ? <small>Referencia: {soles(loteInfo.precio.cuota)}/mes</small> : <small>Consulta su estado con un asesor.</small>}</div><button type="button" className="form__lot-clear" onClick={() => setLote("")} aria-label="Quitar lote seleccionado"><Icon name="close" size={16} /></button></div> : null}
-    <div className="row2 form__identity">
-      <div className="field"><label htmlFor={`${idPrefix}-nombre`}>Nombre completo <span>*</span></label><input id={`${idPrefix}-nombre`} name="nombre" autoComplete="name" placeholder="¿Cómo te llamas?" maxLength={120} required aria-invalid={!!errores.nombre} aria-describedby={errores.nombre ? `${idPrefix}-e-nombre` : undefined} />{errores.nombre ? <span className="field__err" id={`${idPrefix}-e-nombre`}>{errores.nombre}</span> : null}</div>
-      <div className="field"><label htmlFor={`${idPrefix}-celular`}>Celular / WhatsApp <span>*</span></label><input id={`${idPrefix}-celular`} name="celular" type="tel" inputMode="tel" autoComplete="tel" placeholder="Ej. 987 654 321" maxLength={20} required aria-invalid={!!errores.celular} aria-describedby={errores.celular ? `${idPrefix}-e-celular` : undefined} />{errores.celular ? <span className="field__err" id={`${idPrefix}-e-celular`}>{errores.celular}</span> : null}</div>
-    </div>
-    <fieldset className="field field--profiles"><legend>Estoy buscando un lote para</legend><div className="choices">{PERFILES.map((p) => <label className={`choice ${busca === p.id ? "is-selected" : ""}`} key={p.id}><input type="radio" name="busca" value={p.id} checked={busca === p.id} onChange={() => setBusca(p.id)} /><strong>{p.label}</strong></label>)}</div></fieldset>
-    {compact ? <details className="form__extras"><summary>Personalizar mi solicitud <Icon name="mas" size={15} /></summary><div>{extraFields}</div></details> : extraFields}
-    <label className="check form__consent"><input type="checkbox" name="consentimiento" required aria-invalid={!!errores.consentimiento} aria-describedby={errores.consentimiento ? `${idPrefix}-e-cons` : undefined} /><span>Autorizo a Rosso Inmobiliaria a contactarme por WhatsApp o llamada sobre este proyecto.</span></label>
-    {errores.consentimiento ? <span className="field__err" id={`${idPrefix}-e-cons`}>{errores.consentimiento}</span> : null}
+    {loteInfo ? <div className="form__lot-banner"><div><span className="label">Tu lote seleccionado</span><strong>{loteInfo.id}, {m2(loteInfo.m2)}</strong>{loteInfo.precio ? <small>Referencia: {soles(loteInfo.precio.cuota)}/mes</small> : <small>Consulta su estado con un asesor.</small>}</div><button type="button" className="form__lot-clear" onClick={() => setLote("")} aria-label="Quitar lote seleccionado"><Icon name="close" size={16} /></button></div> : null}
+    <div className="field"><label className="sr-only" htmlFor={`${idPrefix}-nombre`}>Nombres y apellidos</label><input id={`${idPrefix}-nombre`} name="nombre" autoComplete="name" placeholder="Nombres y apellidos*" maxLength={120} required aria-invalid={!!errores.nombre} aria-describedby={errores.nombre ? `${idPrefix}-e-nombre` : undefined} />{errores.nombre ? <span className="field__err" id={`${idPrefix}-e-nombre`}>{errores.nombre}</span> : null}</div>
+    <div className="field"><label className="sr-only" htmlFor={`${idPrefix}-celular`}>Número de WhatsApp</label><div className="field__tel"><span aria-hidden="true">+51</span><input id={`${idPrefix}-celular`} name="celular" type="tel" inputMode="tel" autoComplete="tel" placeholder="Tu número de WhatsApp*" maxLength={20} required aria-invalid={!!errores.celular} aria-describedby={errores.celular ? `${idPrefix}-e-celular` : undefined} /></div>{errores.celular ? <span className="field__err" id={`${idPrefix}-e-celular`}>{errores.celular}</span> : null}</div>
+    <fieldset className="field field--choices"><legend>¿Con cuánto de inicial te gustaría empezar?</legend><div className="choices">{INICIALES.map((o) => <label className={`choice ${busca === o.id ? "is-selected" : ""}`} key={o.id}><input type="radio" name="busca" value={o.id} checked={busca === o.id} onChange={() => setBusca(o.id)} /><strong>{o.label}</strong></label>)}</div></fieldset>
     {estado.t === "error" ? <div className="status status--warn" role="alert"><p>{estado.msg}</p></div> : null}
     {estado.t === "sin-destino" ? <div className="status status--warn" role="alert"><p>El formulario no tiene un destino de contacto configurado en este entorno. Tus datos no se enviaron.</p></div> : null}
-    <button className="btn btn--forest form__submit" type="submit" disabled={estado.t === "enviando"}>{estado.t === "enviando" ? "Enviando solicitud…" : visita ? "Solicitar una visita" : lote ? `Consultar lote ${lote}` : "Recibir plano y precios"}<Icon name="der" size={18} /></button>
+    <button className="btn btn--forest form__submit" type="submit" disabled={estado.t === "enviando"}>{estado.t === "enviando" ? "Enviando solicitud…" : lote ? `Consultar lote ${lote}` : "Recibir plano y precios"}<Icon name="der" size={18} /></button>
+    <p className="form__legal">Al enviar, aceptas que {PROYECTO.empresa} te contacte por WhatsApp o llamada sobre este proyecto. <a href="/privacidad">Privacidad</a></p>
   </form>;
 }

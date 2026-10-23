@@ -181,12 +181,11 @@ export function HeroCarousel() {
               key={s.toma}
               type="button"
               aria-pressed={active}
-              aria-label={`Ver toma ${i + 1} de ${SLIDES.length}: ${s.tag}`}
               className={`hero-showcase__thumb ${active ? "is-active" : ""}`}
               onClick={() => select(i)}
             >
               <div className="hero-showcase__thumb-img">
-                <Image src={m.color} alt={s.titulo} fill sizes="140px" />
+                <Image src={m.color} alt="" fill sizes="140px" />
               </div>
               <div className="hero-showcase__thumb-txt">
                 <small>{s.fecha}</small>

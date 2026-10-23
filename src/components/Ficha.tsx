@@ -1,22 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { track } from "@/lib/tracking/client";
 import { CUOTAS, LISTA_FECHA, m2, soles, soles0, type Lote } from "@/content/lotes";
-import { PROYECTO, whatsappHref } from "@/content/proyecto";
+import { PROYECTO } from "@/content/proyecto";
 import { Icon } from "./Icon";
-
-export function mensajeLote(l: Lote, inicialCustom?: number, plazoCustom?: number) {
-  if (l.precio && inicialCustom && plazoCustom) {
-    const cuotaCalc = (l.precio.financiado - inicialCustom) / plazoCustom;
-    return `Hola, me interesa el lote ${l.id} de ${PROYECTO.nombre} (${m2(l.m2)}). Vi la simulación con inicial de ${soles0(inicialCustom)} y ${plazoCustom} cuotas de ${soles(cuotaCalc)}. ¿Me brindan información?`;
-  }
-  return `Hola, me interesa el lote ${l.id} de ${PROYECTO.nombre} (${m2(l.m2)}). ¿Me pueden dar más información?`;
-}
 
 const PLAZOS = [12, 24, 36, 48] as const;
 
-/** Ficha técnica ejecutiva + Simulador financiero en tiempo real (0% interés). */
+/** Ficha técnica ejecutiva + Simulador financiero en tiempo real (0% interés).
+ *  Toda consulta lleva al formulario de la portada (#formulario) con el lote ya elegido. */
 export function Ficha({
   lote,
   onPedir,
@@ -26,10 +19,6 @@ export function Ficha({
   onPedir?: (l: Lote) => void;
   showFullLink?: boolean;
 }) {
-  const [copiado, setCopiado] = useState(false);
-  const [errorCompartir, setErrorCompartir] = useState("");
-  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => { if (copyTimer.current) clearTimeout(copyTimer.current); }, []);
   const [modoPago, setModoPago] = useState<"financiado" | "contado">("financiado");
   const p = lote.precio;
 
@@ -48,30 +37,8 @@ export function Ficha({
 
   const cuotaSimulada = p ? Math.max(0, (p.financiado - inicial) / plazo) : 0;
   const ahorroContado = p ? p.financiado - (p.promoContado ?? p.contado) : 0;
-  const wa = whatsappHref(modoPago === "contado" && p
-    ? `Hola, me interesa el lote ${lote.id} de ${PROYECTO.nombre} (${m2(lote.m2)}). Vi el precio de referencia al contado de ${soles(p.promoContado ?? p.contado)}. ¿Me confirman su vigencia y disponibilidad?`
-    : mensajeLote(lote, inicial, plazo));
-
-  const compartir = async () => {
-    track("share_lot", { lot: lote.id });
-    setErrorCompartir("");
-    setCopiado(false);
-    const url = `${window.location.origin}/lote/${lote.id}`;
-    const data = { title: `Lote ${lote.id} · ${PROYECTO.nombre}`, text: mensajeLote(lote), url };
-    if (navigator.share) {
-      try { await navigator.share(data); return; }
-      catch (error) { if (error instanceof Error && error.name === "AbortError") return; }
-    }
-    try {
-      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
-      await navigator.clipboard.writeText(url);
-      setCopiado(true);
-      if (copyTimer.current) clearTimeout(copyTimer.current);
-      copyTimer.current = setTimeout(() => setCopiado(false), 2400);
-    } catch {
-      setErrorCompartir("No se pudo copiar el enlace. Abre la ficha y copia la dirección desde tu navegador.");
-    }
-  };
+  // En la portada el formulario está en la misma página; desde /lote/[id] se vuelve a ella con el lote.
+  const alFormulario = onPedir ? "#formulario" : `/?lote=${lote.id}#formulario`;
 
   return (
     <div className="ficha__body">
@@ -80,7 +47,7 @@ export function Ficha({
         <div className="ficha__id-group">
           <span className="ficha__badge-mz">Manzana {lote.manzana}</span>
           <div className="ficha__title-row">
-            <b className="ficha__code">Lote {lote.id}</b>
+            <h3 className="ficha__code">Lote {lote.id}</h3>
             <span className={`ficha__status ficha__status--${lote.estado}`}>
               <i />
               {lote.estado === "disponible"
@@ -91,7 +58,7 @@ export function Ficha({
             </span>
           </div>
           <p className="ficha__subtitle">
-            Superficie total de <strong>{m2(lote.m2)}</strong> ·{" "}
+            Superficie total de <strong>{m2(lote.m2)}</strong>.{" "}
             {lote.m2 >= 1000
               ? "Lote de mayor superficie"
               : lote.manzana === "E"
@@ -115,7 +82,7 @@ export function Ficha({
               className={`ficha__mode-tab ${modoPago === "financiado" ? "is-active" : ""}`}
               onClick={() => setModoPago("financiado")}
             >
-              <span>Financiado 0% Interés</span>
+              <span>Financiado sin intereses</span>
               <small>{soles(cuotaSimulada)} / mes</small>
             </button>
             <button
@@ -124,7 +91,7 @@ export function Ficha({
               className={`ficha__mode-tab ${modoPago === "contado" ? "is-active" : ""}`}
               onClick={() => setModoPago("contado")}
             >
-              <span>Al Contado {p.promoContado ? "· Promo" : "-15%"}</span>
+              <span>Al contado{p.promoContado ? " con promoción" : ""}</span>
               <small>{soles0(p.promoContado ?? p.contado)}</small>
             </button>
           </div>
@@ -133,9 +100,8 @@ export function Ficha({
             <div className="ficha__sim">
               <div className="ficha__kpi-highlight">
                 <div>
-                  <span className="ficha__kpi-label">Cuota mensual estimada ({plazo} meses)</span>
                   <div className="ficha__kpi-value">{soles(cuotaSimulada)}</div>
-                  <span className="ficha__kpi-sub">Simulación referencial · financiamiento directo al 0%</span>
+                  <span className="ficha__kpi-sub">al mes durante {plazo} meses. Simulación referencial con financiamiento directo sin intereses.</span>
                 </div>
                 <div className="ficha__kpi-tag">
                   <span>Precio lista</span>
@@ -148,11 +114,11 @@ export function Ficha({
               <div className="ficha__calc">
                 <div className="ficha__calc-head">
                   <label htmlFor={`slider-ini-${lote.id}`}>
-                    <Icon name="calculator" size={16} /> Tu cuota inicial
+                    Tu cuota inicial
                   </label>
                   <output htmlFor={`slider-ini-${lote.id}`} className="ficha__calc-out">
                     {soles0(inicial)}
-                    {inicial === p.inicial ? <small> (Mínima)</small> : null}
+                    {inicial === p.inicial ? <small> (mínima)</small> : null}
                   </output>
                 </div>
                 <input
@@ -168,12 +134,12 @@ export function Ficha({
                   className="ficha__slider"
                 />
                 <div className="ficha__slider-limits">
-                  <span>Mín: {soles0(minInicial)}</span>
+                  <span>Mínimo {soles0(minInicial)}</span>
                   <span>Saldo a financiar: {soles0(p.financiado - inicial)}</span>
                 </div>
 
                 <div className="ficha__plazos">
-                  <span className="ficha__plazos-label">Plazo en meses (0% interés):</span>
+                  <span className="ficha__plazos-label">Plazo, sin intereses</span>
                   <div className="ficha__plazos-grid">
                     {PLAZOS.map((m) => (
                       <button
@@ -194,13 +160,11 @@ export function Ficha({
             <div className="ficha__contado-box">
               <div className="ficha__kpi-highlight ficha__kpi-highlight--gold">
                 <div>
-                  <span className="ficha__kpi-label">
-                    {p.promoContado ? "Precio Promocional al Contado" : "Precio al Contado (-15% dto.)"}
-                  </span>
                   <div className="ficha__kpi-value">{soles(p.promoContado ?? p.contado)}</div>
+                  <span className="ficha__kpi-sub">{p.promoContado ? "Precio de promoción al contado." : "Precio al contado."}</span>
                   {p.promoContado ? (
                     <span className="ficha__kpi-sub">
-                      Precio contado regular: <s>{soles(p.contado)}</s> · Financiado: <s>{soles(p.financiado)}</s>
+                      Precio contado regular: <s>{soles(p.contado)}</s>; financiado: <s>{soles(p.financiado)}</s>
                     </span>
                   ) : (
                     <span className="ficha__kpi-sub">
@@ -230,48 +194,35 @@ export function Ficha({
             <dd>{soles(p.contado)}</dd>
             {p.promoContado ? (
               <>
-                <dt className="label">Bono Promo Contado</dt>
+                <dt className="label">Promoción al contado</dt>
                 <dd className="ficha__promo-val">{soles(p.promoContado)}</dd>
               </>
             ) : null}
-            <dt className="label">Título & Entrega</dt>
+            <dt className="label">Título y entrega</dt>
             <dd>
-              {PROYECTO.titulo} · {PROYECTO.entrega}
+              {PROYECTO.titulo}, entrega en {PROYECTO.entrega}
             </dd>
           </dl>
 
           <div className="ficha__actions">
-            {wa ? (
-              <a data-track="lot-whatsapp" data-lot={lote.id} className="btn btn--primary ficha__cta-main" href={wa} target="_blank" rel="noopener">
-                <Icon name="chat" size={20} />
-                Solicitar Lote {lote.id} por WhatsApp
+            <a
+              className="btn btn--primary ficha__cta-main"
+              data-track="lot-contact" data-lot={lote.id}
+              href={alFormulario}
+              onClick={() => onPedir?.(lote)}
+            >
+              <Icon name="chat" size={20} />
+              Consultar el lote {lote.id}
+            </a>
+            {showFullLink ? (
+              <a className="btn ficha__detail" href={`/lote/${lote.id}`}>
+                <Icon name="plano" size={20} />
+                Ver detalle
+                <Icon name="der" size={18} />
               </a>
-            ) : (
-              <a
-                className="btn btn--primary ficha__cta-main"
-                data-track="lot-contact" data-lot={lote.id}
-                href={onPedir ? "#contacto" : `/?vista=${lote.manzana}&lote=${lote.id}#contacto`}
-                onClick={() => onPedir?.(lote)}
-              >
-                <Icon name="chat" size={20} />
-                Separar / Cotizar Lote {lote.id}
-              </a>
-            )}
-            <div className="ficha__secondary-actions">
-              <button type="button" className="btn btn--small" onClick={compartir}>
-                <Icon name="compartir" size={17} />
-                {copiado ? "¡Enlace copiado!" : "Compartir ficha"}
-              </button>
-              {showFullLink ? (
-                <a className="btn btn--small" href={`/lote/${lote.id}`}>
-                  <Icon name="plano" size={17} />
-                  Abrir expediente
-                </a>
-              ) : null}
-            </div>
+            ) : null}
           </div>
 
-          {errorCompartir ? <p className="note" role="status">{errorCompartir}</p> : null}
           <p className="note">
             Valores de referencia de la lista del {LISTA_FECHA}. Confirma la vigencia de precios, estado del lote,
             documentación y condiciones antes de separar.
@@ -280,16 +231,17 @@ export function Ficha({
       ) : (
         <div className="ficha__unavailable">
           <div className="ficha__unavailable-badge">
-            {lote.estado === "vendido" ? "UNIDAD ADQUIRIDA" : "UNIDAD CON RESERVA ACTIVA"}
+            {lote.estado === "vendido" ? "Vendido" : "Reservado"}
           </div>
           <p>
             {lote.estado === "vendido"
-              ? `El lote ${lote.id} (${m2(lote.m2)}) en la Manzana ${lote.manzana} figura como vendido en la lista de referencia. Selecciona un lote en color verde dentro del Masterplan para cotizar unidades disponibles similares.`
+              ? `El lote ${lote.id} (${m2(lote.m2)}) en la Manzana ${lote.manzana} figura como vendido en la lista de referencia. Elige en el plano un lote disponible para ver su precio.`
               : `El lote ${lote.id} (${m2(lote.m2)}) figura como reservado en la lista de referencia. Puedes dejar tus datos con un asesor por si se libera o para elegir un lote colindante en la Manzana ${lote.manzana}.`}
           </p>
           <a
             className="btn btn--primary"
-            href={onPedir ? "#contacto" : `/?vista=${lote.manzana}&lote=${lote.id}#contacto`}
+            data-track="lot-contact" data-lot={lote.id}
+            href={alFormulario}
             onClick={() => onPedir?.(lote)}
           >
             <Icon name="chat" size={18} />

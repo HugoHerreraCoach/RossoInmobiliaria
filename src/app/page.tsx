@@ -1,172 +1,323 @@
 import Image from "next/image";
-import { HeroAtmosphere } from "@/components/HeroAtmosphere";
-import { CUOTAS, DESDE, DESDE_CONTADO, LISTA_FECHA, M2_MAX, M2_MIN, loteById, m2, resumen, soles, soles0 } from "@/content/lotes";
+import { AVANCE, MEDIA } from "@/content/avance";
+import { CUOTAS, DESDE, DESDE_CONTADO, DISPONIBLES, LISTA_FECHA, M2_MAX, M2_MIN, loteById, m2, resumen, soles, soles0 } from "@/content/lotes";
 import { PROYECTO } from "@/content/proyecto";
-import { ContactCta } from "@/components/ContactCta";
+import { AsesorFlotante } from "@/components/AsesorFlotante";
 import { ContactForm } from "@/components/ContactForm";
+import { DecisionTabs, type Pestana } from "@/components/DecisionTabs";
 import { HeroCarousel } from "@/components/HeroCarousel";
-import { Icon, type IconName } from "@/components/Icon";
-import { LotStack } from "@/components/LotStack";
-import { NavCurrent } from "@/components/NavCurrent";
-import { PaletaSwitch } from "@/components/PaletaSwitch";
-import { Photo } from "@/components/Photo";
-import { Schedule } from "@/components/Schedule";
+import { Icon } from "@/components/Icon";
+import { LazyLotStack } from "@/components/LazyLotStack";
+import { MotionToggle } from "@/components/MotionExperience";
+import { ObraBand, type Toma4 } from "@/components/ObraBand";
 import { SiteHeader } from "@/components/SiteHeader";
-import { WhyProjectTabs } from "@/components/WhyProjectTabs";
+import { Reveal, Stagger } from "@/components/motion/Reveal";
 
-const AREAS: { nombre: string; detalle: string; icon: IconName; estado: string }[] = [
-  { nombre: "Pórtico de ingreso", detalle: "La bienvenida a tu nuevo lugar en el valle.", icon: "gate", estado: "Registro de obra disponible" },
-  { nombre: "Cerco vivo", detalle: "Un límite natural que se integra al paisaje.", icon: "trees", estado: "Frente registrado en obra" },
-  { nombre: "Cancha de grass natural", detalle: "Más partidos, más amigos, más tiempo juntos.", icon: "plano", estado: "Proyectado" },
-  { nombre: "Parrillas y hamacas", detalle: "Espacios para compartir y bajar el ritmo.", icon: "sun", estado: "Proyectado" },
-  { nombre: "Juegos y gimnasio", detalle: "Movimiento y recreación al aire libre.", icon: "sparkles", estado: "Proyectado" },
-  { nombre: "Servicios campestres", detalle: "Pozo tubular e iluminación solar en las vías.", icon: "water", estado: "Proyectado" },
+// Estructura guiada por la landing de Grupo DLC (grupodlc.conexigo.com): portada con formulario,
+// plano de lotes con simulador, galería y video, pestañas para decidir y contacto. Todo botón de
+// contacto lleva al formulario de la portada (#formulario); el único WhatsApp es el botón flotante. Con la marca, las fotos y
+// los datos de La Campiña. Toda cifra sale de src/content (lista de precios y proyecto).
+
+const VUELOS: Toma4[] = [
+  { toma: "general-jul", titulo: "Las 8 manzanas, de punta a punta", fecha: "21 jul 2026", grow: 5, alt: "Vista de drone del trazado completo de La Campiña con el verde del valle al fondo" },
+  { toma: "portico", titulo: "El pórtico de ingreso", fecha: "11 abr 2026", grow: 2, alt: "Pórtico de ingreso de La Campiña sobre la vía a San Nicolás" },
+  { toma: "cerco-jun", titulo: "El frente sobre la vía", fecha: "jun 2026", grow: 3, alt: "Frente del proyecto con su cerco, visto desde el drone" },
+  { toma: "trazado-jun", titulo: "Los lotes trazados con cal", fecha: "25 jun 2026", grow: 2, alt: "Lotes y vías marcados con cal sobre la tierra" },
 ];
-const EJEMPLOS = ["G18", "C3", "C9", "E4", "F11"].map((id) => loteById(id)!);
-const SECCIONES = ["inicio", "proyecto", "areas", "lotes", "avance", "pagar", "ubicacion", "contacto"];
+
+const DISFRUTAR = [
+  { toma: "portico" as const, titulo: "Pórtico de ingreso", estado: "Foto real · 11 abr 2026", alt: "Pórtico de ingreso de La Campiña junto a la vía a San Nicolás" },
+  { toma: "cerco-jun" as const, titulo: "Frente con cerco", estado: "Foto real · jun 2026", alt: "Frente del proyecto con su cerco de caña" },
+  { toma: "trazado-jun" as const, titulo: "Lotes y calles trazados", estado: "Foto real · 25 jun 2026", alt: "Lotes y calles marcados con cal sobre la tierra del Valle de Zaña" },
+];
+const PROYECTADAS = ["Cancha de grass natural", "Zona de parrillas", "Zona de hamacas", "Juegos para niños", "Gimnasio al aire libre", "Agua de pozo tubular", "Vías con iluminación solar"];
+
+const EJEMPLOS = ["G18", "C3", "C9", "E4", "F11"].map((id) => loteById(id)!).filter((l) => l.precio);
 
 export default function Home() {
   const r = resumen();
-  const precio = DESDE.precio!;
+  const desde = DESDE.precio!;
+  const inicialMin = Math.min(...DISPONIBLES.map((l) => l.precio!.inicial));
+  const conPromo = DISPONIBLES.filter((l) => l.precio!.promoContado).length;
+  const tramos = PROYECTO.ubicacion.tramos;
+  const chiclayo = tramos.find((t) => t.lugar === "Chiclayo")!;
+  const { telefono } = PROYECTO.contacto;
+  const maps = PROYECTO.ubicacion.mapsUrl;
+
+  const PESTANAS: Pestana[] = [
+    {
+      id: "ubicacion",
+      etiqueta: "Ubicación",
+      icon: "pin",
+      contenido: (
+        <div className="tabs__body">
+          <p>{PROYECTO.ubicacion.frase}. Lo bastante cerca para ir cualquier fin de semana; lo bastante lejos para desconectar.</p>
+          <ul className="checks">
+            {tramos.map((t) => <li key={t.lugar}><Icon name="check" size={16} /> {t.minutos} minutos de {t.lugar}</li>)}
+            <li><Icon name="check" size={16} /> Tiempos aproximados; varían según la ruta y el tránsito</li>
+          </ul>
+          {maps ? (
+            <a className="btn btn--ghost" href={maps} target="_blank" rel="noopener noreferrer"><Icon name="pin" size={18} /> Ver en Google Maps</a>
+          ) : (
+            <a className="btn btn--ghost" href="#formulario"><Icon name="pin" size={18} /> Pide la ubicación exacta</a>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "financiamiento",
+      etiqueta: "Financiamiento directo",
+      icon: "calculator",
+      contenido: (
+        <div className="tabs__body">
+          <p>Financiamiento directo con {PROYECTO.empresa}, sin intereses: la cuota es el precio de lista menos la inicial, dividido entre {CUOTAS} meses.</p>
+          <ul className="checks">
+            <li><Icon name="check" size={16} /> Inicial desde {soles0(inicialMin)}, según el lote</li>
+            <li><Icon name="check" size={16} /> Cuota desde {soles(desde.cuota)} al mes</li>
+            <li><Icon name="check" size={16} /> Al contado, alrededor de 15 % menos; {conPromo} lotes con promoción desde {soles0(DESDE_CONTADO)}</li>
+          </ul>
+          <details className="compare">
+            <summary>Compara {EJEMPLOS.length} lotes de la lista</summary>
+            <div className="table-wrap">
+              <table className="plan">
+                <caption>Lista de referencia del {LISTA_FECHA}. No es inventario en tiempo real.</caption>
+                <thead>
+                  <tr><th scope="col">Lote</th><th scope="col">Área</th><th scope="col">Financiado</th><th scope="col">Inicial</th><th scope="col">{CUOTAS} cuotas</th><th scope="col">Contado</th></tr>
+                </thead>
+                <tbody>
+                  {EJEMPLOS.map((l) => (
+                    <tr key={l.id}>
+                      <th scope="row"><a href={`/lote/${l.id}`} aria-label={`Ver ficha del lote ${l.id}`}>{l.id}</a></th>
+                      <td>{m2(l.m2)}</td>
+                      <td>{soles0(l.precio!.financiado)}</td>
+                      <td>{soles0(l.precio!.inicial)}</td>
+                      <td>{soles(l.precio!.cuota)}</td>
+                      <td>{soles0(l.precio!.promoContado ?? l.precio!.contado)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+      ),
+    },
+    {
+      id: "papeles",
+      etiqueta: "Papeles claros",
+      icon: "shield",
+      contenido: (
+        <div className="tabs__body">
+          <p>La compra se formaliza con {PROYECTO.titulo.toLowerCase()}. Antes de separar, pide al asesor los documentos del lote que te interesa y revísalos con calma.</p>
+          <ul className="checks">
+            <li><Icon name="check" size={16} /> {PROYECTO.titulo}</li>
+            <li><Icon name="check" size={16} /> Precios de la lista vigente del {LISTA_FECHA}</li>
+            <li><Icon name="check" size={16} /> Entrega programada para {PROYECTO.entrega}</li>
+          </ul>
+          <a className="btn btn--ghost" href="#formulario"><Icon name="plano" size={18} /> Pide la documentación</a>
+        </div>
+      ),
+    },
+  ];
+
+  const PREGUNTAS = [
+    ["¿Cuánto pago al mes?", `Depende del lote. La cuota más baja de la lista es de ${soles(desde.cuota)} al mes, con ${soles0(desde.inicial)} de inicial y ${CUOTAS} cuotas, en el lote ${DESDE.id} de ${m2(DESDE.m2)}. En el plano puedes simular la cuota de cada lote disponible.`],
+    ["¿El financiamiento tiene intereses?", "No. Es financiamiento directo con Rosso Inmobiliaria: la cuota es el precio de lista menos la inicial, dividido entre el número de cuotas."],
+    ["¿Y si pago al contado?", `Pagas alrededor de 15 % menos que el precio financiado, y ${conPromo} lotes tienen además una promoción de contado, desde ${soles0(DESDE_CONTADO)}. Confirma su vigencia con un asesor.`],
+    ["¿Los lotes tienen escritura pública?", "Sí, la compra se formaliza con escritura pública. Pide al asesor los documentos del lote que te interesa antes de separarlo."],
+    ["¿Cuándo se entrega?", `La entrega está programada para ${PROYECTO.entrega}. Mientras tanto, puedes ver cómo avanza la obra en los vuelos de drone y las fotos fechadas de esta página.`],
+    ["¿Puedo comprar si vivo en Lima o Trujillo?", "Sí. Revisa el plano y la ficha de cada lote, pide una videollamada con un asesor desde tu ciudad y coordina la visita al terreno cuando puedas viajar."],
+  ];
 
   return (
-    <div className="rosso-site">
+    <>
       <a className="skip" href="#contenido">Saltar al contenido</a>
       <SiteHeader />
 
       <main id="contenido">
-        <section className="estate-hero" id="inicio" aria-labelledby="t-inicio">
-          <HeroAtmosphere />
-          <div className="estate-hero__shade" aria-hidden="true" />
-          <div className="site-container estate-hero__grid">
-            <div className="estate-hero__copy">
-              <span className="overline overline--light"><span className="live-dot" /> Club de campo privado y ecológico</span>
-              <h1 id="t-inicio">Más espacio.<br />Más naturaleza.<br /><em>Más vida.</em></h1>
-              <p className="estate-hero__lead">Tu propio lugar en <strong>La Campiña, Valle de Zaña.</strong> Lotes amplios, un entorno natural y un nuevo motivo para escaparte de la ciudad.</p>
-              <div className="estate-hero__benefits">
-                <span><Icon name="check" size={16} /> Lotes desde {m2(M2_MIN)}</span>
-                <span><Icon name="check" size={16} /> Hasta {CUOTAS} cuotas sin intereses</span>
-              </div>
-              <div className="estate-hero__actions">
-                <a className="btn btn--primary" data-track="hero-lots" href="#lotes">Encuentra tu lote <Icon name="der" size={18} /></a>
-                <a className="hero-film-link" data-track="hero-gallery" href="#galeria"><span><Icon name="play" size={13} /></span> Conoce el proyecto</a>
-              </div>
-              <div className="estate-hero__location"><Icon name="pin" size={17} /><span>Valle de Zaña · Vía a San Nicolás · Lambayeque</span></div>
-            </div>
-
-            <aside className="enquiry-card" aria-labelledby="hero-form-title">
-              <div className="enquiry-card__top"><span className="overline">Empieza aquí</span><span className="enquiry-card__mark"><Icon name="trees" size={22} /></span></div>
-              <h2 id="hero-form-title">Tu próximo lugar<br /><em>está más cerca.</em></h2>
-              <p>Solicita el plano, los precios y una visita al proyecto. Sin compromiso.</p>
-              <ContactForm idPrefix="hero" compact />
-              <div className="enquiry-card__foot"><Icon name="shield" size={15} /> Atención directa de Rosso Inmobiliaria</div>
-            </aside>
+        {/* Portada: titular, beneficios, formulario y fotos reales de la obra */}
+        <section id="inicio" className="hero" aria-labelledby="t-inicio">
+          <div className="hero__bg" aria-hidden="true">
+            <Image src={MEDIA["ingreso-abr"].color} alt="" fill priority sizes="100vw" />
           </div>
-          <div className="site-container estate-hero__bottom"><span><Icon name="drone" size={15} /> Fotografía real del proyecto · abril 2026</span><a href="#proyecto">Descubre La Campiña <span aria-hidden="true">↓</span></a></div>
-        </section>
+          <div className="wrap hero__inner">
+            <p className="eyebrow eyebrow--center">A {chiclayo.minutos} min de Chiclayo · {PROYECTO.valle}</p>
+            <h1 id="t-inicio" className="hero__title">
+              <span className="hero__pre">Lotes campestres para</span>
+              <span className="hero__big">tu casa de campo</span>
+              <span className="hero__post">desde <b>{m2(M2_MIN)}</b> con <b>{PROYECTO.titulo.toLowerCase()}</b></span>
+            </h1>
+            <ul className="chips" aria-label="Beneficios">
+              <li><Icon name="check" size={16} /> {CUOTAS} cuotas sin intereses</li>
+              <li><Icon name="check" size={16} /> Desde {soles(desde.cuota)} al mes</li>
+              <li><Icon name="check" size={16} /> Obra en marcha · entrega {PROYECTO.entrega}</li>
+            </ul>
 
-        <div className="facts-band" aria-label="Datos del proyecto">
-          <div className="site-container facts-band__grid">
-            <div><span>Tu espacio, desde</span><strong>{M2_MIN} <small>m²</small></strong><p>Lotes hasta {m2(M2_MAX)}</p></div>
-            <div><span>Precio promocional de contado</span><strong>{soles0(DESDE_CONTADO)}</strong><p>Según lote y lista de precios*</p></div>
-            <div><span>Financiamiento directo</span><strong>{CUOTAS} <small>cuotas</small></strong><p>Sin intereses sobre precio de lista</p></div>
-            <div><span>Entrega programada</span><strong>Julio <small>2027</small></strong><p>Conoce los avances de obra</p></div>
-          </div>
-          <p className="facts-band__note">*Referencia de la lista del {LISTA_FECHA}. Confirma precios, promociones y disponibilidad con un asesor.</p>
-        </div>
-
-        <section className="editorial-section" id="proyecto" aria-labelledby="t-proyecto">
-          <div className="site-container">
-            <div className="intro-grid">
-              <div className="intro-grid__visual">
-                <Image src="/media/banderas.webp" alt="Banderas de La Campiña frente a las montañas del Valle de Zaña, en el terreno del proyecto" fill sizes="(max-width: 760px) 100vw, 560px" />
-                <span className="image-label"><span /> La Campiña · Valle de Zaña</span>
-                <div className="intro-grid__seal"><Icon name="trees" size={25} /><span>Un lugar<br /><b>para ti.</b></span></div>
+            <div className="hero__grid">
+              <div className="form-card" id="formulario">
+                <p className="form-card__title">Déjanos tus datos y recibe <strong>el plano y los precios.</strong></p>
+                <p className="form-card__promo"><Icon name="sparkles" size={18} /> Promoción al contado desde {soles0(DESDE_CONTADO)} en {conPromo} lotes</p>
+                <ContactForm idPrefix="hero" />
+                <p className="form-card__foot"><Icon name="shield" size={15} /> Atención directa de {PROYECTO.empresa}</p>
               </div>
-              <div className="intro-grid__copy">
-                <span className="overline">La vida, a otro ritmo</span>
-                <h2 id="t-proyecto">Cerca de lo que amas.<br /><em>Lejos del ruido.</em></h2>
-                <p>Un club de campo privado y ecológico para disfrutar con tu familia, compartir con amigos o explorar una inversión en el entorno turístico de Lambayeque.</p>
-                <p>Conoce el terreno, revisa las opciones de lotes y elige el espacio que va contigo. Aquí puedes ver fotografías reales y registros de obra antes de programar tu visita.</p>
-                <div className="intro-features"><span><Icon name="trees" size={18} /> Entorno natural</span><span><Icon name="drone" size={18} /> Avance documentado</span></div>
-                <a className="text-link" href="#ubicacion">Descubre su ubicación <Icon name="der" size={18} /></a>
+              <div className="hero__media">
+                <HeroCarousel />
               </div>
             </div>
-            <WhyProjectTabs />
           </div>
         </section>
 
-        <section className="gallery-section" id="galeria" aria-labelledby="t-galeria">
-          <div className="site-container">
-            <div className="editorial-heading editorial-heading--split">
-              <div><span className="overline">Sin filtros, sin imaginarlo</span><h2 id="t-galeria">Conócelo desde <em>otro ángulo.</em></h2></div>
-              <p>Fotografías y videos del terreno. Explora las tomas y mira cómo avanza La Campiña.</p>
+        {/* El proyecto: el plano interactivo con la ficha y el simulador de cada lote */}
+        <section id="proyecto" className="section" aria-labelledby="t-proyecto">
+          <div className="wrap">
+            <Stagger className="section__head">
+              <p className="eyebrow" data-part>Club de campo privado y ecológico</p>
+              <h2 id="t-proyecto" className="h2" data-part>La Campiña: <em>tu lugar en el campo</em></h2>
+              <p className="lead" data-part>
+                {r.total} lotes de {m2(M2_MIN)} a {m2(M2_MAX)} frente al {PROYECTO.valle}, al borde de la vía a San Nicolás y a {chiclayo.minutos} minutos de Chiclayo. Para que tu familia disfrute el fin de semana, compartir con amigos o invertir en tierra que puedes visitar.
+              </p>
+            </Stagger>
+
+            <section id="lotes" className="plan-block" aria-label="Plano de lotes y simulador de cuotas">
+              <p className="notice"><Icon name="info" size={17} /> Toca un lote del plano para ver su precio y simular tu cuota. {r.disponibles} lotes disponibles según la lista del {LISTA_FECHA}. El plano es un esquema de consulta, no un plano técnico ni catastral: confirma la ubicación, el perímetro y la disponibilidad con un asesor.</p>
+              <LazyLotStack />
+            </section>
+          </div>
+        </section>
+
+        {/* Lo que vas a disfrutar: fotos reales de lo construido y lo proyectado */}
+        <section id="areas" className="section section--tight" aria-labelledby="t-areas">
+          <div className="wrap">
+            <Reveal as="h2" id="t-areas" className="h3">Lo que vas a <em>disfrutar</em></Reveal>
+            <div className="photo-cards">
+              {DISFRUTAR.map((d) => (
+                <figure key={d.titulo} className="photo-card">
+                  <Image src={MEDIA[d.toma].color} alt={d.alt} fill sizes="(max-width: 899px) 90vw, 33vw" />
+                  <figcaption><strong>{d.titulo}</strong><span>{d.estado}</span></figcaption>
+                </figure>
+              ))}
             </div>
-            <HeroCarousel />
-          </div>
-        </section>
-
-        <section className="editorial-section amenities-section" id="areas" aria-labelledby="t-areas">
-          <div className="site-container">
-            <div className="editorial-heading editorial-heading--center"><span className="overline">Espacio para disfrutar</span><h2 id="t-areas">Tus fines de semana,<br /><em>con más posibilidades.</em></h2><p>Áreas comunes y servicios pensados para la vida de campo.<br />Diferenciamos lo registrado en obra de lo proyectado para la entrega.</p></div>
-            <div className="amenity-list">
-              {AREAS.map((a, i) => <article className="amenity-item" key={a.nombre}><span className="amenity-item__icon"><Icon name={a.icon} size={26} /></span><span className="amenity-item__number">0{i + 1}</span><h3>{a.nombre}</h3><p>{a.detalle}</p><span className={`amenity-item__status ${i < 2 ? "amenity-item__status--built" : ""}`}><i />{a.estado}</span></article>)}
+            <div className="planned">
+              <p>Proyectado para {PROYECTO.entrega}:</p>
+              <ul className="chips chips--left">
+                {PROYECTADAS.map((p) => <li key={p}>{p}</li>)}
+              </ul>
             </div>
-            <p className="section-disclaimer">Equipamiento proyectado para {PROYECTO.entrega}. Consulta los alcances y condiciones del proyecto con el equipo comercial.</p>
           </div>
         </section>
 
-        <section className="lot-section" id="lotes" aria-labelledby="t-lotes">
-          <div className="site-container">
-            <div className="editorial-heading editorial-heading--split editorial-heading--light">
-              <div><span className="overline overline--light">Elige tu espacio</span><h2 id="t-lotes">Un lote que encaje<br /><em>con tus planes.</em></h2></div>
-              <div><p>Explora las manzanas, compara precios y simula tus cuotas. Selecciona un lote para conocer sus detalles.</p><span className="data-note"><Icon name="calendario" size={15} /> Lista de referencia: {LISTA_FECHA}</span></div>
+        {/* Galería y video de la obra */}
+        <section id="avance" className="section" aria-labelledby="t-avance">
+          <div className="wrap">
+            <Stagger className="section__head">
+              <p className="eyebrow" data-part>Obra a la vista</p>
+              <h2 id="t-avance" className="h2" data-part>Así avanza <em>La Campiña</em></h2>
+              <p className="lead" data-part>Vuelos de drone y fotos fechadas del propio terreno, para que lo conozcas antes de tu visita.</p>
+            </Stagger>
+          </div>
+          <div className="wrap wrap--wide">
+            <ObraBand tomas={VUELOS} />
+          </div>
+          <div className="wrap">
+            <ol className="timeline" aria-label="Bitácora de obra">
+              {AVANCE.map((h) => <li key={h.toma}><span>{h.fecha ?? "Inicio de obra"}</span><strong>{h.titulo}</strong></li>)}
+              <li className="is-next"><span>{PROYECTO.entrega}</span><strong>Entrega programada</strong></li>
+            </ol>
+            <div className="actions actions--center">
+              <a className="btn btn--ghost" href="#formulario"><Icon name="drone" size={18} /> ¿Estás lejos? Pide una videollamada</a>
             </div>
-            <div className="lot-notice"><Icon name="info" size={17} /><p>El plano es un <strong>esquema de consulta, no un plano técnico ni catastral</strong>. La ubicación exacta, el perímetro y la disponibilidad deben confirmarse con el plano oficial y un asesor.</p></div>
-            <LotStack />
           </div>
         </section>
 
-        <section className="editorial-section" id="avance" aria-labelledby="t-avance">
-          <div className="site-container">
-            <div className="editorial-heading editorial-heading--split"><div><span className="overline">Un proyecto que puedes ver</span><h2 id="t-avance">Así vamos <em>avanzando.</em></h2></div><p>Una bitácora de fotografías y vuelos de drone. Revisa cada registro y su fecha, desde el inicio de obra.</p></div>
-            <Schedule />
-          </div>
-        </section>
-
-        <section className="finance-section" id="pagar" aria-labelledby="t-pagar">
-          <div className="site-container">
-            <div className="finance-intro">
-              <div><span className="overline">Haz espacio para tus planes</span><h2 id="t-pagar">Tu lote, a tu ritmo.<br /><em>Sin intereses.</em></h2><p>Compara el pago al contado con el financiamiento directo. En cada ficha puedes ajustar la inicial y simular tu cuota mensual.</p><a href="#lotes" className="text-link">Ir al simulador de lotes <Icon name="der" size={18} /></a></div>
-              <div className="finance-highlight"><span>Financiamiento de referencia · Lote {DESDE.id}</span><strong>{soles(precio.cuota)} <small>/ mes</small></strong><div><span>Inicial desde<b>{soles0(precio.inicial)}</b></span><span>Plazo de referencia<b>{CUOTAS} meses</b></span><span>Interés<b>0%</b></span></div><p>Precio financiado: {soles0(precio.financiado)}. Según lista del {LISTA_FECHA}; sujeto a confirmación.</p></div>
+        {/* Por qué: lo necesario para decidir */}
+        <section id="por-que" className="section section--band" aria-labelledby="t-por-que">
+          <div className="wrap why">
+            <div>
+              <Stagger className="section__head section__head--left">
+                <p className="eyebrow" data-part>Por qué La Campiña</p>
+                <h2 id="t-por-que" className="h2" data-part>Todo lo que necesitas para <em>decidir tranquilo</em></h2>
+              </Stagger>
+              <DecisionTabs pestanas={PESTANAS} />
             </div>
-            <div className="purchase-steps">
-              <div><span>01</span><h3>Encuentra tu lote</h3><p>Compara áreas, manzanas y precios en el explorador.</p></div>
-              <div><span>02</span><h3>Elige cómo pagarlo</h3><p>Simula tu inicial y plazo, o consulta las opciones al contado.</p></div>
-              <div><span>03</span><h3>Coordina con un asesor</h3><p>Confirma la disponibilidad, los documentos y tu visita.</p></div>
+            <dl className="stat-cards">
+              <div><dt>lotes desde</dt><dd>{M2_MIN}<small> m²</small></dd></div>
+              <div><dt>de Chiclayo</dt><dd>{chiclayo.minutos}<small> min</small></dd></div>
+              <div><dt>para pagar sin intereses</dt><dd>{CUOTAS}<small> meses</small></dd></div>
+              <div><dt>lotes disponibles en la lista</dt><dd>{r.disponibles}</dd></div>
+            </dl>
+          </div>
+        </section>
+
+        {/* Preguntas frecuentes */}
+        <section id="preguntas" className="section" aria-labelledby="t-preguntas">
+          <div className="wrap faq">
+            <Stagger className="section__head section__head--left">
+              <p className="eyebrow" data-part>Preguntas frecuentes</p>
+              <h2 id="t-preguntas" className="h2" data-part>Lo que más <em>nos preguntan</em></h2>
+            </Stagger>
+            <div className="faq__list">
+              {PREGUNTAS.map(([q, a]) => (
+                <details key={q}>
+                  <summary>{q}</summary>
+                  <p>{a}</p>
+                </details>
+              ))}
             </div>
-            <details className="price-comparison"><summary><span><Icon name="calculator" size={20} /> Compara cinco opciones de la lista de precios</span><Icon name="mas" size={20} /></summary><div className="plan-wrap"><table className="plan"><caption>Lista de referencia del {LISTA_FECHA}. No es inventario en tiempo real.</caption><thead><tr><th scope="col">Lote</th><th scope="col">Área</th><th scope="col">Financiado</th><th scope="col">Inicial</th><th scope="col">{CUOTAS} cuotas</th><th scope="col">Contado / promo</th><th scope="col">Detalle</th></tr></thead><tbody>{EJEMPLOS.map((l) => <tr key={l.id}><th scope="row">{l.id}</th><td>{m2(l.m2)}</td><td>{soles0(l.precio!.financiado)}</td><td>{soles0(l.precio!.inicial)}</td><td>{soles(l.precio!.cuota)}</td><td>{soles0(l.precio!.promoContado ?? l.precio!.contado)}</td><td><a className="text-link" href={`/lote/${l.id}`} aria-label={`Ver ficha del lote ${l.id}`}>Ver ficha <Icon name="der" size={15} /></a></td></tr>)}</tbody></table></div></details>
           </div>
         </section>
 
-        <section className="editorial-section" id="ubicacion" aria-labelledby="t-ubicacion">
-          <div className="site-container location-grid">
-            <div className="location-grid__copy"><span className="overline">Naturaleza e historia</span><h2 id="t-ubicacion">Tu punto de encuentro<br /><em>en el Valle de Zaña.</em></h2><p>{PROYECTO.ubicacion.frase}. Un lugar para descubrir el entorno y disfrutar de la vida de campo en Lambayeque.</p><div className="travel-times">{PROYECTO.ubicacion.tramos.map((t) => <div key={t.lugar}><strong>{t.minutos}<small> min</small></strong><span>{t.lugar}</span></div>)}</div><p className="section-disclaimer">Tiempos aproximados indicados en el proyecto original; varían según ruta, origen y tránsito.</p>{PROYECTO.ubicacion.mapsUrl ? <a className="btn btn--forest" href={PROYECTO.ubicacion.mapsUrl} target="_blank" rel="noopener noreferrer"><Icon name="pin" size={18} /> Ver ubicación en Google Maps</a> : <a className="btn btn--forest" href="#contacto"><Icon name="pin" size={18} /> Solicita la ubicación y una visita</a>}</div>
-            <div className="location-grid__visual"><Photo toma="portico" sello="Ingreso del proyecto · abril 2026" alt="Acceso real de La Campiña junto a la vía a San Nicolás, con las montañas del Valle de Zaña al fondo" aspect="4 / 3" /><span className="location-grid__caption"><Icon name="pin" size={17} /> La Campiña · Lambayeque, Perú</span></div>
-          </div>
-        </section>
-
-        <section className="contact-section" id="contacto" aria-labelledby="t-contacto">
-          <div className="site-container contact-section__grid">
-            <div className="contact-section__copy"><span className="overline overline--light">El siguiente paso es conocernos</span><h2 id="t-contacto">Tus planes merecen<br /><em>un lugar propio.</em></h2><p>Déjanos tus datos para solicitar la ficha del proyecto, resolver tus dudas o coordinar una visita al terreno.</p><div className="contact-promises"><span><Icon name="plano" size={20} /> Plano y opciones de lotes</span><span><Icon name="calculator" size={20} /> Orientación sobre formas de pago</span><span><Icon name="calendario" size={20} /> Coordinación de visita o videollamada</span></div>{PROYECTO.contacto.whatsapp ? <ContactCta mensaje="Hola, quiero conocer el Club Privado La Campiña y coordinar una visita." className="btn btn--primary">Hablar por WhatsApp</ContactCta> : null}{PROYECTO.contacto.telefono ? <a className="contact-phone" href={`tel:${PROYECTO.contacto.telefono}`}><Icon name="fono" size={18} /> {PROYECTO.contacto.telefono}</a> : null}<span className="contact-signature">La Campiña <span>/</span> Rosso Inmobiliaria</span></div>
-            <div className="contact-section__form"><span className="overline">Hablemos de tu próximo lote</span><h3>Cuéntanos qué estás buscando.</h3><ContactForm idPrefix="contacto" /></div>
+        {/* Contacto: canales; todos llevan al formulario de la portada */}
+        <section id="contacto" className="section section--contact" aria-labelledby="t-contacto">
+          <div className="wrap">
+            <Stagger className="section__head section__head--center">
+              <h2 id="t-contacto" className="h2" data-part>Da el <em>primer paso</em> hoy</h2>
+              <p className="lead" data-part>Un asesor de {PROYECTO.empresa} te envía el plano, tu plan de cuotas y los horarios de visita. Sin compromiso.</p>
+            </Stagger>
+            <div className="channels">
+              <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="calendario" size={20} /></span><span className="channel__text"><strong>Agenda tu visita</strong><small>Visitas guiadas los fines de semana</small></span></a>
+              <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="drone" size={20} /></span><span className="channel__text"><strong>¿Estás lejos?</strong><small>Pide una videollamada desde tu ciudad</small></span></a>
+              {maps ? (
+                <a className="channel" href={maps} target="_blank" rel="noopener noreferrer"><span className="channel__icon"><Icon name="pin" size={20} /></span><span className="channel__text"><strong>Ubicación</strong><small>Vía a San Nicolás, {PROYECTO.valle}</small></span></a>
+              ) : (
+                <div className="channel"><span className="channel__icon"><Icon name="pin" size={20} /></span><span className="channel__text"><strong>Ubicación</strong><small>Vía a San Nicolás, {PROYECTO.valle}, Lambayeque</small></span></div>
+              )}
+              {telefono ? <a className="channel" href={`tel:${telefono}`}><span className="channel__icon"><Icon name="fono" size={20} /></span><span className="channel__text"><strong>Llámanos</strong><small>{telefono}</small></span></a> : null}
+            </div>
           </div>
         </section>
       </main>
 
-      <footer className="site-footer"><div className="site-container"><div className="site-footer__top"><a className="estate-brand estate-brand--footer" href="#inicio"><span className="estate-brand__name">La Campiña<span>·</span></span><span className="estate-brand__sub">Valle de Zaña · Rosso Inmobiliaria</span></a><nav aria-label="Enlaces del pie"><a href="#proyecto">El proyecto</a><a href="#lotes">Lotes</a><a href="#avance">Avances</a><a href="#contacto">Contacto</a><a href="/privacidad">Privacidad</a></nav></div><div className="site-footer__bottom"><p>© 2026 Rosso Inmobiliaria · Club Privado La Campiña.</p><PaletaSwitch /></div><p className="site-footer__legal">Fotografías y videos reales del material incluido en el proyecto. Precios, áreas y estados de los {r.total} lotes según lista del {LISTA_FECHA}, sujetos a confirmación comercial. El esquema interactivo no sustituye al plano oficial. Consulta los alcances de las áreas comunes, documentación y entrega antes de contratar.</p></div></footer>
-      <nav className="mobile-actions" aria-label="Acciones rápidas"><a href="#lotes" data-track="mobile-lots"><Icon name="plano" size={19} /> Ver lotes</a><a className="btn btn--primary" data-track="mobile-contact" href="#contacto">Solicitar información <Icon name="der" size={17} /></a></nav>
-      <NavCurrent ids={SECCIONES} />
-    </div>
+      <footer className="site-footer">
+        <div className="wrap site-footer__grid">
+          <div className="site-footer__brand">
+            <p className="brand" translate="no">La Campiña<span>Valle de Zaña · {PROYECTO.empresa}</span></p>
+            <p>Lotes campestres con {PROYECTO.titulo.toLowerCase()} y financiamiento directo, a {chiclayo.minutos} minutos de Chiclayo.</p>
+            <span className="badge badge--lime">Desde {soles(desde.cuota)} al mes</span>
+          </div>
+          <nav aria-label="Explora">
+            <p className="site-footer__label">Explora</p>
+            <ul><li><a href="#proyecto">El proyecto</a></li><li><a href="#lotes">Lotes y precios</a></li><li><a href="#avance">Avance de obra</a></li><li><a href="#preguntas">Preguntas</a></li></ul>
+          </nav>
+          <nav aria-label="La Campiña">
+            <p className="site-footer__label">La Campiña</p>
+            <ul><li><a href="#por-que">Financiamiento</a></li><li><a href="#formulario">Pide el plano</a></li><li><a href="#formulario">Videollamada</a></li><li><a href="#por-que">Documentación</a></li></ul>
+          </nav>
+          <div>
+            <p className="site-footer__label">Contacto</p>
+            <ul>
+              <li><a href="#formulario"><Icon name="calendario" size={16} /> Agenda tu visita</a></li>
+              <li><span><Icon name="pin" size={16} /> Vía a San Nicolás, {PROYECTO.valle}, Lambayeque</span></li>
+              {telefono ? <li><a href={`tel:${telefono}`}><Icon name="fono" size={16} /> {telefono}</a></li> : null}
+            </ul>
+          </div>
+        </div>
+        <div className="wrap site-footer__legal">
+          <p>© 2026 {PROYECTO.empresa}. Fotografías y videos del propio proyecto. Precios, áreas y estados de los {r.total} lotes según la lista del {LISTA_FECHA}, sujetos a confirmación comercial. El plano interactivo es un esquema y no sustituye al plano oficial.</p>
+          <div className="site-footer__links"><a href="/privacidad">Privacidad</a><MotionToggle /><a href="#inicio">Volver arriba</a></div>
+        </div>
+      </footer>
+
+      <AsesorFlotante />
+    </>
   );
 }

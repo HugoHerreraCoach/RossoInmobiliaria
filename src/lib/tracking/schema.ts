@@ -13,6 +13,7 @@ export const SOURCES: Record<string, string> = {
   "hero-form": "Formulario de portada", "contacto-form": "Formulario de contacto", "contact-whatsapp": "Contacto · WhatsApp",
   "lot-whatsapp": "Ficha de lote · WhatsApp", "lot-contact": "Ficha de lote · consultar", "mobile-contact": "Barra móvil · contacto",
   "mobile-lots": "Barra móvil · lotes", "navigation": "Navegación", "other-whatsapp": "Otro enlace de WhatsApp",
+  "float-contact": "Botón flotante · asesor",
 };
 export type Consent = { analytics: boolean; marketing: boolean; version: "2026-10-13" };
 export type Touch = { source: string; medium?: string; campaign?: string; content?: string; term?: string; campaign_id?: string; adset_id?: string; ad_id?: string; referrer?: string; landing?: string };
