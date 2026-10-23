@@ -63,7 +63,8 @@ Diferenciales confirmados:
 
 **Pendientes:**
 
-- Números de WhatsApp y de teléfono; CRM de destino del formulario; mecanismo para agendar visitas.
+- WhatsApp de asesores: **941 377 136** (+51), confirmado el 2026-10-23 (`docs/0015`). Falta el teléfono
+  para llamadas, el CRM de destino del formulario y el mecanismo para agendar visitas.
 - Enlace exacto de Google Maps (el documento de textos comerciales lo trae cortado).
 - Porcentaje de avance de obra y datos legales (partida registral, habilitación urbana).
 

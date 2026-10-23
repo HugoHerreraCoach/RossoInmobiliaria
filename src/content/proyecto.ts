@@ -2,6 +2,9 @@
 // lista de precios). Lo marcado PENDIENTE no se inventa: mientras sea null, la web
 // lleva todo contacto al formulario y no muestra números.
 
+/** Número de WhatsApp de Rosso para La Campiña (Perú, +51). */
+export const WHATSAPP_ROSSO = "51941377136";
+
 export const PROYECTO = {
   nombre: "La Campiña",
   empresa: "Rosso Inmobiliaria",
@@ -19,8 +22,9 @@ export const PROYECTO = {
     mapsUrl: (process.env.NEXT_PUBLIC_MAPS_URL?.trim() || null) as string | null,
   },
   contacto: {
-    /** PENDIENTE: número de WhatsApp de asesores, formato internacional sin "+" (ej. 51987654321). */
-    whatsapp: (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/\D/g, "") || null) as string | null,
+    /** WhatsApp de asesores que recibe los mensajes (941 377 136, docs/0015), formato internacional sin "+".
+     *  Un NEXT_PUBLIC_WHATSAPP_NUMBER con valor lo reemplaza al compilar. */
+    whatsapp: ((process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() || WHATSAPP_ROSSO).replace(/\D/g, "") || null) as string | null,
     /** PENDIENTE: teléfono para llamadas, formato internacional (ej. +51987654321). */
     telefono: (process.env.NEXT_PUBLIC_CONTACT_PHONE?.trim() || null) as string | null,
   },
