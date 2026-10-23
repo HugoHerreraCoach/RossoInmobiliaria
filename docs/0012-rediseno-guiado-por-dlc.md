@@ -1,7 +1,8 @@
 # 0012 · Rediseño guiado por la landing de Grupo DLC
 
 - **Fecha:** 2026-10-23
-- **Rama:** `rediseno-inmersivo` (sin commit ni push; `main` intacto).
+- **Rama:** `jheferson`, subido el 2026-10-23 a `origin/jheferson` en el commit `c316261`; el trabajo de píxeles
+  de la otra sesión va en `23e2395`. `main` intacto.
 - **Reemplaza a:** la dirección visual de `0011-rediseno-inmersivo.md`. De 0011 se conservan las
   piezas técnicas (motor de movimiento, plano diferido, banda de drone, pruebas actualizadas).
 - **Pedido:** "Cuando te pasé el link de la página no fuera para que lo hagas igual, en todo caso si
@@ -84,7 +85,7 @@ El único error de consola es el 503 de `/api/tracking/*` en local: `.env.local`
 
 ## Pendientes
 
-- Revisión del dueño, commit y despliegue (no se hacen desde este entorno).
+- Revisión del dueño, unión a `main` y despliegue (no se hacen desde este entorno).
 - Si Rosso tiene testimonios reales o la foto de un asesor, se pueden sumar como en la referencia.
 - Número de WhatsApp, teléfono y enlace de Maps siguen pendientes del cliente: hoy los botones
   llevan al formulario.

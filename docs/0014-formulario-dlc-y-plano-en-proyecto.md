@@ -1,7 +1,8 @@
 # 0014 · Formulario como DLC, plano en "El proyecto" y ficha del lote interactiva
 
 - **Fecha:** 2026-10-23
-- **Rama:** `rediseno-inmersivo` (sin commit ni push; `main` intacto).
+- **Rama:** `jheferson`, subido el 2026-10-23 a `origin/jheferson` en el commit `c316261`; el trabajo de píxeles
+  de la otra sesión va en `23e2395`. `main` intacto.
 - **Sigue a:** `0012-rediseno-guiado-por-dlc.md`. El número 0013 lo usa otra sesión que trabaja en paralelo
   (píxeles y hoja de leads); este cambio no toca sus archivos.
 - **Pedido del usuario (resumen):**
@@ -147,8 +148,9 @@ con la ficha, botones de la ficha, contacto y página del lote.
 
 - **Trabajo en paralelo:** otra sesión agregó en el mismo árbol los píxeles y la hoja de leads (doc 0013).
   Desde el formulario manda `inicial: busca` al evento de registro, así que la respuesta a la pregunta de
-  inicial también llega a los píxeles. Ninguna de las dos sesiones hizo commit.
-- **Revisión del dueño, commit y despliegue:** no se hacen desde este entorno.
+  inicial también llega a los píxeles. Los dos trabajos se subieron juntos a `jheferson` en commits separados.
+- **Revisión del dueño, unión a `main` y despliegue:** no se hacen desde este entorno. GitHub ofrece abrir la
+  solicitud de unión en `https://github.com/HugoHerreraCoach/RossoInmobiliaria/pull/new/jheferson`.
 - **Consentimiento:** sin casilla, la autorización es el envío con el aviso visible junto al botón (como en
   DLC). Conviene que el dueño confirme con su asesoría legal que eso cumple la Ley 29733 para su caso; si
   no, se vuelve a poner la casilla.

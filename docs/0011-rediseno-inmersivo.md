@@ -3,7 +3,8 @@
 > **Reemplazado por `0012-rediseno-guiado-por-dlc.md`** en cuanto a dirección visual. Se conservan las piezas técnicas descritas aquí.
 
 - **Fecha:** 2026-10-23
-- **Rama:** `rediseno-inmersivo` (creada desde `main`; sin commits todavía, `main` intacto).
+- **Rama:** trabajado en `rediseno-inmersivo` (desde `main`); subido el
+  2026-10-23 a `origin/jheferson` en el commit `c316261`. `main` intacto.
 - **Pedido:** "reestructura todo este proyecto de Rosso usando el catálogo de skills y herramientas
   […] si es necesario que reconstruyas todo, hazlo".
 - **Método:** skill `web-inmersiva` (flujo de 6 pasos) + `design-taste-frontend` (dirección y gate),
@@ -116,8 +117,8 @@ corridas de Lighthouse de escritorio de la comparación tampoco llegaron a corre
 
 ## Pendientes
 
-- **Revisión del dueño y commit:** el trabajo está en la rama `rediseno-inmersivo`, sin commit ni
-  push. No se despliega desde este entorno.
+- **Revisión del dueño:** el trabajo está en la rama `jheferson` (commit `c316261`). No se une a `main`
+  ni se despliega desde este entorno.
 - **Seguridad de Next:** la compilación avisa que Next 16.4.0 tiene una vulnerabilidad conocida.
   La versión actual es 16.4.3. Se propone actualizar en una tarea aparte.
 - **Prueba existente que ya fallaba:** "Global Privacy Control forces marketing off" falla igual
