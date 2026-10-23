@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { DESDE_CONTADO, DISPONIBLES, loteById, m2, soles } from "@/content/lotes";
 import { PROYECTO } from "@/content/proyecto";
 import { Icon } from "./Icon";
-import { track, trackingContext, pixelEvent } from "@/lib/tracking/client";
+import { track, trackingContext, registrationEvent } from "@/lib/tracking/client";
 
 type Estado = { t: "idle" | "enviando" | "ok" } | { t: "error"; msg: string } | { t: "sin-destino" };
 
@@ -78,7 +78,7 @@ export function ContactForm({ idPrefix = "f" }: { idPrefix?: string }) {
       const response = await fetch("/api/lead", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...datos, website: data.get("website") || "", source, submission_id: submission.current.id, tracking: trackingContext() }), signal: controller.signal });
       const json = await response.json().catch(() => ({}));
       // Registro guardado (fila en la hoja): recién ahora va CompleteRegistration a Meta y TikTok, con el id del envío.
-      if (response.ok) { if (json.event_id) pixelEvent("form_submit", json.event_id, { source, lot: lote }); setEstado({ t: "ok" }); return; }
+      if (response.ok) { const registro = json.id || json.event_id; if (registro) registrationEvent(registro, { source, lot: lote, inicial: busca }); setEstado({ t: "ok" }); return; }
       if (response.status === 422 && json.errores && Object.keys(json.errores).length) { mostrarErrores(json.errores); return; }
       if (json.error === "sin-destino") { track("form_error", { source, error: "unconfigured" }); setEstado({ t: "sin-destino" }); return; }
       track("form_error", { source, error: "crm" });

@@ -1,19 +1,21 @@
 import { createHash } from "node:crypto";
+import { metaPixelId, tiktokPixelId } from "@/lib/tracking/pixels";
 import { Delivery } from "@/lib/tracking/schema";
+import { sheetConfig } from "./sheets";
 import { db } from "./store";
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 export function providerConfig() {
   return {
-    meta: { pixel: !!process.env.NEXT_PUBLIC_META_PIXEL_ID, server: !!(process.env.NEXT_PUBLIC_META_PIXEL_ID && process.env.META_CAPI_ACCESS_TOKEN && /^v\d+\.\d+$/.test(process.env.META_GRAPH_VERSION || "")) },
-    tiktok: { pixel: !!process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID, server: !!(process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID && process.env.TIKTOK_EVENTS_ACCESS_TOKEN) },
-    sender: process.env.CONVERSION_SENDER || "landing", crm: !!(process.env.CONEXIGO_EMPRESA_ID && process.env.CONEXIGO_WEBHOOK_SECRET), form: !!process.env.LEAD_WEBHOOK_URL,
+    meta: { pixel: !!metaPixelId(), server: !!(metaPixelId() && process.env.META_CAPI_ACCESS_TOKEN && /^v\d+\.\d+$/.test(process.env.META_GRAPH_VERSION || "")) },
+    tiktok: { pixel: !!tiktokPixelId(), server: !!(tiktokPixelId() && process.env.TIKTOK_EVENTS_ACCESS_TOKEN) },
+    sender: process.env.CONVERSION_SENDER || "landing", crm: !!(process.env.CONEXIGO_EMPRESA_ID && process.env.CONEXIGO_WEBHOOK_SECRET), form: !!(process.env.LEAD_WEBHOOK_URL || sheetConfig()),
   };
 }
 export function payloadFor(job: Delivery) {
   const { event: e, matching: m } = job; const source = new URL(e.path, process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").toString();
   const external = e.visitor_id ? sha(e.visitor_id) : undefined;
   if (job.provider === "meta") {
-    const id = process.env.NEXT_PUBLIC_META_PIXEL_ID || ""; const version = process.env.META_GRAPH_VERSION || "";
+    const id = metaPixelId(); const version = process.env.META_GRAPH_VERSION || "";
     if (!/^\d+$/.test(id) || !/^v\d+\.\d+$/.test(version) || !process.env.META_CAPI_ACCESS_TOKEN) return null;
     return { url: `https://graph.facebook.com/${version}/${id}/events`, headers: { authorization: `Bearer ${process.env.META_CAPI_ACCESS_TOKEN}` }, body: {
       data: [{ event_name: "Lead", event_id: e.id, event_time: Math.floor(Date.parse(e.at) / 1000), action_source: "chat", event_source_url: source,
@@ -22,7 +24,7 @@ export function payloadFor(job: Delivery) {
       ...(process.env.META_TEST_EVENT_CODE ? { test_event_code: process.env.META_TEST_EVENT_CODE } : {}),
     } };
   }
-  const id = process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || ""; if (!/^[A-Za-z0-9]{5,40}$/.test(id) || !process.env.TIKTOK_EVENTS_ACCESS_TOKEN) return null;
+  const id = tiktokPixelId(); if (!/^[A-Za-z0-9]{5,40}$/.test(id) || !process.env.TIKTOK_EVENTS_ACCESS_TOKEN) return null;
   return { url: "https://business-api.tiktok.com/open_api/v1.3/event/track/", headers: { "Access-Token": process.env.TIKTOK_EVENTS_ACCESS_TOKEN }, body: {
     event_source: "web", event_source_id: id, data: [{ event: "Lead", event_id: e.id, event_time: Math.floor(Date.parse(e.at) / 1000),
       user: { ...(external ? { external_id: external } : {}), ...(job.phone_hash ? { phone: job.phone_hash } : {}), ...(m.ttclid ? { ttclid: m.ttclid } : {}), ...(m.ttp ? { ttp: m.ttp } : {}) },

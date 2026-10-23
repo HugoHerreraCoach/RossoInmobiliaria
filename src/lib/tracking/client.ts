@@ -1,5 +1,6 @@
 "use client";
-import { Attribution, ClientContext, Consent, EventName, Matching, Props, PublicEventName, normalizeAttribution, normalizeMatching, safePath } from "./schema";
+import { Attribution, ClientContext, Consent, EventName, Matching, Props, PublicEventName, SOURCES, normalizeAttribution, normalizeMatching, safePath } from "./schema";
+import { REGISTRATION_EVENT, metaPixelId, tiktokPixelId } from "./pixels";
 type StoredConsent = Consent & { at: number };
 type Fbq = ((...args: unknown[]) => void) & { callMethod?: (...args: unknown[]) => void; queue: unknown[][]; push?: Fbq; loaded?: boolean; version?: string };
 type Ttq = unknown[] & Record<string, unknown> & { page: (...args: unknown[]) => void; track: (...args: unknown[]) => void; revokeConsent: () => void; grantConsent: () => void };
@@ -107,17 +108,28 @@ export function pixelEvent(name: EventName, id: string, p: Props={}) {
   if (!active || !consent?.marketing || name==="lead_confirmed") return; // Lead is server-only.
   if(name==="page_view") { window.fbq?.("track","PageView",{}, {eventID:id}); window.ttq?.page?.(); }
   if(name==="lot_view") { const props={content_ids:[p.lot],content_type:"product",content_name:`Lote ${p.lot}`};window.fbq?.("track","ViewContent",props,{eventID:id});window.ttq?.track?.("ViewContent",{contents:[{content_id:p.lot,content_type:"product"}]},{event_id:id}); }
-  // Intentions are CUSTOM events, never Lead / SubmitForm / Schedule.
-  if(name==="whatsapp_click" || name==="form_submit") { const label=name==="whatsapp_click"?"WhatsAppClick":"FormSubmitted";window.fbq?.("trackCustom",label,{source:p.source||"",lot:p.lot||""},{eventID:id}); window.ttq?.track?.(label,{source:p.source||""},{event_id:id}); }
+  if(name==="form_submit") registrationEvent(id,{source:p.source,lot:p.lot});
+  // A WhatsApp click is an intention: CUSTOM event, never Lead / SubmitForm / Schedule.
+  if(name==="whatsapp_click") { window.fbq?.("trackCustom","WhatsAppClick",{source:p.source||"",lot:p.lot||""},{eventID:id}); window.ttq?.track?.("WhatsAppClick",{source:p.source||""},{event_id:id}); }
+}
+/** Registration saved (docs/0013): CompleteRegistration to Meta and TikTok at the same moment with the same event ID
+ *  (the submission ID, also written to the sheet). Call ONLY after /api/lead confirms. No name or phone. */
+export function registrationEvent(id: string, p: { source?: string; lot?: string; inicial?: string } = {}) {
+  if (!active || !consent?.marketing) return;
+  const content={content_name:"La Campiña",content_category:"Lotes campestres"}, origin=SOURCES[p.source||""]||p.source||"";
+  try {
+    window.fbq?.("track",REGISTRATION_EVENT,{...content,origen:p.source||"",rastro:origin,lote:p.lot||"",inicial:p.inicial||""},{eventID:id});
+    window.ttq?.track?.(REGISTRATION_EVENT,{...content,description:origin},{event_id:id});
+  } catch { /* measurement must never break the form */ }
 }
 function loadPixels() {
-  const meta=process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
+  const meta=metaPixelId();
   if(meta && /^\d+$/.test(meta) && !document.getElementById("rosso-meta-pixel")) {
     const f=((...args:unknown[])=>{ if(f.callMethod)f.callMethod(...args);else f.queue.push(args);}) as Fbq; f.queue=[];f.push=f;f.loaded=true;f.version="2.0";window.fbq=f;window._fbq=f;
     f("consent","grant");f("set","autoConfig",false,meta);f("init",meta);
     const script=document.createElement("script");script.id="rosso-meta-pixel";script.async=true;script.src="https://connect.facebook.net/en_US/fbevents.js";document.head.append(script);
   } else if(meta) window.fbq?.("consent","grant");
-  const tiktok=process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID?.trim();
+  const tiktok=tiktokPixelId();
   if(tiktok && /^[A-Za-z0-9]{5,40}$/.test(tiktok) && !document.getElementById("rosso-tiktok-pixel")) {
     const t=[] as unknown as Ttq; window.TiktokAnalyticsObject="ttq";window.ttq=t;
     const methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"];
