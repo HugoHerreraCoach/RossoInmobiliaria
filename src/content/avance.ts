@@ -1,9 +1,10 @@
 import media from "./media.json";
+import imagenes from "./imagenes.json";
 
 // Avance de obra con la fecha real de cada toma (metadato creation_time del video
 // o fecha del archivo). Solo se describe lo que se ve en la imagen.
 
-export type Toma = keyof typeof media;
+export type Toma = keyof typeof MEDIA;
 
 export type Hito = {
   toma: Toma;
@@ -60,7 +61,9 @@ export const AVANCE: Hito[] = [
   },
 ];
 
-export const MEDIA = media;
+/** Tomas de obra (media.json, scripts/build-assets.mjs) e imágenes referenciales: renders y dron retocado con IA
+ *  (imagenes.json, scripts/build-imagenes.mjs, docs/0024). Estas nunca se rotulan como foto real ni llevan fecha. */
+export const MEDIA = { ...media, ...imagenes };
 
 /** Fin del cronograma: entrega comprometida del proyecto. */
 export const ENTREGA_ISO = "2027-07-31";

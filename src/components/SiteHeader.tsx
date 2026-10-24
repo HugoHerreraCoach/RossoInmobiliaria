@@ -2,11 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ScrollTrigger, useGSAP, useMotion } from "@/lib/motion";
+import { Icon } from "./Icon";
+import { WhatsAppCta } from "./WhatsAppCta";
 
 const MENU = [["proyecto", "El proyecto"], ["lotes", "Lotes"], ["avance", "Obra"], ["por-que", "Por qué"], ["preguntas", "Preguntas"]] as const;
 
-/** Barra flotante (como en la referencia de Grupo DLC): marca, cinco enlaces y la acción que lleva al
- *  formulario de la portada. Con movimiento se esconde al bajar y vuelve al subir, para no tapar
+const VISITA = "Hola, quiero agendar una visita a La Campiña.";
+
+/** Barra flotante (como en la referencia de Grupo DLC): marca, cinco enlaces y "Agenda tu visita", que
+ *  abre WhatsApp con el mensaje listo. Con movimiento se esconde al bajar y vuelve al subir, para no tapar
  *  contenido en el móvil. En el móvil el menú ocupa la pantalla; Escape lo cierra y devuelve el foco. */
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -70,20 +74,24 @@ export function SiteHeader() {
       <nav className="site-header__nav" aria-label="Navegación principal">
         {MENU.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
       </nav>
-      <a className="btn btn--lime btn--small site-header__cta" data-track="header-contact" href="#formulario">Agenda tu visita</a>
+      <WhatsAppCta mensaje={VISITA} className="btn btn--outline btn--small site-header__cta" track="header-contact" icon="calendario">
+        <span className="site-header__cta-long">Agenda tu visita</span>
+        <span className="site-header__cta-short">Agendar</span>
+      </WhatsAppCta>
       <button
         ref={button}
         type="button"
         className="site-header__menu"
         aria-expanded={open}
         aria-controls="menu-movil"
+        aria-label={open ? "Cerrar el menú" : "Abrir el menú"}
         onClick={() => setOpen(!open)}
       >
-        {open ? "Cerrar" : "Menú"}
+        <Icon name={open ? "close" : "menu"} size={26} />
       </button>
       <nav id="menu-movil" className="mobile-menu" hidden={!open} aria-label="Navegación móvil">
         {MENU.map(([id, label]) => <a key={id} href={`#${id}`} onClick={close}>{label}</a>)}
-        <a className="btn btn--lime" data-track="header-contact" href="#formulario" onClick={close}>Agenda tu visita</a>
+        <WhatsAppCta mensaje={VISITA} track="header-contact" icon="calendario" onClick={close}>Agenda tu visita</WhatsAppCta>
       </nav>
     </header>
   );

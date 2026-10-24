@@ -17,7 +17,9 @@ export function SmoothScroll() {
 
   useEffect(() => {
     if (!ok) return;
-    const lenis = new Lenis({ anchors: { offset: -72 }, stopInertiaOnNavigate: true });
+    // Los enlaces #… respetan el scroll-padding-top del html (alto de la cabecera): Lenis ya lo descuenta, así que no
+    // lleva desfase propio (con offset -72 los destinos quedaban 72 px más abajo; docs/0026).
+    const lenis = new Lenis({ anchors: true, stopInertiaOnNavigate: true });
     window.__lenis = lenis;
     lenis.on("scroll", ScrollTrigger.update);
     const tick = (time: number) => lenis.raf(time * 1000);

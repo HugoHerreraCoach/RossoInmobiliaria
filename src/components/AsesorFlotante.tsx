@@ -1,16 +1,21 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
-import { whatsappHref } from "@/content/proyecto";
+import { PROYECTO } from "@/content/proyecto";
+import { irAlFormulario } from "@/lib/formulario";
 import { Icon } from "./Icon";
 
 const KEY = "rosso.saludo.v1";
 
-/** Botón flotante de asesor: WhatsApp si hay número; si no, el formulario de la portada.
+/** Botón flotante de asesor: lleva al formulario de la portada, como «Consultar este lote» del plano (pedido del
+ *  cliente, docs/0026); el formulario pide el WhatsApp y el asesor responde por ahí. En escritorio es una
+ *  tarjeta "Asesor en línea · ¡Hablemos!" con el círculo de WhatsApp; en el móvil, solo el círculo.
+ *  La foto del asesor aparece cuando el cliente entregue una real (PROYECTO.contacto.asesorFoto).
  *  A los pocos segundos muestra un saludo que se puede cerrar y no vuelve en la misma sesión. */
 export function AsesorFlotante() {
   const [saludo, setSaludo] = useState(false);
-  const wa = whatsappHref("Hola, quiero información de los lotes de La Campiña.");
+  const foto = PROYECTO.contacto.asesorFoto;
 
   useEffect(() => {
     let visto = false;
@@ -38,15 +43,21 @@ export function AsesorFlotante() {
       <a
         className="asesor__btn"
         data-track="float-contact"
-        href={wa ?? "#formulario"}
-        {...(wa ? { target: "_blank", rel: "noopener" } : {})}
-        onClick={cerrar}
+        href="#formulario"
+        onClick={(e) => {
+          cerrar();
+          if (irAlFormulario()) e.preventDefault();
+        }}
       >
-        <span className="asesor__icon" aria-hidden="true"><Icon name="chat" size={22} /></span>
+        <span className="asesor__avatar" aria-hidden="true">
+          {foto ? <Image src={foto} alt="" width={48} height={48} /> : <Icon name="asesor" size={24} />}
+          <i />
+        </span>
         <span className="asesor__text">
-          <small><i aria-hidden="true" /> Asesor en línea</small>
+          <small>Asesor en línea</small>
           <strong>¡Hablemos!</strong>
         </span>
+        <span className="asesor__wa" aria-hidden="true"><Icon name="whatsapp" size={26} /></span>
       </a>
     </div>
   );

@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { landingPorSource, validarRespuestas } from "@/content/landings";
 import { loteById } from "@/content/lotes";
 import { SOURCES, UUID, normalizeContext } from "@/lib/tracking/schema";
 import { createIntent } from "@/server/intents";
-import { appendRow, leadRow, sheetConfig, sheetSource } from "@/server/sheets";
+import { appendRow, landingRow, leadRow, sheetConfig, sheetSource } from "@/server/sheets";
 import { db, rateLimit } from "@/server/store";
 import { failure, hash, HttpError, json, readJson, requireOrigin } from "@/server/security";
 export const runtime="nodejs";
@@ -12,13 +13,16 @@ export async function POST(req:Request){
   let claim:{state:string;lease?:string;result?:unknown}|null=null;let submission="";
   try{
     requireOrigin(req);const b=await readJson(req);if(b.website)throw new HttpError(400,"Solicitud inválida.");
-    const lead={nombre:clean(b.nombre),celular:clean(b.celular,20).replace(/[^\d+]/g,""),ciudad:clean(b.ciudad,40),busca:clean(b.busca,40),lote:clean(b.lote,8).toUpperCase(),visita:b.visita===true,dia:clean(b.dia,40),consentimiento:b.consentimiento===true};
-    const errors:Record<string,string>={};if(lead.nombre.length<2)errors.nombre="Escribe tu nombre.";if(!/^\+?\d{9,15}$/.test(lead.celular))errors.celular="Revisa tu número de celular.";if(!lead.consentimiento)errors.consentimiento="Autoriza el contacto para poder enviar tu solicitud.";if(lead.lote&&!loteById(lead.lote))errors.lote="Revisa el código del lote.";
+    // Landing del envío (docs/0017): Lambayeque ("/") conserva el contrato de siempre (`busca`); /promocion manda
+    // sus respuestas en `respuestas`, que solo valen si son opciones de sus preguntas.
+    const landing=landingPorSource(b.source),elegidas=landing.id==="lambayeque"?null:validarRespuestas(landing,b.respuestas);
+    const lead={nombre:clean(b.nombre),celular:clean(b.celular,20).replace(/[^\d+]/g,""),ciudad:clean(b.ciudad,40),busca:clean(b.busca,40),lote:clean(b.lote,8).toUpperCase(),visita:b.visita===true,dia:clean(b.dia,40),consentimiento:b.consentimiento===true,...(elegidas?{landing:landing.id,respuestas:elegidas.respuestas}:{})};
+    const errors:Record<string,string>={};if(lead.nombre.length<2)errors.nombre="Escribe tu nombre.";if(!/^\+?\d{9,15}$/.test(lead.celular))errors.celular="Revisa tu número de celular.";if(!lead.consentimiento)errors.consentimiento="Autoriza el contacto para poder enviar tu solicitud.";if(lead.lote&&!loteById(lead.lote))errors.lote="Revisa el código del lote.";if(elegidas)Object.assign(errors,elegidas.errores);
     if(Object.keys(errors).length)return json({error:"validacion",errores:errors},422);
     // Destinos: el CRM (LEAD_WEBHOOK_URL) y/o la hoja de leads (docs/0013). Sin ninguno no se confirma nada.
     // Último contacto de marketing de la visita: de ahí salen la FUENTE y la campaña de la fila.
     const touch=normalizeContext(b.tracking)?.attribution.last;const fuente=sheetSource(touch?.source);
-    const destination=process.env.LEAD_WEBHOOK_URL,sheet=sheetConfig(fuente);if(!destination&&!sheet)return json({error:"sin-destino"},503);
+    const destination=process.env.LEAD_WEBHOOK_URL,sheet=sheetConfig(fuente,landing.id);if(!destination&&!sheet)return json({error:"sin-destino"},503);
     if(destination){const url=new URL(destination);if(url.protocol!=="https:"&&!(process.env.NODE_ENV!=="production"&&url.protocol==="http:"&&["localhost","127.0.0.1"].includes(url.hostname)))throw new HttpError(503,"El destino del CRM debe ser HTTPS.");}
     await rateLimit(req,"form",8,900);
     submission=typeof b.submission_id==="string"&&UUID.test(b.submission_id)?b.submission_id:randomUUID();
@@ -26,15 +30,16 @@ export async function POST(req:Request){
     if(claim!.state==="done")return json(claim!.result);
     if(claim!.state==="conflict")throw new HttpError(409,"Identificador usado por otra solicitud.");
     if(claim!.state==="busy")throw new HttpError(409,"Tu solicitud se está procesando. Espera antes de volver a enviar.");
-    const source=b.source==="contacto-form"?"contacto-form":"hero-form";
+    const source=elegidas?landing.source:b.source==="contacto-form"?"contacto-form":"hero-form";
     const intent=await createIntent(req,b.tracking,"form",submission,{source,lot:lead.lote});
     // El CRM va primero: aplica Idempotency-Key, así que un reintento tras fallar la hoja no lo duplica.
     if(destination){let response:Response;
     try{response=await fetch(destination,{method:"POST",redirect:"error",signal:AbortSignal.timeout(10000),headers:{"content-type":"application/json","Idempotency-Key":submission,...(process.env.LEAD_WEBHOOK_TOKEN?{authorization:`Bearer ${process.env.LEAD_WEBHOOK_TOKEN}`}:{})},body:JSON.stringify({...lead,proyecto:"La Campiña",origen:"web",fecha:new Date().toISOString(),submission_id:submission,...(intent?{intencion_id:intent.id,codigo:intent.code,atribucion:intent.event.attribution,tracking_consent:{analytics:true,marketing:intent.event.marketing}}:{tracking_consent:{analytics:false,marketing:false}})})});}catch{throw new HttpError(502,"crm");}
     if(!response.ok)throw new HttpError(502,"crm");}
-    // La hoja va al final: su fila es la confirmación del registro y con ella el navegador envía CompleteRegistration.
+    // La hoja va al final: su fila es la confirmación del registro y con ella el navegador envía el evento de la landing.
     if(sheet){const campaign=touch?.campaign||touch?.campaign_id||null;
-      try{await appendRow(sheet,leadRow({id:submission,date:new Date(),nombre:lead.nombre,celular:lead.celular,inicial:lead.busca,campaign,origin:`Landing · ${SOURCES[source]}`,source:fuente,lote:lead.lote}));}
+      const fila={id:submission,date:new Date(),nombre:lead.nombre,celular:lead.celular,campaign,origin:`Landing · ${SOURCES[source]}`,source:fuente,lote:lead.lote};
+      try{await appendRow(sheet,elegidas?landingRow(landing,fila,elegidas.respuestas):leadRow({...fila,inicial:lead.busca}));}
       catch(e){console.error("[lead] no se pudo agregar la fila a la hoja",e);throw new HttpError(502,"hoja");}}
     const result={ok:true,id:submission,...(intent?{event_id:intent.event.id,intencion_id:intent.id}:{})};
     await db("form_finish",{id:submission,lease:claim!.lease,ok:true,result,event:intent?.event||null});return json(result);

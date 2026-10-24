@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-10-23
 - **Rama:** `jheferson`, subido el 2026-10-23 a `origin/jheferson` en el commit `c316261`; el trabajo de píxeles
-  de la otra sesión va en `23e2395`. `main` intacto.
+  de la otra sesión va en `23e2395`. Después el dueño lo unió a `main` el mismo día (commit `1be4da0`).
 - **Sigue a:** `0012-rediseno-guiado-por-dlc.md`. El número 0013 lo usa otra sesión que trabaja en paralelo
   (píxeles y hoja de leads); este cambio no toca sus archivos.
 - **Pedido del usuario (resumen):**

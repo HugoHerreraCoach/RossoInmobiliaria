@@ -14,6 +14,9 @@ export const SOURCES: Record<string, string> = {
   "lot-whatsapp": "Ficha de lote · WhatsApp", "lot-contact": "Ficha de lote · consultar", "mobile-contact": "Barra móvil · contacto",
   "mobile-lots": "Barra móvil · lotes", "navigation": "Navegación", "other-whatsapp": "Otro enlace de WhatsApp",
   "float-contact": "Botón flotante · asesor",
+  "promocion-form": "Formulario de promoción (Lima)",
+  "decision-whatsapp": "Por qué · WhatsApp", "obra-whatsapp": "Obra · videollamada", "footer-whatsapp": "Pie de página · WhatsApp",
+  "map-form": "Plano · consultar este lote", "map-detail": "Plano · ver detalle del lote",
 };
 export type Consent = { analytics: boolean; marketing: boolean; version: "2026-10-13" };
 export type Touch = { source: string; medium?: string; campaign?: string; content?: string; term?: string; campaign_id?: string; adset_id?: string; ad_id?: string; referrer?: string; landing?: string };
@@ -28,7 +31,7 @@ export type PanelSnapshot = { events: TrackingEvent[]; deliveries: Pick<Delivery
 export const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 export const isObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const safeText = (v: unknown, n = 100) => typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, "").slice(0, n) : "";
-export function safePath(v: unknown) { const p = safeText(v, 100).split(/[?#]/)[0]; return /^\/(?:lote\/[A-H]\d{1,2})?\/?$/i.test(p) ? p : "/"; }
+export function safePath(v: unknown) { const p = safeText(v, 100).split(/[?#]/)[0]; return /^\/(?:lote\/[A-H]\d{1,2}|promocion)?\/?$/i.test(p) ? p : "/"; }
 export function normalizeTouch(v: unknown): Touch {
   if (!isObject(v)) return { source: "direct" };
   const source=safeText(v.source,60);

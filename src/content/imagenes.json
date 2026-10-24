@@ -1,0 +1,72 @@
+{
+  "ingreso-vista": {
+    "color": "/media/ingreso-vista.webp",
+    "colorSize": [
+      1600,
+      900
+    ],
+    "video": null,
+    "source": "Toma de dron editada con IA: el archivo trae la credencial C2PA de OpenAI/ChatGPT (carpeta «Marketing - MCP/FOTOS ROSSO»): Vista aérea de propiedad serrana.png",
+    "tipo": "editada"
+  },
+  "parcelas-aerea": {
+    "color": "/media/parcelas-aerea.webp",
+    "colorSize": [
+      1600,
+      900
+    ],
+    "video": null,
+    "source": "Toma de dron editada con IA: el archivo trae la credencial C2PA de OpenAI/ChatGPT (carpeta «Marketing - MCP/FOTOS ROSSO»): Parcelas aéreas en luz natural.png",
+    "tipo": "editada"
+  },
+  "lotes-cerros": {
+    "color": "/media/lotes-cerros.webp",
+    "colorSize": [
+      1600,
+      900
+    ],
+    "video": null,
+    "source": "Toma de dron editada con IA: el archivo trae la credencial C2PA de OpenAI/ChatGPT (carpeta «Marketing - MCP/FOTOS ROSSO»): Lotes marcados bajo montañas soleadas.png",
+    "tipo": "editada"
+  },
+  "render-ingreso": {
+    "color": "/media/render-ingreso.webp",
+    "colorSize": [
+      1600,
+      900
+    ],
+    "video": null,
+    "source": "Render 3D del proyecto, no es una foto (Drive de Conexipema, carpeta 1SF9YeUqJFyh51XeWMWk0KuG2tlH6Wp-w): IMG_02.png",
+    "tipo": "render"
+  },
+  "render-hamacas": {
+    "color": "/media/render-hamacas.webp",
+    "colorSize": [
+      1600,
+      900
+    ],
+    "video": null,
+    "source": "Render 3D del proyecto, no es una foto (Drive de Conexipema, carpeta 1SF9YeUqJFyh51XeWMWk0KuG2tlH6Wp-w): IMG_06.png",
+    "tipo": "render"
+  },
+  "render-juegos": {
+    "color": "/media/render-juegos.webp",
+    "colorSize": [
+      1600,
+      900
+    ],
+    "video": null,
+    "source": "Render 3D del proyecto, no es una foto (Drive de Conexipema, carpeta 1SF9YeUqJFyh51XeWMWk0KuG2tlH6Wp-w): IMG_07.png",
+    "tipo": "render"
+  },
+  "render-gimnasio": {
+    "color": "/media/render-gimnasio.webp",
+    "colorSize": [
+      1600,
+      900
+    ],
+    "video": null,
+    "source": "Render 3D del proyecto, no es una foto (Drive de Conexipema, carpeta 1SF9YeUqJFyh51XeWMWk0KuG2tlH6Wp-w): IMG_09.png",
+    "tipo": "render"
+  }
+}

@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import { track } from "@/lib/tracking/client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { DESDE, DISPONIBLES, LOTES, MANZANAS, loteById, m2, resumen, soles, soles0, type Lote } from "@/content/lotes";
+import { PLANO_GIRADO, type Caja, type Orientacion } from "@/content/planoGirado";
+import { desplazarA, irAlFormulario } from "@/lib/formulario";
 import { gsap, useGSAP, useMotion } from "@/lib/motion";
 import { Ficha } from "./Ficha";
 import { Icon } from "./Icon";
@@ -12,111 +14,28 @@ const TODAS = "TODAS";
 type Vista = string; // "TODAS" | "A"…"H"
 type ColorMode = "estado" | "cuota" | "area";
 
-export type ParcelGeom = {
-  id: string;
-  mz: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  isMacro?: boolean;
-};
-
 const CONTEO = resumen();
 
-/** Conserva el esquema ilustrativo heredado en coordenadas SVG (1160x760); no representa geometría catastral para los 132 lotes (Manzanas A–H). */
-export const MASTERPLAN_GEOM: Record<string, ParcelGeom> = (() => {
-  const map: Record<string, ParcelGeom> = {};
+/** Proporción de cada orientación, para que el recuadro del plano tenga su alto antes de dibujarlo. */
+const PROPORCION = {
+  "--mp-ar-h": `${PLANO_GIRADO.horizontal.caja[2]} / ${PLANO_GIRADO.horizontal.caja[3]}`,
+  "--mp-ar-v": `${PLANO_GIRADO.vertical.caja[2]} / ${PLANO_GIRADO.vertical.caja[3]}`,
+} as CSSProperties;
 
-  // Manzana A (9 lotes: A1..A9) — Frente Sur-Oeste junto a Vía San Nicolás
-  for (let i = 0; i < 9; i++) {
-    const id = `A${i + 1}`;
-    map[id] = { id, mz: "A", x: 76 + i * 42, y: 572, w: 40, h: 58 };
-  }
-
-  // Manzana B (9 lotes: B1..B9) — Frente Sur-Este junto a Pórtico de Ingreso
-  for (let i = 0; i < 9; i++) {
-    const id = `B${i + 1}`;
-    map[id] = { id, mz: "B", x: 542 + i * 38, y: 572, w: 36, h: 58 };
-  }
-
-  // Manzana C (20 lotes: C1..C20) — Bloque doble Oeste con macrolotes C6 (1487 m²) y C7 (1382 m²) en cabecera
-  // C1..C5 fila sur (5 lotes), C6 y C7 macrolotes cabecera este, C8..C20 fila norte (13 lotes)
-  for (let i = 0; i < 5; i++) {
-    const id = `C${i + 1}`;
-    map[id] = { id, mz: "C", x: 76 + i * 64, y: 484, w: 62, h: 48 };
-  }
-  map["C6"] = { id: "C6", mz: "C", x: 398, y: 484, w: 56, h: 48, isMacro: true };
-  map["C7"] = { id: "C7", mz: "C", x: 398, y: 432, w: 56, h: 49, isMacro: true };
-  for (let i = 0; i < 13; i++) {
-    const id = `C${i + 8}`;
-    map[id] = { id, mz: "C", x: 76 + i * 24.6, y: 432, w: 23.2, h: 49 };
-  }
-
-  // Manzana D (34 lotes: D1..D34) — Gran bloque central doble con D16 (1647 m²) y D17 (1600 m²) en cabecera
-  // D1..D15 fila sur (15 lotes), D16 y D17 macrolotes cabecera este, D18..D34 fila norte (17 lotes)
-  for (let i = 0; i < 15; i++) {
-    const id = `D${i + 1}`;
-    map[id] = { id, mz: "D", x: 76 + i * 44, y: 344, w: 42.5, h: 48 };
-  }
-  map["D16"] = { id: "D16", mz: "D", x: 738, y: 344, w: 68, h: 48, isMacro: true };
-  map["D17"] = { id: "D17", mz: "D", x: 738, y: 292, w: 68, h: 49, isMacro: true };
-  for (let i = 0; i < 17; i++) {
-    const id = `D${i + 18}`;
-    map[id] = { id, mz: "D", x: 76 + i * 38.8, y: 292, w: 37.3, h: 49 };
-  }
-
-  // Manzana E (8 lotes: E1..E8) — Bloque curvo / Frente al Gran Parque Central y Cancha de Grass
-  for (let i = 0; i < 8; i++) {
-    const id = `E${i + 1}`;
-    map[id] = { id, mz: "E", x: 842, y: 170 + i * 47, w: 68, h: 44.5 };
-  }
-
-  // Manzana F (21 lotes: F1..F21) — Bloque doble Nor-Oeste con macrolotes F11 (1550 m²) y F12 (1658 m²)
-  for (let i = 0; i < 10; i++) {
-    const id = `F${i + 1}`;
-    map[id] = { id, mz: "F", x: 76 + i * 33.5, y: 214, w: 32, h: 45 };
-  }
-  map["F11"] = { id: "F11", mz: "F", x: 413, y: 214, w: 52, h: 45, isMacro: true };
-  map["F12"] = { id: "F12", mz: "F", x: 413, y: 166, w: 52, h: 45, isMacro: true };
-  for (let i = 0; i < 9; i++) {
-    const id = `F${i + 13}`;
-    map[id] = { id, mz: "F", x: 76 + i * 37.2, y: 166, w: 35.6, h: 45 };
-  }
-
-  // Manzana G (21 lotes: G1..G21) — Bloque doble Nor-Este con macrolote G21 (1265 m²)
-  for (let i = 0; i < 10; i++) {
-    const id = `G${i + 1}`;
-    map[id] = { id, mz: "G", x: 522 + i * 24, y: 214, w: 22.6, h: 45 };
-  }
-  for (let i = 0; i < 10; i++) {
-    const id = `G${i + 11}`;
-    map[id] = { id, mz: "G", x: 522 + i * 24, y: 166, w: 22.6, h: 45 };
-  }
-  map["G21"] = { id: "G21", mz: "G", x: 764, y: 166, w: 52, h: 93, isMacro: true };
-
-  // Manzana H (10 lotes: H1..H10) — Bloque Mirador Norte con macrolote H10 (1392 m²)
-  for (let i = 0; i < 9; i++) {
-    const id = `H${i + 1}`;
-    map[id] = { id, mz: "H", x: 110 + i * 64, y: 78, w: 62, h: 54 };
-  }
-  map["H10"] = { id: "H10", mz: "H", x: 688, y: 78, w: 92, h: 54, isMacro: true };
-
-  return map;
-})();
-
-/** Coordenadas de enfoque (viewBox) por cada Manzana para zoom automático. */
-const MZ_VIEWBOX: Record<string, [number, number, number, number]> = {
-  TODAS: [0, 0, 1160, 760],
-  A: [40, 500, 480, 220],
-  B: [490, 500, 450, 220],
-  C: [40, 390, 460, 190],
-  D: [40, 250, 810, 195],
-  E: [760, 130, 380, 460],
-  F: [40, 130, 465, 175],
-  G: [485, 130, 380, 175],
-  H: [70, 40, 760, 150],
-};
+/** En pantallas angostas (celular) el plano va vertical; en el resto, horizontal (docs/0025). El servidor
+ *  dibuja el horizontal; el recuadro ya tiene el alto de la orientación correcta por CSS, así que no se mueve. */
+const VERTICAL = "(max-width: 699px)";
+function useOrientacion(): Orientacion {
+  return useSyncExternalStore(
+    (avisar) => {
+      const mq = window.matchMedia(VERTICAL);
+      mq.addEventListener("change", avisar);
+      return () => mq.removeEventListener("change", avisar);
+    },
+    () => (window.matchMedia(VERTICAL).matches ? "vertical" : "horizontal"),
+    () => "horizontal",
+  );
+}
 
 /** Avisa al formulario de contacto qué lote eligió el visitante. */
 export function anunciarLote(id: string) {
@@ -154,28 +73,33 @@ function getLotFill(l: Lote, colorMode: ColorMode, isSelected: boolean, isHovere
 }
 
 /**
- * Plano interactivo + ficha con simulador.
+ * Plano interactivo a todo el ancho + ficha con simulador debajo (docs/0025).
  * - En la portada (sin props) lee y escribe ?vista=&lote= en la URL y avisa al formulario.
  * - En /lote/[id] (`lote` + `onLote`) arranca en ese lote y deja que la página cambie de lote.
  */
-export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => void } = {}) {
+export function LotStack({ lote, onLote, origen }: { lote?: Lote; onLote?: (l: Lote) => void; origen?: string } = {}) {
   const enPortada = !onLote;
+  const orientacion = useOrientacion();
+  const geo = PLANO_GIRADO[orientacion];
   // En /lote/[id] el plano abre completo (el lote va resaltado) para poder tocar cualquier otro.
   const [vista, setVista] = useState<Vista>(TODAS);
   const [colorMode, setColorMode] = useState<ColorMode>("estado");
   const [droneOverlay, setDroneOverlay] = useState(false);
   const [droneOpacity, setDroneOpacity] = useState(55);
 
-  // Lote activo desde el inicio (el de la página, el de la URL o el de cuota más baja) para que la ficha no quede vacía.
+  // La ficha muestra desde el inicio un lote (el de la página, el de la URL o el de cuota más baja) para no quedar
+  // vacía; el plano lo resalta y sus dos botones se activan solo cuando el visitante elige uno.
   const [sel, setSel] = useState<Lote | null>(() => lote ?? DESDE ?? DISPONIBLES[0] ?? null);
+  const [elegido, setElegido] = useState(!!lote);
   const [hovered, setHovered] = useState<Lote | null>(null);
   const [flip, setFlip] = useState(0);
+  const ficha = useRef<HTMLElement>(null);
 
   // Estado de Zoom y Pan sobre el SVG
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const dragStart = useRef<{ x: number; y: number; panX: number; panY: number }>({ x: 0, y: 0, panX: 0, panY: 0 });
+  const dragStart = useRef({ x: 0, y: 0, panX: 0, panY: 0, escala: 1 });
 
   // Gesto de la página: al entrar en pantalla, las líneas de los 132 lotes se trazan como con cal
   // sobre la tierra, y después se rellenan. Una sola vez y solo en la portada (en /lote/[id] el plano
@@ -185,7 +109,7 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
   useGSAP(
     () => {
       if (!ok || !enPortada) return;
-      const lines = gsap.utils.toArray<SVGRectElement>(".mp-parcel__line", shell.current);
+      const lines = gsap.utils.toArray<SVGGeometryElement>(".mp-parcel__line", shell.current);
       if (!lines.length) return;
       gsap.from(lines, {
         drawSVG: 0,
@@ -205,7 +129,10 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
     const sync = () => {
       const { vista: v, lote: id } = leerUrl();
       const l = id ? loteById(id) ?? null : null;
-      if (l) setSel(l);
+      if (l) {
+        setSel(l);
+        setElegido(true);
+      }
       if (v) setVista(v);
       else if (l) setVista(l.manzana);
       setFlip((n) => n + 1);
@@ -237,32 +164,53 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
   const elegirLote = (l: Lote) => {
     track("lot_view", { lot: l.id });
     setSel(l);
+    setElegido(true);
     setFlip((n) => n + 1);
     if (onLote) onLote(l);
     else anunciarLote(l.id);
     escribirUrl(vista, l);
   };
 
+  // Botones del plano. "Consultar" lleva al formulario de la portada con el lote ya cargado (desde /lote/X, vuelve
+  // a la landing de origen con ?lote=); "Ver detalle" baja a la ficha de este lote, debajo del plano.
+  const consultar = () => {
+    if (!sel) return;
+    if (!enPortada) {
+      window.location.assign(`${origen === "promocion" ? "/promocion" : "/"}?lote=${sel.id}#formulario`);
+      return;
+    }
+    anunciarLote(sel.id);
+    irAlFormulario();
+  };
+  const verDetalle = () => {
+    if (!ficha.current) return;
+    desplazarA(ficha.current);
+    ficha.current.focus({ preventScroll: true });
+  };
+
   // Cálculo del viewBox activo según Manzana + Zoom + Pan
-  const baseVb = MZ_VIEWBOX[vista] ?? MZ_VIEWBOX.TODAS;
+  const baseVb: Caja = vista === TODAS ? geo.caja : geo.manzanas[vista]?.vista ?? geo.caja;
   const vbW = baseVb[2] / zoom;
   const vbH = baseVb[3] / zoom;
   const vbX = baseVb[0] + (baseVb[2] - vbW) / 2 - pan.x;
   const vbY = baseVb[1] + (baseVb[3] - vbH) / 2 - pan.y;
+  // Arrastre: hasta un tercio del lienzo hacia cada lado.
+  const panMax = { x: geo.caja[2] / 3, y: geo.caja[3] / 3 };
 
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     if (e.button !== 0) return;
     setIsDragging(true);
-    dragStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
+    // Unidades del plano por píxel en pantalla (el SVG encaja el viewBox entero, sin recortar).
+    const r = e.currentTarget.getBoundingClientRect();
+    dragStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y, escala: Math.max(vbW / r.width, vbH / r.height) };
   };
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!isDragging) return;
-    const dx = (e.clientX - dragStart.current.x) * (vbW / 800);
-    const dy = (e.clientY - dragStart.current.y) * (vbH / 520);
+    const { escala } = dragStart.current;
     setPan({
-      x: Math.max(-350, Math.min(350, dragStart.current.panX + dx)),
-      y: Math.max(-260, Math.min(260, dragStart.current.panY + dy)),
+      x: Math.max(-panMax.x, Math.min(panMax.x, dragStart.current.panX + (e.clientX - dragStart.current.x) * escala)),
+      y: Math.max(-panMax.y, Math.min(panMax.y, dragStart.current.panY + (e.clientY - dragStart.current.y) * escala)),
     });
   };
 
@@ -270,322 +218,359 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
 
   return (
     <div className="lots" ref={shell}>
-      <div className="mp-stage-col">
-        <div className="mp-canvas-card">
-          {/* Sub-barra de herramientas del plano vectorial */}
-          <div className="mp-canvas-bar">
-            <div className="mp-colormodes" role="group" aria-label="Colorear lotes por">
-              <span className="mp-colormodes__label">Colorear por</span>
-              <button
-                type="button"
-                className={`mp-pill ${colorMode === "estado" ? "is-active" : ""}`}
-                onClick={() => setColorMode("estado")}
-              >
-                Disponibilidad
-              </button>
-              <button
-                type="button"
-                className={`mp-pill ${colorMode === "cuota" ? "is-active" : ""}`}
-                onClick={() => setColorMode("cuota")}
-              >
-                Cuota mensual
-              </button>
-              <button
-                type="button"
-                className={`mp-pill ${colorMode === "area" ? "is-active" : ""}`}
-                onClick={() => setColorMode("area")}
-              >
-                Área (m²)
-              </button>
-            </div>
-
-            <div className="mp-canvas-actions">
-              <button
-                type="button"
-                className={`mp-pill mp-pill--drone ${droneOverlay ? "is-active" : ""}`}
-                onClick={() => setDroneOverlay((x) => !x)}
-                title="Fotografía de referencia; no está georreferenciada ni alineada al esquema"
-              >
-                <Icon name="drone" size={15} />
-                {droneOverlay ? "Ocultar foto" : "Ver foto de referencia"}
-              </button>
-
-              {droneOverlay ? (
-                <input
-                  type="range"
-                  min={20}
-                  max={85}
-                  value={droneOpacity}
-                  onChange={(e) => setDroneOpacity(Number(e.target.value))}
-                  className="mp-drone-slider"
-                  aria-label="Opacidad de foto de drone"
-                />
-              ) : null}
-
-              <div className="mp-zoom-group" role="group" aria-label="Controles de zoom del plano">
-                <button
-                  type="button"
-                  onClick={() => setZoom((z) => Math.min(2.8, +(z + 0.35).toFixed(2)))}
-                  aria-label="Acercar plano"
-                  title="Acercar"
-                >
-                  <Icon name="zoomIn" size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setZoom((z) => Math.max(1, +(z - 0.35).toFixed(2)))}
-                  aria-label="Alejar plano"
-                  title="Alejar"
-                >
-                  <Icon name="zoomOut" size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setZoom(1);
-                    setPan({ x: 0, y: 0 });
-                    setVista(TODAS);
-                  }}
-                  aria-label="Restablecer vista completa"
-                  title="Vista completa"
-                >
-                  <Icon name="reset" size={16} />
-                </button>
-              </div>
-            </div>
+      <div className="mp-canvas-card">
+        {/* Sub-barra de herramientas del plano vectorial */}
+        <div className="mp-canvas-bar">
+          <div className="mp-colormodes" role="group" aria-label="Colorear lotes por">
+            <span className="mp-colormodes__label">Colorear por</span>
+            <button
+              type="button"
+              className={`mp-pill ${colorMode === "estado" ? "is-active" : ""}`}
+              onClick={() => setColorMode("estado")}
+            >
+              Disponibilidad
+            </button>
+            <button
+              type="button"
+              className={`mp-pill ${colorMode === "cuota" ? "is-active" : ""}`}
+              onClick={() => setColorMode("cuota")}
+            >
+              Cuota mensual
+            </button>
+            <button
+              type="button"
+              className={`mp-pill ${colorMode === "area" ? "is-active" : ""}`}
+              onClick={() => setColorMode("area")}
+            >
+              Área (m²)
+            </button>
           </div>
 
-          {/* Lienzo interactivo SVG + Superposición Drone opcional */}
-          <div className="mp-viewport">
+          <div className="mp-canvas-actions">
+            <button
+              type="button"
+              className={`mp-pill mp-pill--drone ${droneOverlay ? "is-active" : ""}`}
+              onClick={() => setDroneOverlay((x) => !x)}
+              title="Fotografía de referencia; no está alineada al plano"
+            >
+              <Icon name="drone" size={15} />
+              {droneOverlay ? "Ocultar foto" : "Ver foto de referencia"}
+            </button>
+
             {droneOverlay ? (
-              <div className="mp-drone-layer" style={{ opacity: droneOpacity / 100 }}>
-                <Image
-                  src="/media/hero.webp"
-                  alt="Fotografía aérea de drone de los lotes trazados con cal en La Campiña"
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 820px"
-                />
-              </div>
+              <input
+                type="range"
+                min={20}
+                max={85}
+                value={droneOpacity}
+                onChange={(e) => setDroneOpacity(Number(e.target.value))}
+                className="mp-drone-slider"
+                aria-label="Opacidad de foto de drone"
+              />
             ) : null}
 
-            <svg
-              viewBox={`${vbX} ${vbY} ${vbW} ${vbH}`}
-              className={`mp-svg ${isDragging ? "is-dragging" : ""}`}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={() => {
-                setIsDragging(false);
-                setHovered(null);
-              }}
-              role="group"
-              aria-label="Masterplan interactivo de los 132 lotes de La Campiña"
-            >
-              {/* Tierra del terreno; con la foto de referencia se vuelve translúcida. */}
-              <rect x="0" y="0" width="1160" height="760" fill={droneOverlay ? "var(--plan-ground-veil)" : "var(--plan-ground)"} />
+            <div className="mp-zoom-group" role="group" aria-label="Controles de zoom del plano">
+              <button
+                type="button"
+                onClick={() => setZoom((z) => Math.min(2.8, +(z + 0.35).toFixed(2)))}
+                aria-label="Acercar plano"
+                title="Acercar"
+              >
+                <Icon name="zoomIn" size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoom((z) => Math.max(1, +(z - 0.35).toFixed(2)))}
+                aria-label="Alejar plano"
+                title="Alejar"
+              >
+                <Icon name="zoomOut" size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setZoom(1);
+                  setPan({ x: 0, y: 0 });
+                  setVista(TODAS);
+                }}
+                aria-label="Restablecer vista completa"
+                title="Vista completa"
+              >
+                <Icon name="reset" size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
 
-              {/* Perímetro del proyecto (cerco) en línea de cal discontinua */}
-              <path
-                d="M 52 62 L 835 62 L 945 140 C 1095 148 1132 255 1132 375 C 1132 505 1090 595 940 612 L 905 648 L 52 648 Z"
-                fill="var(--plan-inner)"
-                stroke="var(--plan-cal)"
-                strokeOpacity="0.55"
-                strokeWidth="2"
-                strokeDasharray="10 6"
+        {/* Lienzo interactivo SVG + Superposición Drone opcional */}
+        <div className="mp-viewport" style={PROPORCION}>
+          {droneOverlay ? (
+            <div className="mp-drone-layer" style={{ opacity: droneOpacity / 100 }}>
+              <Image
+                src="/media/hero.webp"
+                alt="Fotografía aérea de drone de los lotes trazados con cal en La Campiña"
+                fill
+                sizes="100vw"
               />
+            </div>
+          ) : null}
 
-              {/* Vías internas del esquema (sin nombres: no hay nomenclatura oficial) */}
-              <rect x="478" y="138" width="34" height="510" fill="var(--plan-street)" />
-              <rect x="68" y="135" width="755" height="27" fill="var(--plan-street)" />
-              <rect x="68" y="262" width="755" height="27" fill="var(--plan-street)" />
-              <rect x="68" y="396" width="755" height="32" fill="var(--plan-street)" />
-              <rect x="68" y="536" width="820" height="32" fill="var(--plan-street)" />
+          <svg
+            viewBox={`${vbX} ${vbY} ${vbW} ${vbH}`}
+            className={`mp-svg ${isDragging ? "is-dragging" : ""}`}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={() => {
+              setIsDragging(false);
+              setHovered(null);
+            }}
+            role="group"
+            aria-label="Masterplan interactivo de los 132 lotes de La Campiña"
+          >
+            {/* Tierra alrededor del terreno; con la foto de referencia se vuelve translúcida. */}
+            <rect
+              x={geo.caja[0] - geo.caja[2]}
+              y={geo.caja[1] - geo.caja[3]}
+              width={geo.caja[2] * 3}
+              height={geo.caja[3] * 3}
+              fill={droneOverlay ? "var(--plan-ground-veil)" : "var(--plan-ground)"}
+            />
 
-              {/* Áreas comunes proyectadas (ubicación esquemática) */}
-              <g className="mp-park">
-                <path
-                  d="M 926 156 C 1068 162 1114 256 1114 375 C 1114 494 1068 585 926 592 L 926 156 Z"
-                  fill="var(--plan-park)"
-                  stroke="var(--plan-cal)"
-                  strokeOpacity="0.6"
-                  strokeWidth="1.5"
-                />
-                <rect x="948" y="292" width="96" height="148" fill="var(--plan-grass)" stroke="var(--plan-cal)" strokeOpacity="0.7" strokeWidth="1.2" />
-                <line x1="948" y1="366" x2="1044" y2="366" stroke="var(--plan-cal)" strokeOpacity="0.7" strokeWidth="1" />
-                <circle cx="996" cy="366" r="18" fill="none" stroke="var(--plan-cal)" strokeOpacity="0.7" strokeWidth="1" />
-                <text x="996" y="318" fill="var(--plan-cal)" fontSize="11" textAnchor="middle">Cancha</text>
-                <text x="992" y="242" fill="var(--plan-cal)" fontSize="11" textAnchor="middle">Parrillas y hamacas</text>
-                <text x="994" y="492" fill="var(--plan-cal)" fontSize="11" textAnchor="middle">Juegos y gimnasio</text>
-                <text x="985" y="560" fill="var(--plan-cal)" fontSize="11" textAnchor="middle">Pozo</text>
-              </g>
+            {/* Vía a San Nicolás, por el frente del terreno */}
+            <g className="mp-highway" pointerEvents="none">
+              <path d={geo.via} fill="var(--plan-road)" />
+              {geo.viaRotulos.map((r, i) => (
+                <text
+                  key={r.texto}
+                  x={r.x}
+                  y={r.y}
+                  transform={`rotate(${r.angulo} ${r.x} ${r.y})`}
+                  fill="var(--plan-cal)"
+                  fillOpacity={i ? 0.7 : 1}
+                  fontSize={i ? 7 : 9}
+                  fontWeight={i ? 400 : 600}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  {r.texto}
+                </text>
+              ))}
+            </g>
 
-              {/* Vía a San Nicolás y pórtico de ingreso, en el frente */}
-              <g className="mp-highway">
-                <rect x="20" y="666" width="1120" height="54" fill="var(--plan-road)" />
-                <line x1="40" y1="693" x2="1120" y2="693" stroke="var(--plan-cal)" strokeOpacity="0.5" strokeWidth="2" strokeDasharray="16 12" />
-                <text x="40" y="712" fill="var(--plan-cal)" fontSize="13">← Vía a San Nicolás: Saltur 6 min, Chiclayo 35 min</text>
-                <text x="1120" y="712" fill="var(--plan-cal)" fontSize="13" textAnchor="end">Cayaltí 8 min →</text>
-                <rect x="442" y="634" width="94" height="38" fill="var(--lime)" />
-                <text x="489" y="657" fill="var(--ink)" fontSize="12" fontWeight="600" textAnchor="middle">Pórtico</text>
-              </g>
+            {/* Terreno (10.98 ha) con su perímetro en cal discontinua: lo que no es lote ni área común son calles y alamedas. */}
+            <path
+              d={geo.terreno}
+              fill="var(--plan-street)"
+              stroke="var(--plan-cal)"
+              strokeOpacity="0.55"
+              strokeWidth="1.2"
+              strokeDasharray="6 4"
+            />
 
-              {/* Rótulos de Manzanas A–H: acercan el plano a esa manzana */}
-              {[
-                { mz: "A", x: 56, y: 605 },
-                { mz: "B", x: 904, y: 605 },
-                { mz: "C", x: 56, y: 482 },
-                { mz: "D", x: 56, y: 344 },
-                { mz: "E", x: 876, y: 152 },
-                { mz: "F", x: 56, y: 215 },
-                { mz: "G", x: 506, y: 215 },
-                { mz: "H", x: 88, y: 108 },
-              ].map((b) => (
+            {/* Áreas comunes del plano: bermas con palmeras, 4 parques y reservorio */}
+            <g className="mp-park" pointerEvents="none">
+              {geo.bermas.map((d, i) => (
+                <path key={i} d={d} fill="var(--plan-park)" />
+              ))}
+              {geo.parques.map((d, i) => (
+                <path key={i} d={d} fill="var(--plan-park)" stroke="var(--plan-cal)" strokeOpacity="0.5" strokeWidth="0.8" />
+              ))}
+              <path d={geo.reservorio.d} fill="var(--plan-road)" stroke="var(--plan-cal)" strokeOpacity="0.5" strokeWidth="0.8" />
+              <text x={geo.reservorio.x} y={geo.reservorio.y} fill="var(--plan-cal)" fillOpacity="0.8" fontSize="6.5" textAnchor="middle">
+                Reservorio
+              </text>
+              {geo.amenidades.map((a) => (
+                <text key={`${a.texto}-${a.x}`} x={a.x} y={a.y} fill="var(--plan-cal)" fillOpacity="0.85" fontSize="4.2" textAnchor="middle">
+                  {a.texto}
+                </text>
+              ))}
+              {geo.calles.map((c) => (
+                <text
+                  key={c.texto}
+                  x={c.x}
+                  y={c.y}
+                  transform={`rotate(${c.angulo} ${c.x} ${c.y})`}
+                  fill="var(--plan-cal)"
+                  fillOpacity="0.7"
+                  fontSize="5.5"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  {c.texto}
+                </text>
+              ))}
+            </g>
+
+            {/* Pórtico de ingreso, sobre la vía */}
+            <g className="mp-portico" pointerEvents="none">
+              <circle cx={geo.portico.x} cy={geo.portico.y} r="4" fill="var(--lime)" />
+              <text x={geo.portico.x} y={geo.portico.y - 7} fill="var(--plan-cal)" fontSize="7.5" fontWeight="600" textAnchor="middle">
+                Pórtico de ingreso
+              </text>
+            </g>
+
+            {/* Renderizado de los 132 lotes con su forma real (PLANO.lotes, girado en planoGirado.ts) */}
+            {LOTES.map((l) => {
+              const g = geo.lotes[l.id];
+              if (!g) return null;
+              const isSelected = elegido && sel?.id === l.id;
+              const isHovered = hovered?.id === l.id;
+              // Con una manzana elegida, el resto del plano queda atenuado.
+              const dimmed = vista !== TODAS && l.manzana !== vista;
+              const fill = getLotFill(l, colorMode, isSelected, isHovered, dimmed);
+              const conM2 = g.ancho >= 30;
+              const tinta = isSelected ? "var(--ink)" : l.estado === "vendido" ? "var(--plan-cal-dim)" : "var(--plan-cal)";
+
+              return (
                 <g
-                  key={b.mz}
-                  className="mp-mz-marker"
-                  onClick={() => elegirVista(vista === b.mz ? TODAS : b.mz)}
+                  key={l.id}
+                  className={`mp-parcel ${l.estado} ${isSelected ? "is-selected" : ""} ${dimmed ? "is-dimmed" : ""}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    elegirLote(l);
+                  }}
+                  onMouseEnter={() => setHovered(l)}
                   style={{ cursor: "pointer" }}
                 >
-                  <circle
-                    cx={b.x}
-                    cy={b.y}
-                    r="14"
-                    fill={vista === b.mz ? "var(--lime)" : "var(--plan-road)"}
-                    stroke="var(--plan-cal)"
-                    strokeOpacity="0.7"
-                    strokeWidth="1.5"
+                  <path
+                    className="mp-parcel__line"
+                    d={g.d}
+                    fill={fill}
+                    stroke={isSelected || isHovered ? "var(--ink)" : "var(--plan-cal)"}
+                    strokeOpacity={isSelected || isHovered ? 1 : 0.8}
+                    strokeWidth={isSelected ? 2 : isHovered ? 1.4 : 0.6}
+                    strokeLinejoin="round"
                   />
+                  {/* Promoción al contado */}
+                  {l.precio?.promoContado && !dimmed ? (
+                    <circle cx={g.x + g.fs * 1.5} cy={g.y - g.fs * 0.9} r={2.6} fill="var(--plan-promo)" />
+                  ) : null}
+
+                  {/* Código del lote, donde el plano rotula su número */}
                   <text
-                    x={b.x}
-                    y={b.y + 4}
-                    fill={vista === b.mz ? "var(--ink)" : "var(--plan-cal)"}
-                    fontSize="12"
+                    x={g.x}
+                    y={g.y + (conM2 ? -g.fs * 0.15 : g.fs * 0.35)}
+                    fill={tinta}
+                    fontSize={g.fs}
                     fontWeight="600"
                     textAnchor="middle"
+                    pointerEvents="none"
                   >
-                    {b.mz}
+                    {l.id}
                   </text>
-                </g>
-              ))}
 
-              {/* Renderizado de los 132 Lotes individuales */}
-              {LOTES.map((l) => {
-                const g = MASTERPLAN_GEOM[l.id];
-                if (!g) return null;
-                const isSelected = sel?.id === l.id;
-                const isHovered = hovered?.id === l.id;
-                // Con una manzana elegida, el resto del plano queda atenuado.
-                const dimmed = vista !== TODAS && l.manzana !== vista;
-                const fill = getLotFill(l, colorMode, isSelected, isHovered, dimmed);
-
-                return (
-                  <g
-                    key={l.id}
-                    className={`mp-parcel ${l.estado} ${isSelected ? "is-selected" : ""} ${dimmed ? "is-dimmed" : ""}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      elegirLote(l);
-                    }}
-                    onMouseEnter={() => setHovered(l)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <rect
-                      className="mp-parcel__line"
-                      x={g.x}
-                      y={g.y}
-                      width={g.w}
-                      height={g.h}
-                      fill={fill}
-                      stroke={isSelected || isHovered ? "var(--ink)" : "var(--plan-cal)"}
-                      strokeOpacity={isSelected || isHovered ? 1 : 0.8}
-                      strokeWidth={isSelected ? 2.6 : isHovered ? 2 : 1}
-                    />
-                    {/* Promoción al contado */}
-                    {l.precio?.promoContado && !dimmed ? (
-                      <circle cx={g.x + g.w - 5} cy={g.y + 5} r={3} fill="var(--plan-promo)" />
-                    ) : null}
-
-                    {/* Código del lote */}
-                    <text
-                      x={g.x + g.w / 2}
-                      y={g.y + g.h / 2 - (g.w >= 34 ? 2 : -3)}
-                      fill={
-                        isSelected
-                          ? "var(--ink)"
-                          : l.estado === "vendido"
-                            ? "var(--plan-cal-dim)"
-                            : "var(--plan-cal)"
-                      }
-                      fontSize={g.w < 26 ? "7.2" : g.w < 36 ? "8.5" : "9.5"}
-                      fontWeight="600"
-                      textAnchor="middle"
-                      pointerEvents="none"
-                    >
-                      {l.id}
+                  {/* Superficie en los lotes con espacio para rotularla */}
+                  {conM2 ? (
+                    <text x={g.x} y={g.y + g.fs * 0.95} fill={tinta} fontSize="6.2" fontWeight="600" textAnchor="middle" pointerEvents="none">
+                      {l.m2}m²
                     </text>
+                  ) : null}
+                </g>
+              );
+            })}
 
-                    {/* Superficie m² visible en lotes medianos/grandes */}
-                    {g.w >= 34 ? (
-                      <text
-                        x={g.x + g.w / 2}
-                        y={g.y + g.h / 2 + 10}
-                        fill={
-                          isSelected
-                            ? "var(--ink)"
-                            : l.estado === "vendido"
-                              ? "var(--plan-cal-dim)"
-                              : "var(--plan-cal)"
-                        }
-                        fontSize="7.2"
-                        fontWeight="600"
-                        textAnchor="middle"
-                        pointerEvents="none"
-                      >
-                        {l.m2}m²
-                      </text>
-                    ) : null}
-                  </g>
-                );
-              })}
-
-              {/* Rosa de los Vientos (Norte) */}
-              <g transform="translate(1105, 68)">
-                <circle cx="0" cy="0" r="22" fill="var(--plan-road)" stroke="var(--plan-cal)" strokeOpacity="0.6" strokeWidth="1.5" />
-                <polygon points="0,-15 5,4 0,0 -5,4" fill="var(--lime)" />
-                <text x="0" y="15" fill="var(--plan-cal)" fontSize="9" fontWeight="600" textAnchor="middle">
-                  N
+            {/* Rótulos de manzanas A–H: acercan el plano a esa manzana */}
+            {Object.entries(geo.manzanas).map(([mz, b]) => (
+              <g key={mz} className="mp-mz-marker" onClick={() => elegirVista(vista === mz ? TODAS : mz)} style={{ cursor: "pointer" }}>
+                <circle
+                  cx={b.x}
+                  cy={b.y}
+                  r="10"
+                  fill={vista === mz ? "var(--lime)" : "var(--plan-road)"}
+                  stroke="var(--plan-cal)"
+                  strokeOpacity="0.7"
+                  strokeWidth="1.2"
+                />
+                <text x={b.x} y={b.y + 3.5} fill={vista === mz ? "var(--ink)" : "var(--plan-cal)"} fontSize="10" fontWeight="600" textAnchor="middle">
+                  {mz}
                 </text>
               </g>
-            </svg>
+            ))}
 
-            {/* Tooltip flotante en tiempo real al pasar el cursor sobre cualquier lote */}
-            {hovered ? (
-              <div className="mp-tooltip" role="status">
-                <div className="mp-tooltip__head">
-                  <strong>Lote {hovered.id}</strong>
-                  <span className={`mp-tooltip__badge mp-tooltip__badge--${hovered.estado}`}>
-                    {hovered.estado === "disponible"
-                      ? "Disponible"
-                      : hovered.estado === "reservado"
-                        ? "Reservado"
-                        : "Vendido"}
+            {/* Norte: el plano está girado para la pantalla; la flecha marca el norte real */}
+            <g transform={`translate(${geo.rosa.x}, ${geo.rosa.y})`} pointerEvents="none">
+              <circle r="18" fill="var(--plan-road)" stroke="var(--plan-cal)" strokeOpacity="0.6" strokeWidth="1.2" />
+              <polygon points="0,-13 4.5,3.5 0,0 -4.5,3.5" fill="var(--lime)" transform={`rotate(${geo.norte})`} />
+              <text
+                x={27 * Math.sin((geo.norte * Math.PI) / 180)}
+                y={-27 * Math.cos((geo.norte * Math.PI) / 180) + 3}
+                fill="var(--plan-cal)"
+                fontSize="9"
+                fontWeight="600"
+                textAnchor="middle"
+              >
+                N
+              </text>
+            </g>
+          </svg>
+
+          {/* Tooltip flotante en tiempo real al pasar el cursor sobre cualquier lote */}
+          {hovered ? (
+            <div className="mp-tooltip" role="status">
+              <div className="mp-tooltip__head">
+                <strong>Lote {hovered.id}</strong>
+                <span className={`mp-tooltip__badge mp-tooltip__badge--${hovered.estado}`}>
+                  {hovered.estado === "disponible"
+                    ? "Disponible"
+                    : hovered.estado === "reservado"
+                      ? "Reservado"
+                      : "Vendido"}
+                </span>
+              </div>
+              <div className="mp-tooltip__meta">
+                Manzana {hovered.manzana}, <b>{m2(hovered.m2)}</b>
+              </div>
+              {hovered.precio ? (
+                <div className="mp-tooltip__price">
+                  <span>
+                    Cuota: <b>{soles(hovered.precio.cuota)}/mes</b>
+                  </span>
+                  <span>
+                    Contado: <b>{soles0(hovered.precio.promoContado ?? hovered.precio.contado)}</b>
                   </span>
                 </div>
-                <div className="mp-tooltip__meta">
-                  Manzana {hovered.manzana}, <b>{m2(hovered.m2)}</b>
-                </div>
-                {hovered.precio ? (
-                  <div className="mp-tooltip__price">
-                    <span>
-                      Cuota: <b>{soles(hovered.precio.cuota)}/mes</b>
-                    </span>
-                    <span>
-                      Contado: <b>{soles0(hovered.precio.promoContado ?? hovered.precio.contado)}</b>
-                    </span>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Pie del plano: a la izquierda la leyenda; a la derecha, en la esquina inferior, los dos botones del lote elegido.
+            Van fuera del dibujo para no tapar ningún lote en ningún ancho (docs/0025); en el celular, los botones primero. */}
+        <div className="mp-foot">
+          {/* Se activan cuando el visitante elige un lote. */}
+          <div className="mp-acciones" role="group" aria-label="Acciones del lote elegido">
+            <p className="mp-acciones__lote" aria-live="polite">
+              {elegido && sel ? (
+                <>
+                  Lote <strong>{sel.id}</strong> · {m2(sel.m2)}
+                </>
+              ) : (
+                "Toca un lote del plano para consultarlo"
+              )}
+            </p>
+            <button
+              type="button"
+              className="btn btn--lime mp-acciones__btn"
+              disabled={!elegido}
+              data-track="map-form"
+              data-lot={elegido ? sel?.id : undefined}
+              onClick={consultar}
+            >
+              <Icon name="whatsapp" size={18} />
+              Consultar este lote por WhatsApp
+            </button>
+            <button
+              type="button"
+              className="btn btn--outline mp-acciones__btn"
+              disabled={!elegido}
+              data-track="map-detail"
+              data-lot={elegido ? sel?.id : undefined}
+              onClick={verDetalle}
+            >
+              <Icon name="plano" size={18} />
+              Ver detalle de este lote
+            </button>
           </div>
 
           {/* Leyenda interactiva inferior */}
@@ -604,7 +589,7 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
                 <i className="mp-dot mp-dot--sold" /> Vendido ({CONTEO.vendidos})
               </span>
               <span>
-                <i className="mp-dot mp-dot--selected" /> Tu lote ({sel?.id ?? "ninguno"})
+                <i className="mp-dot mp-dot--selected" /> Tu lote ({elegido && sel ? sel.id : "elige uno"})
               </span>
             </div>
             <p className="mp-legend__hint">
@@ -614,9 +599,15 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
         </div>
       </div>
 
-      {/* Panel Lateral: Ficha Técnica Ejecutiva & Simulador en Vivo */}
-      <aside className="ficha panel" aria-live="polite">
-        {/* Con un lote elegido, la ficha ya lo titula; la banda solo guía cuando no hay ninguno. */}
+      {/* Ficha técnica y simulador del lote, debajo del plano: "Ver detalle de este lote" baja hasta aquí */}
+      <aside id="ficha-lote" ref={ficha} tabIndex={-1} className="ficha panel" aria-live="polite" aria-label="Ficha del lote">
+        {/* Hasta que el visitante elige, la ficha muestra el lote de cuota más baja y lo dice. */}
+        {sel && !elegido ? (
+          <div className="band ficha__band">
+            <h3>El lote con la cuota más baja</h3>
+            <p>Toca cualquier lote del plano para ver el tuyo.</p>
+          </div>
+        ) : null}
         {sel ? null : (
           <div className="band ficha__band">
             <h3>Elige un lote en el plano</h3>
@@ -624,7 +615,7 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
         )}
         <div key={flip}>
           {sel ? (
-            enPortada ? <Ficha lote={sel} onPedir={(l) => anunciarLote(l.id)} /> : <Ficha lote={sel} showFullLink={false} />
+            enPortada ? <Ficha lote={sel} onPedir={(l) => anunciarLote(l.id)} origen={origen} /> : <Ficha lote={sel} origen={origen} />
           ) : (
             <div className="ficha__empty">
               <Icon name="plano" size={40} />
