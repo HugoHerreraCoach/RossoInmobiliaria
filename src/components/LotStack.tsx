@@ -272,31 +272,12 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
     <div className="lots" ref={shell}>
       <div className="mp-stage-col">
         <div className="mp-canvas-card">
-          {/* Sub-barra de herramientas del plano vectorial */}
+          {/* Sub-barra simplificada del plano: estado general + controles de vista */}
           <div className="mp-canvas-bar">
-            <div className="mp-colormodes" role="group" aria-label="Colorear lotes por">
-              <span className="mp-colormodes__label">Colorear por</span>
-              <button
-                type="button"
-                className={`mp-pill ${colorMode === "estado" ? "is-active" : ""}`}
-                onClick={() => setColorMode("estado")}
-              >
-                Disponibilidad
-              </button>
-              <button
-                type="button"
-                className={`mp-pill ${colorMode === "cuota" ? "is-active" : ""}`}
-                onClick={() => setColorMode("cuota")}
-              >
-                Cuota mensual
-              </button>
-              <button
-                type="button"
-                className={`mp-pill ${colorMode === "area" ? "is-active" : ""}`}
-                onClick={() => setColorMode("area")}
-              >
-                Área (m²)
-              </button>
+            <div className="mp-colormodes">
+              <span className="mp-pill is-active">
+                Disponibles ({CONTEO.disponibles})
+              </span>
             </div>
 
             <div className="mp-canvas-actions">
@@ -360,7 +341,7 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
             {droneOverlay ? (
               <div className="mp-drone-layer" style={{ opacity: droneOpacity / 100 }}>
                 <Image
-                  src="/media/hero.webp"
+                  src="/media/editada-aerea-lotes.jpg"
                   alt="Fotografía aérea de drone de los lotes trazados con cal en La Campiña"
                   fill
                   sizes="(max-width: 1024px) 100vw, 820px"
@@ -468,7 +449,7 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
                 </g>
               ))}
 
-              {/* Renderizado de los 132 Lotes individuales */}
+              {/* Renderizado de los 132 Lotes individuales (solo código y disponibilidad) */}
               {LOTES.map((l) => {
                 const g = MASTERPLAN_GEOM[l.id];
                 if (!g) return null;
@@ -476,7 +457,7 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
                 const isHovered = hovered?.id === l.id;
                 // Con una manzana elegida, el resto del plano queda atenuado.
                 const dimmed = vista !== TODAS && l.manzana !== vista;
-                const fill = getLotFill(l, colorMode, isSelected, isHovered, dimmed);
+                const fill = getLotFill(l, "estado", isSelected, isHovered, dimmed);
 
                 return (
                   <g
@@ -500,15 +481,11 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
                       strokeOpacity={isSelected || isHovered ? 1 : 0.8}
                       strokeWidth={isSelected ? 2.6 : isHovered ? 2 : 1}
                     />
-                    {/* Promoción al contado */}
-                    {l.precio?.promoContado && !dimmed ? (
-                      <circle cx={g.x + g.w - 5} cy={g.y + 5} r={3} fill="var(--plan-promo)" />
-                    ) : null}
 
-                    {/* Código del lote */}
+                    {/* Código del lote centrado y limpio */}
                     <text
                       x={g.x + g.w / 2}
-                      y={g.y + g.h / 2 - (g.w >= 34 ? 2 : -3)}
+                      y={g.y + g.h / 2 + 3.5}
                       fill={
                         isSelected
                           ? "var(--ink)"
@@ -516,34 +493,13 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
                             ? "var(--plan-cal-dim)"
                             : "var(--plan-cal)"
                       }
-                      fontSize={g.w < 26 ? "7.2" : g.w < 36 ? "8.5" : "9.5"}
-                      fontWeight="600"
+                      fontSize={g.w < 26 ? "7.8" : g.w < 36 ? "9" : "10.5"}
+                      fontWeight="700"
                       textAnchor="middle"
                       pointerEvents="none"
                     >
                       {l.id}
                     </text>
-
-                    {/* Superficie m² visible en lotes medianos/grandes */}
-                    {g.w >= 34 ? (
-                      <text
-                        x={g.x + g.w / 2}
-                        y={g.y + g.h / 2 + 10}
-                        fill={
-                          isSelected
-                            ? "var(--ink)"
-                            : l.estado === "vendido"
-                              ? "var(--plan-cal-dim)"
-                              : "var(--plan-cal)"
-                        }
-                        fontSize="7.2"
-                        fontWeight="600"
-                        textAnchor="middle"
-                        pointerEvents="none"
-                      >
-                        {l.m2}m²
-                      </text>
-                    ) : null}
                   </g>
                 );
               })}
@@ -558,7 +514,7 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
               </g>
             </svg>
 
-            {/* Tooltip flotante en tiempo real al pasar el cursor sobre cualquier lote */}
+            {/* Tooltip flotante simple al pasar el cursor */}
             {hovered ? (
               <div className="mp-tooltip" role="status">
                 <div className="mp-tooltip__head">
@@ -572,30 +528,17 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
                   </span>
                 </div>
                 <div className="mp-tooltip__meta">
-                  Manzana {hovered.manzana}, <b>{m2(hovered.m2)}</b>
+                  Manzana {hovered.manzana}
                 </div>
-                {hovered.precio ? (
-                  <div className="mp-tooltip__price">
-                    <span>
-                      Cuota: <b>{soles(hovered.precio.cuota)}/mes</b>
-                    </span>
-                    <span>
-                      Contado: <b>{soles0(hovered.precio.promoContado ?? hovered.precio.contado)}</b>
-                    </span>
-                  </div>
-                ) : null}
               </div>
             ) : null}
           </div>
 
-          {/* Leyenda interactiva inferior */}
+          {/* Leyenda inferior simple */}
           <div className="mp-legend">
             <div className="mp-legend__items">
               <span>
                 <i className="mp-dot mp-dot--free" /> Disponible ({CONTEO.disponibles})
-              </span>
-              <span>
-                <i className="mp-dot mp-dot--promo" /> Promoción al contado
               </span>
               <span>
                 <i className="mp-dot mp-dot--reserved" /> Reservado ({CONTEO.reservados})
@@ -608,15 +551,14 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
               </span>
             </div>
             <p className="mp-legend__hint">
-              Toca cualquier lote para ver su precio y simular la cuota, o elige una manzana para acercarte.
+              Toca cualquier lote disponible para seleccionarlo y recibir toda la información con un asesor.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Panel Lateral: Ficha Técnica Ejecutiva & Simulador en Vivo */}
+      {/* Panel Lateral simplificado: estado del lote y contacto directo con asesor */}
       <aside className="ficha panel" aria-live="polite">
-        {/* Con un lote elegido, la ficha ya lo titula; la banda solo guía cuando no hay ninguno. */}
         {sel ? null : (
           <div className="band ficha__band">
             <h3>Elige un lote en el plano</h3>
@@ -628,7 +570,7 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
           ) : (
             <div className="ficha__empty">
               <Icon name="plano" size={40} />
-              <p>Toca cualquier lote del plano para ver su precio y simular su cuota.</p>
+              <p>Toca cualquier lote disponible en el plano para consultarlo con un asesor.</p>
               <button
                 type="button"
                 className="btn btn--small"
@@ -637,7 +579,7 @@ export function LotStack({ lote, onLote }: { lote?: Lote; onLote?: (l: Lote) => 
                   if (eco) elegirLote(eco);
                 }}
               >
-                {`Ver el lote con la cuota más baja (${DESDE.id})`}
+                {`Seleccionar lote disponible (${DESDE.id})`}
               </button>
             </div>
           )}

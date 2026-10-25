@@ -19,16 +19,19 @@ import { Reveal, Stagger } from "@/components/motion/Reveal";
 // los datos de La Campiña. Toda cifra sale de src/content (lista de precios y proyecto).
 
 const VUELOS: Toma4[] = [
-  { toma: "general-jul", titulo: "Las 8 manzanas, de punta a punta", fecha: "21 jul 2026", grow: 5, alt: "Vista de drone del trazado completo de La Campiña con el verde del valle al fondo" },
-  { toma: "portico", titulo: "El pórtico de ingreso", fecha: "11 abr 2026", grow: 2, alt: "Pórtico de ingreso de La Campiña sobre la vía a San Nicolás" },
-  { toma: "cerco-jun", titulo: "El frente sobre la vía", fecha: "jun 2026", grow: 3, alt: "Frente del proyecto con su cerco, visto desde el drone" },
-  { toma: "trazado-jun", titulo: "Los lotes trazados con cal", fecha: "25 jun 2026", grow: 2, alt: "Lotes y vías marcados con cal sobre la tierra" },
+  { toma: "hero", titulo: "Las 8 manzanas, de punta a punta", fecha: "21 jul 2026", grow: 5, alt: "Vista aérea de drone del trazado completo de lotes de La Campiña" },
+  { toma: "trazado-jun", titulo: "Los lotes trazados con cal", fecha: "25 jun 2026", grow: 3, alt: "Lotes y vías marcados con cal sobre la tierra con áreas verdes" },
+  { toma: "portico", titulo: "El pórtico y jardines de ingreso", fecha: "11 abr 2026", grow: 2, alt: "Vista cenital del pórtico de ingreso y jardines de La Campiña" },
+  { toma: "cerco-jun", titulo: "El frente sobre la vía", fecha: "jun 2026", grow: 2, alt: "Frente del proyecto con su cerco de caña y cielo despejado" },
 ];
 
 const DISFRUTAR = [
-  { toma: "portico" as const, titulo: "Pórtico de ingreso", estado: "Foto real · 11 abr 2026", alt: "Pórtico de ingreso de La Campiña junto a la vía a San Nicolás" },
-  { toma: "cerco-jun" as const, titulo: "Frente con cerco", estado: "Foto real · jun 2026", alt: "Frente del proyecto con su cerco de caña" },
-  { toma: "trazado-jun" as const, titulo: "Lotes y calles trazados", estado: "Foto real · 25 jun 2026", alt: "Lotes y calles marcados con cal sobre la tierra del Valle de Zaña" },
+  { src: "/media/render-portico.jpg", titulo: "Pórtico de ingreso y seguridad", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D del pórtico de ingreso y caseta de vigilancia de La Campiña" },
+  { src: "/media/render-alameda.jpg", titulo: "Alameda central y casas de campo", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D panorámico del ingreso, pérgolas y casas de campo en La Campiña" },
+  { src: "/media/render-juegos.jpg", titulo: "Juegos para niños y zona de hamacas", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D de la zona de juegos infantiles de madera y área de hamacas" },
+  { src: "/media/render-parques.jpg", titulo: "Parques y zona de picnic familiar", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D de las áreas verdes con mesas de picnic y sombrillas" },
+  { src: "/media/render-gimnasio.jpg", titulo: "Gimnasio al aire libre y senderos", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D del circuito de calistenia y gimnasio al aire libre" },
+  { src: "/media/render-cancha.jpg", titulo: "Cancha deportiva de grass natural", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D de la cancha multiusos de grass natural en La Campiña" },
 ];
 const PROYECTADAS = ["Cancha de grass natural", "Zona de parrillas", "Zona de hamacas", "Juegos para niños", "Gimnasio al aire libre", "Agua de pozo tubular", "Vías con iluminación solar"];
 
@@ -56,11 +59,7 @@ export default function Home() {
             {tramos.map((t) => <li key={t.lugar}><Icon name="check" size={16} /> {t.minutos} minutos de {t.lugar}</li>)}
             <li><Icon name="check" size={16} /> Tiempos aproximados; varían según la ruta y el tránsito</li>
           </ul>
-          {maps ? (
-            <a className="btn btn--ghost" href={maps} target="_blank" rel="noopener noreferrer"><Icon name="pin" size={18} /> Ver en Google Maps</a>
-          ) : (
-            <a className="btn btn--ghost" href="#formulario"><Icon name="pin" size={18} /> Pide la ubicación exacta</a>
-          )}
+          <a className="btn btn--ghost" href="#formulario"><Icon name="pin" size={18} /> Pide la ubicación exacta</a>
         </div>
       ),
     },
@@ -87,7 +86,7 @@ export default function Home() {
                 <tbody>
                   {EJEMPLOS.map((l) => (
                     <tr key={l.id}>
-                      <th scope="row"><a href={`/lote/${l.id}`} aria-label={`Ver ficha del lote ${l.id}`}>{l.id}</a></th>
+                      <th scope="row"><a href="#formulario" aria-label={`Consultar lote ${l.id} en el formulario`}>{l.id}</a></th>
                       <td>{m2(l.m2)}</td>
                       <td>{soles0(l.precio!.financiado)}</td>
                       <td>{soles0(l.precio!.inicial)}</td>
@@ -141,27 +140,46 @@ export default function Home() {
             <Image src={MEDIA["ingreso-abr"].color} alt="" fill priority sizes="100vw" />
           </div>
           <div className="wrap hero__inner">
-            <p className="eyebrow eyebrow--center">A {chiclayo.minutos} min de Chiclayo · {PROYECTO.valle}</p>
+            <p className="eyebrow eyebrow--center">
+              <a href="#ubicacion" className="eyebrow__loc" aria-label={`Ver ubicación: A ${chiclayo.minutos} min de Chiclayo, ${PROYECTO.valle}`}>
+                <span className="eyebrow__pin" aria-hidden="true"><Icon name="pin" size={13} /></span>
+                <span>A {chiclayo.minutos} min de Chiclayo · {PROYECTO.valle}</span>
+              </a>
+            </p>
             <h1 id="t-inicio" className="hero__title">
-              <span className="hero__pre">Lotes campestres para</span>
-              <span className="hero__big">tu casa de campo</span>
-              <span className="hero__post">desde <b>{m2(M2_MIN)}</b> con <b>{PROYECTO.titulo.toLowerCase()}</b></span>
+              <span className="hero__big">
+                <span className="hero__big-sans">LOTES</span>{" "}
+                <em className="hero__big-serif">Amplios</em>
+              </span>
+              <span className="hero__mid">
+                <span className="hero__mid-light">para tu</span>{" "}
+                <strong className="hero__mid-bold">CASA DE CAMPO</strong>
+              </span>
+              <span className="hero__post">
+                desde <b>500 m²</b> en <b>club privado</b>
+              </span>
             </h1>
             <ul className="chips" aria-label="Beneficios">
-              <li><Icon name="check" size={16} /> {CUOTAS} cuotas sin intereses</li>
-              <li><Icon name="check" size={16} /> Desde {soles(desde.cuota)} al mes</li>
-              <li><Icon name="check" size={16} /> Obra en marcha · entrega {PROYECTO.entrega}</li>
+              <li><span className="chip__check" aria-hidden="true"><Icon name="check" size={11} /></span> {CUOTAS} cuotas sin interés</li>
+              <li><span className="chip__check" aria-hidden="true"><Icon name="check" size={11} /></span> Desde S/ 17 mil</li>
+              <li><span className="chip__check" aria-hidden="true"><Icon name="check" size={11} /></span> Entrega jul. 2027</li>
             </ul>
 
             <div className="hero__grid">
-              <div className="form-card" id="formulario">
-                <p className="form-card__title">Déjanos tus datos y recibe <strong>el plano y los precios.</strong></p>
-                <p className="form-card__promo"><Icon name="sparkles" size={18} /> Promoción al contado desde {soles0(DESDE_CONTADO)} en {conPromo} lotes</p>
-                <ContactForm idPrefix="hero" />
-                <p className="form-card__foot"><Icon name="shield" size={15} /> Atención directa de {PROYECTO.empresa}</p>
-              </div>
               <div className="hero__media">
                 <HeroCarousel />
+              </div>
+              <div className="hero__form-wrap">
+                <a href="#formulario" className="hero__form-cue">
+                  <span>REGISTRA TUS DATOS AQUÍ</span>
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+                </a>
+                <div className="form-card" id="formulario">
+                  <p className="form-card__title">Déjanos tus datos para<br /><strong>reclamar tu regalo.</strong></p>
+                  <p className="form-card__promo"><Icon name="gift" size={18} /> ¡Bono de regalo: Descuento exclusivo!</p>
+                  <ContactForm idPrefix="hero" />
+                  <p className="form-card__foot"><Icon name="shield" size={15} /> Canal oficial de comunicación</p>
+                </div>
               </div>
             </div>
           </div>
@@ -178,8 +196,8 @@ export default function Home() {
               </p>
             </Stagger>
 
-            <section id="lotes" className="plan-block" aria-label="Plano de lotes y simulador de cuotas">
-              <p className="notice"><Icon name="info" size={17} /> Toca un lote del plano para ver su precio y simular tu cuota. {r.disponibles} lotes disponibles según la lista del {LISTA_FECHA}. El plano es un esquema de consulta, no un plano técnico ni catastral: confirma la ubicación, el perímetro y la disponibilidad con un asesor.</p>
+            <section id="lotes" className="plan-block" aria-label="Plano de lotes disponibles">
+              <p className="notice"><Icon name="info" size={17} /> Toca cualquier lote disponible en el plano para seleccionarlo y solicitar su información completa con un asesor. {r.disponibles} lotes disponibles.</p>
               <LazyLotStack />
             </section>
           </div>
@@ -192,7 +210,7 @@ export default function Home() {
             <div className="photo-cards">
               {DISFRUTAR.map((d) => (
                 <figure key={d.titulo} className="photo-card">
-                  <Image src={MEDIA[d.toma].color} alt={d.alt} fill sizes="(max-width: 899px) 90vw, 33vw" />
+                  <Image src={d.src} alt={d.alt} fill sizes="(max-width: 899px) 90vw, 33vw" />
                   <figcaption><strong>{d.titulo}</strong><span>{d.estado}</span></figcaption>
                 </figure>
               ))}
@@ -219,10 +237,6 @@ export default function Home() {
             <ObraBand tomas={VUELOS} />
           </div>
           <div className="wrap">
-            <ol className="timeline" aria-label="Bitácora de obra">
-              {AVANCE.map((h) => <li key={h.toma}><span>{h.fecha ?? "Inicio de obra"}</span><strong>{h.titulo}</strong></li>)}
-              <li className="is-next"><span>{PROYECTO.entrega}</span><strong>Entrega programada</strong></li>
-            </ol>
             <div className="actions actions--center">
               <a className="btn btn--ghost" href="#formulario"><Icon name="drone" size={18} /> ¿Estás lejos? Pide una videollamada</a>
             </div>
@@ -276,12 +290,8 @@ export default function Home() {
             <div className="channels">
               <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="calendario" size={20} /></span><span className="channel__text"><strong>Agenda tu visita</strong><small>Visitas guiadas los fines de semana</small></span></a>
               <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="drone" size={20} /></span><span className="channel__text"><strong>¿Estás lejos?</strong><small>Pide una videollamada desde tu ciudad</small></span></a>
-              {maps ? (
-                <a className="channel" href={maps} target="_blank" rel="noopener noreferrer"><span className="channel__icon"><Icon name="pin" size={20} /></span><span className="channel__text"><strong>Ubicación</strong><small>Vía a San Nicolás, {PROYECTO.valle}</small></span></a>
-              ) : (
-                <div className="channel"><span className="channel__icon"><Icon name="pin" size={20} /></span><span className="channel__text"><strong>Ubicación</strong><small>Vía a San Nicolás, {PROYECTO.valle}, Lambayeque</small></span></div>
-              )}
-              {telefono ? <a className="channel" href={`tel:${telefono}`}><span className="channel__icon"><Icon name="fono" size={20} /></span><span className="channel__text"><strong>Llámanos</strong><small>{telefono}</small></span></a> : null}
+              <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="pin" size={20} /></span><span className="channel__text"><strong>Ubicación</strong><small>Vía a San Nicolás, {PROYECTO.valle}, Lambayeque</small></span></a>
+              {telefono ? <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="fono" size={20} /></span><span className="channel__text"><strong>Llámanos</strong><small>{telefono}</small></span></a> : null}
             </div>
           </div>
         </section>

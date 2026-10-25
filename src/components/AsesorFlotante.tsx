@@ -1,53 +1,120 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { whatsappHref } from "@/content/proyecto";
+import { useEffect, useRef, useState } from "react";
+import { DESDE_CONTADO, soles0 } from "@/content/lotes";
+import { PROYECTO } from "@/content/proyecto";
+import { ContactForm } from "./ContactForm";
 import { Icon } from "./Icon";
 
-const KEY = "rosso.saludo.v1";
-
-/** Botón flotante de asesor: WhatsApp si hay número; si no, el formulario de la portada.
- *  A los pocos segundos muestra un saludo que se puede cerrar y no vuelve en la misma sesión. */
+/** Widchat flotante: cerrado muestra únicamente la burbuja compacta "Asesor en línea";
+ *  al hacer clic se despliega la ventana de chat con el formulario integrado. */
 export function AsesorFlotante() {
-  const [saludo, setSaludo] = useState(false);
-  const wa = whatsappHref("Hola, quiero información de los lotes de La Campiña.");
+  const [abierto, setAbierto] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let visto = false;
-    try { visto = sessionStorage.getItem(KEY) === "1"; } catch {}
-    if (visto) return;
-    const t = setTimeout(() => setSaludo(true), 5000);
-    return () => clearTimeout(t);
-  }, []);
-
-  const cerrar = () => {
-    setSaludo(false);
-    try { sessionStorage.setItem(KEY, "1"); } catch {}
-  };
+    if (!abierto) return;
+    const t = setTimeout(() => {
+      const input = document.getElementById("widchat-nombre");
+      if (input instanceof HTMLElement) input.focus({ preventScroll: true });
+    }, 120);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAbierto(false);
+    };
+    const onDown = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setAbierto(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDown);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onDown);
+    };
+  }, [abierto]);
 
   return (
-    <div className="asesor">
-      {saludo ? (
-        <div className="asesor__saludo" role="status">
-          <span>¿Quieres el plano y los precios de los lotes?</span>
-          <button type="button" onClick={cerrar} aria-label="Cerrar el saludo">
-            <Icon name="close" size={14} />
-          </button>
+    <div className={`asesor ${abierto ? "is-open" : ""}`} ref={wrapRef}>
+      {abierto ? (
+        <div className="asesor__panel" role="dialog" aria-label={`Chat con asesora de ${PROYECTO.empresa}`}>
+          <div className="asesor__panel-head">
+            <div className="asesor__panel-avatar" aria-hidden="true">
+              <img src="/media/asesora-perfil.jpg" alt="" width={46} height={46} />
+              <i className="asesor__panel-status-dot" />
+            </div>
+            <div className="asesor__panel-title">
+              <strong>Asesora {PROYECTO.empresa}</strong>
+              <span><i aria-hidden="true" /> En línea · {PROYECTO.nombre}</span>
+            </div>
+            <button
+              type="button"
+              className="asesor__panel-close"
+              onClick={() => setAbierto(false)}
+              aria-label="Cerrar chat"
+            >
+              <Icon name="close" size={18} />
+            </button>
+          </div>
+
+          <div className="asesor__panel-body">
+            <div className="asesor__chat">
+              <img
+                className="asesor__chat-avatar"
+                src="/media/asesora-perfil.jpg"
+                alt=""
+                width={30}
+                height={30}
+                aria-hidden="true"
+              />
+              <div className="asesor__bubble">
+                <p>
+                  ¡Hola! <span aria-hidden="true">👋</span> Soy tu asesora en <strong>{PROYECTO.empresa}</strong>.
+                </p>
+                <p>
+                  Estamos en preventa de terrenos campestres desde <strong className="asesor__bubble-price">{soles0(DESDE_CONTADO)}</strong> a 35 min de Chiclayo, en el {PROYECTO.valle}. ¿Cómo te podemos ayudar hoy?
+                </p>
+              </div>
+            </div>
+
+            <p className="asesor__prompt">Déjanos tus datos y un asesor te escribirá por WhatsApp:</p>
+
+            <ContactForm
+              idPrefix="widchat"
+              openWhatsApp
+              submitLabel="RECLAMAR DESCUENTO EN WHATSAPP"
+              footerNote="Te atenderemos directamente por WhatsApp sin compromiso"
+            />
+          </div>
         </div>
-      ) : null}
-      <a
-        className="asesor__btn"
-        data-track="float-contact"
-        href={wa ?? "#formulario"}
-        {...(wa ? { target: "_blank", rel: "noopener" } : {})}
-        onClick={cerrar}
-      >
-        <span className="asesor__icon" aria-hidden="true"><Icon name="chat" size={22} /></span>
-        <span className="asesor__text">
-          <small><i aria-hidden="true" /> Asesor en línea</small>
-          <strong>¡Hablemos!</strong>
-        </span>
-      </a>
+      ) : (
+        <button
+          type="button"
+          className="asesor__btn"
+          data-track="float-contact"
+          aria-expanded={false}
+          onClick={() => setAbierto(true)}
+        >
+          <span className="asesor__icon asesor__icon--avatar" aria-hidden="true">
+            <img
+              src="/media/asesora-perfil.jpg"
+              alt=""
+              width={46}
+              height={46}
+              loading="eager"
+            />
+          </span>
+          <span className="asesor__text">
+            <small><i aria-hidden="true" /> ASESOR EN LÍNEA</small>
+            <strong>¡Hablemos! <span className="asesor__wave" aria-hidden="true">👋</span></strong>
+          </span>
+          <span className="asesor__wa" aria-hidden="true">
+            <Icon name="chat" size={19} />
+            <b className="asesor__wa-unread">1</b>
+          </span>
+        </button>
+      )}
     </div>
   );
 }
