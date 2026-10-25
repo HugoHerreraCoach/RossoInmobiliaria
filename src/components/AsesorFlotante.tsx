@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { LandingId } from "@/content/landings";
 import { DESDE_CONTADO, soles0 } from "@/content/lotes";
 import { PROYECTO } from "@/content/proyecto";
 import { ContactForm } from "./ContactForm";
@@ -8,7 +9,7 @@ import { Icon } from "./Icon";
 
 /** Widchat flotante: cerrado muestra únicamente la burbuja compacta "Asesor en línea";
  *  al hacer clic se despliega la ventana de chat con el formulario integrado. */
-export function AsesorFlotante() {
+export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId } = {}) {
   const [abierto, setAbierto] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -82,6 +83,7 @@ export function AsesorFlotante() {
 
             <ContactForm
               idPrefix="widchat"
+              landing={landing}
               openWhatsApp
               submitLabel="RECLAMAR DESCUENTO EN WHATSAPP"
               footerNote="Te atenderemos directamente por WhatsApp sin compromiso"

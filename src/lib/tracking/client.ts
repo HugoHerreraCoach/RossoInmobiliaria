@@ -1,6 +1,9 @@
 "use client";
 import { Attribution, ClientContext, Consent, EventName, Matching, Props, PublicEventName, SOURCES, normalizeAttribution, normalizeMatching, safePath } from "./schema";
-import { REGISTRATION_EVENT, metaPixelId, tiktokPixelId } from "./pixels";
+import { metaPixelId, tiktokPixelId } from "./pixels";
+import { landingPorSource } from "@/content/landings";
+// Eventos estándar de Meta: van con "track"; cualquier otro nombre, con "trackCustom".
+const META_STANDARD = new Set(["CompleteRegistration","SubmitApplication","Contact","Schedule","FindLocation","ViewContent","Search"]);
 type StoredConsent = Consent & { at: number };
 type Fbq = ((...args: unknown[]) => void) & { callMethod?: (...args: unknown[]) => void; queue: unknown[][]; push?: Fbq; loaded?: boolean; version?: string };
 type Ttq = unknown[] & Record<string, unknown> & { page: (...args: unknown[]) => void; track: (...args: unknown[]) => void; revokeConsent: () => void; grantConsent: () => void };
@@ -112,14 +115,16 @@ export function pixelEvent(name: EventName, id: string, p: Props={}) {
   // A WhatsApp click is an intention: CUSTOM event, never Lead / SubmitForm / Schedule.
   if(name==="whatsapp_click") { window.fbq?.("trackCustom","WhatsAppClick",{source:p.source||"",lot:p.lot||""},{eventID:id}); window.ttq?.track?.("WhatsAppClick",{source:p.source||""},{event_id:id}); }
 }
-/** Registration saved (docs/0013): CompleteRegistration to Meta and TikTok at the same moment with the same event ID
- *  (the submission ID, also written to the sheet). Call ONLY after /api/lead confirms. No name or phone. */
+/** Registration saved (docs/0013): the landing's event to Meta and TikTok at the same moment with the same event ID
+ *  (the submission ID, also written to the sheet). Lambayeque ("/") sends CompleteRegistration; the /promocion
+ *  landing sends SubmitApplication, one name for both pixels (src/content/landings.ts, docs/0017, 0021). Call ONLY after /api/lead confirms. No name or phone. */
 export function registrationEvent(id: string, p: { source?: string; lot?: string; inicial?: string } = {}) {
   if (!active || !consent?.marketing) return;
   const content={content_name:"La Campiña",content_category:"Lotes campestres"}, origin=SOURCES[p.source||""]||p.source||"";
+  const { evento } = landingPorSource(p.source);
   try {
-    window.fbq?.("track",REGISTRATION_EVENT,{...content,origen:p.source||"",rastro:origin,lote:p.lot||"",inicial:p.inicial||""},{eventID:id});
-    window.ttq?.track?.(REGISTRATION_EVENT,{...content,description:origin},{event_id:id});
+    window.fbq?.(META_STANDARD.has(evento)?"track":"trackCustom",evento,{...content,origen:p.source||"",rastro:origin,lote:p.lot||"",inicial:p.inicial||""},{eventID:id});
+    window.ttq?.track?.(evento,{...content,description:origin},{event_id:id});
   } catch { /* measurement must never break the form */ }
 }
 function loadPixels() {

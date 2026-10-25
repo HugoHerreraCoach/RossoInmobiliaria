@@ -25,6 +25,9 @@ export const PROYECTO = {
     /** WhatsApp de asesores que recibe los mensajes (941 377 136, docs/0015), formato internacional sin "+".
      *  Un NEXT_PUBLIC_WHATSAPP_NUMBER con valor lo reemplaza al compilar. */
     whatsapp: ((process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() || WHATSAPP_ROSSO).replace(/\D/g, "") || null) as string | null,
+    /** PENDIENTE: foto real del asesor para el botón flotante (ruta en /public, con su autorización).
+     *  Mientras sea null, el botón muestra un ícono en lugar de una persona. */
+    asesorFoto: null as string | null,
     /** PENDIENTE: teléfono para llamadas, formato internacional (ej. +51987654321). */
     telefono: (process.env.NEXT_PUBLIC_CONTACT_PHONE?.trim() || null) as string | null,
   },

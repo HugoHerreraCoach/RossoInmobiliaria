@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { DESDE_CONTADO, DISPONIBLES, loteById, m2, soles } from "@/content/lotes";
+import { LANDINGS, type LandingId } from "@/content/landings";
+import { DESDE_CONTADO, DISPONIBLES, loteById } from "@/content/lotes";
 import { PROYECTO } from "@/content/proyecto";
 import { Icon } from "./Icon";
 import { track, trackingContext, registrationEvent } from "@/lib/tracking/client";
@@ -9,7 +10,7 @@ import { track, trackingContext, registrationEvent } from "@/lib/tracking/client
 type Estado = { t: "idle" | "enviando" | "ok" } | { t: "error"; msg: string } | { t: "sin-destino" };
 
 // Montos de la lista de precios, redondeados a miles como en la referencia DLC ("Desde S/ 3 mil").
-// En pantalla, con espacio duro para que "S/" no quede solo al final de la l\u00ednea.
+// En pantalla, con espacio duro para que "S/" no quede solo al final de la línea.
 const mil = (n: number) => `S/ ${Math.round(n / 1000)} mil`;
 const pegado = (s: string) => s.replace(/S\/ (\d+) mil/, "S/\u00a0$1\u00a0mil");
 const INICIAL_MIN = Math.min(...DISPONIBLES.map((l) => l.precio!.inicial));
@@ -19,29 +20,40 @@ const INICIALES = [
   { id: `Pago al contado ${mil(DESDE_CONTADO)}`, label: pegado(`Pago al contado ${mil(DESDE_CONTADO)}`) },
 ];
 
-/** Formulario de la portada: nombre, WhatsApp y la inicial con la que quiere empezar. */
+/** Formulario de la portada: nombre, WhatsApp y la inicial con la que quiere empezar (o la pregunta de /promocion). */
 export function ContactForm({
   idPrefix = "f",
+  landing = "lambayeque",
   openWhatsApp = true,
   submitLabel,
   footerNote,
 }: {
   idPrefix?: string;
+  landing?: LandingId;
   openWhatsApp?: boolean;
   submitLabel?: string;
   footerNote?: string;
 }) {
+  const config = LANDINGS[landing];
   const [estado, setEstado] = useState<Estado>({ t: "idle" });
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [lote, setLote] = useState("");
   const [busca, setBusca] = useState(INICIALES[0].id);
+  const [respuestas, setRespuestas] = useState<Record<string, string>>(() =>
+    Object.fromEntries(config.preguntas.map((p) => [p.id, p.marcada ?? ""])),
+  );
   const [nombreVal, setNombreVal] = useState("");
   const [celularVal, setCelularVal] = useState("");
   const [focused, setFocused] = useState(false);
   const form = useRef<HTMLFormElement>(null);
   const abort = useRef<AbortController | null>(null);
   const submission = useRef<{ id: string; signature: string } | null>(null);
-  const source = idPrefix === "contacto" || idPrefix === "widchat" ? "contacto-form" : "hero-form";
+  const source =
+    landing === "lima"
+      ? config.source
+      : idPrefix === "contacto" || idPrefix === "widchat"
+        ? "contacto-form"
+        : "hero-form";
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("lote");
@@ -70,18 +82,18 @@ export function ContactForm({
     const deg = Math.round(progress * 360);
     card.style.setProperty("--form-progress", `${deg}deg`);
     card.dataset.complete = complete ? "true" : "false";
-  }, [nombreVal, celularVal, busca, focused]);
+  }, [nombreVal, celularVal, busca, respuestas, focused]);
 
   const loteInfo = lote ? loteById(lote) : undefined;
   const mostrarErrores = (errors: Record<string, string>) => {
     setErrores(errors);
     setEstado({ t: "idle" });
-    // El foco anuncia el error y no deja al visitante buscando qué falta.
     requestAnimationFrame(() => {
       const firstKey = Object.keys(errors)[0];
       if (!firstKey) return;
       const element = form.current?.elements.namedItem(firstKey);
-      if (element instanceof HTMLElement) element.focus();
+      const destino = element instanceof RadioNodeList ? element[0] : element;
+      if (destino instanceof HTMLElement) destino.focus();
     });
   };
 
@@ -89,20 +101,25 @@ export function ContactForm({
     event.preventDefault();
     if (estado.t === "enviando") return;
     const data = new FormData(event.currentTarget);
-    // El aviso junto al botón informa el uso de los datos; enviar es la autorización que pide la API.
+    const buscaFinal = landing === "lambayeque" ? busca : "";
     const datos = {
       nombre: String(data.get("nombre") ?? "").trim(),
       celular: String(data.get("celular") ?? "").replace(/[^\d+]/g, ""),
-      ciudad: "", busca, lote, visita: false, dia: "", consentimiento: true,
+      ciudad: "", busca: buscaFinal, lote, visita: false, dia: "", consentimiento: true,
+      ...(landing === "lambayeque" ? {} : { respuestas }),
     };
     const errors: Record<string, string> = {};
     if (datos.nombre.length < 2) errors.nombre = "Escribe tus nombres y apellidos.";
     if (!/^\+?\d{9,15}$/.test(datos.celular)) errors.celular = "Ingresa tu número de WhatsApp de 9 dígitos, o con código de país si estás fuera de Perú.";
+    if (landing !== "lambayeque") {
+      for (const p of config.preguntas) if (!respuestas[p.id]) errors[p.id] = "Elige una opción.";
+    }
     if (Object.keys(errors).length) { track("form_error", { source, error: "validation" }); return mostrarErrores(errors); }
     const signature = JSON.stringify(datos);
     if (!submission.current || submission.current.signature !== signature) submission.current = { id: crypto.randomUUID(), signature };
     setErrores({}); setEstado({ t: "enviando" });
-    const waText = `Hola, soy ${datos.nombre}. Quiero información de los lotes de ${PROYECTO.nombre} (${busca})${lote ? ` · Lote ${lote}` : ""}.`;
+    const resumenEleccion = landing === "lambayeque" ? busca : Object.values(respuestas).filter(Boolean).join(", ");
+    const waText = `Hola, soy ${datos.nombre}. Quiero información de los lotes de ${PROYECTO.nombre}${resumenEleccion ? ` (${resumenEleccion})` : ""}${lote ? ` · Lote ${lote}` : ""}.`;
     const waUrl = openWhatsApp && PROYECTO.contacto.whatsapp
       ? `https://wa.me/${PROYECTO.contacto.whatsapp}?text=${encodeURIComponent(waText)}`
       : null;
@@ -122,10 +139,9 @@ export function ContactForm({
     try {
       const response = await fetch("/api/lead", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...datos, website: data.get("website") || "", source, submission_id: submission.current.id, tracking: trackingContext() }), signal: controller.signal });
       const json = await response.json().catch(() => ({}));
-      // Registro guardado (fila en la hoja): recién ahora va CompleteRegistration a Meta y TikTok, con el id del envío.
       if (response.ok) {
         const registro = json.id || json.event_id;
-        if (registro) registrationEvent(registro, { source, lot: lote, inicial: busca });
+        if (registro) registrationEvent(registro, { source, lot: lote, inicial: buscaFinal });
         abrirWa();
         setEstado({ t: "ok" });
         return;
@@ -165,7 +181,25 @@ export function ContactForm({
     {loteInfo ? <div className="form__lot-banner"><span>Lote seleccionado: <strong>Lote {loteInfo.id} · Mz. {loteInfo.manzana}</strong></span><button type="button" className="form__lot-clear" onClick={() => setLote("")} aria-label="Quitar lote seleccionado"><Icon name="close" size={13} /></button></div> : null}
     <div className="field"><label className="sr-only" htmlFor={`${idPrefix}-nombre`}>Nombres y apellidos</label><div className="field__input-wrap"><span className="field__icon" aria-hidden="true"><Icon name="user" size={18} /></span><input id={`${idPrefix}-nombre`} name="nombre" autoComplete="name" placeholder="Nombres y apellidos*" maxLength={120} required value={nombreVal} onChange={(e) => setNombreVal(e.target.value)} aria-invalid={!!errores.nombre} aria-describedby={errores.nombre ? `${idPrefix}-e-nombre` : undefined} /></div>{errores.nombre ? <span className="field__err" id={`${idPrefix}-e-nombre`}>{errores.nombre}</span> : null}</div>
     <div className="field"><label className="sr-only" htmlFor={`${idPrefix}-celular`}>Número de WhatsApp</label><div className="field__tel"><span aria-hidden="true"><i className="flag-pe" /> +51</span><input id={`${idPrefix}-celular`} name="celular" type="tel" inputMode="tel" autoComplete="tel" placeholder="Tu número de WhatsApp*" maxLength={20} required value={celularVal} onChange={(e) => setCelularVal(e.target.value)} aria-invalid={!!errores.celular} aria-describedby={errores.celular ? `${idPrefix}-e-celular` : undefined} /></div>{errores.celular ? <span className="field__err" id={`${idPrefix}-e-celular`}>{errores.celular}</span> : null}</div>
-    <fieldset className="field field--choices"><legend>¿CON CUÁNTO DE INICIAL TE GUSTARÍA EMPEZAR?</legend><div className="choices">{INICIALES.map((o) => <label className={`choice ${busca === o.id ? "is-selected" : ""}`} key={o.id}><input type="radio" name="busca" value={o.id} checked={busca === o.id} onChange={() => setBusca(o.id)} /><strong>{o.label}</strong><span className="choice__check" aria-hidden="true"><Icon name="check" size={11} /></span></label>)}</div></fieldset>
+    {landing === "lambayeque" ? (
+      <fieldset className="field field--choices"><legend>¿CON CUÁNTO DE INICIAL TE GUSTARÍA EMPEZAR?</legend><div className="choices">{INICIALES.map((o) => <label className={`choice ${busca === o.id ? "is-selected" : ""}`} key={o.id}><input type="radio" name="busca" value={o.id} checked={busca === o.id} onChange={() => setBusca(o.id)} /><strong>{o.label}</strong><span className="choice__check" aria-hidden="true"><Icon name="check" size={11} /></span></label>)}</div></fieldset>
+    ) : (
+      config.preguntas.map((p) => (
+        <fieldset className="field field--choices" key={p.id} aria-describedby={errores[p.id] ? `${idPrefix}-e-${p.id}` : undefined}>
+          <legend>{p.texto}</legend>
+          <div className="choices">
+            {p.opciones.map((o) => (
+              <label className={`choice ${respuestas[p.id] === o.valor ? "is-selected" : ""}`} key={o.valor}>
+                <input type="radio" name={p.id} value={o.valor} checked={respuestas[p.id] === o.valor} onChange={() => setRespuestas((r) => ({ ...r, [p.id]: o.valor }))} />
+                <strong>{o.etiqueta}</strong>
+                <span className="choice__check" aria-hidden="true"><Icon name="check" size={11} /></span>
+              </label>
+            ))}
+          </div>
+          {errores[p.id] ? <span className="field__err" id={`${idPrefix}-e-${p.id}`}>{errores[p.id]}</span> : null}
+        </fieldset>
+      ))
+    )}
     {estado.t === "error" ? <div className="status status--warn" role="alert"><p>{estado.msg}</p></div> : null}
     {estado.t === "sin-destino" ? <div className="status status--warn" role="alert"><p>El formulario no tiene un destino de contacto configurado en este entorno. Tus datos no se enviaron.</p></div> : null}
     <button className="btn btn--forest form__submit" type="submit" disabled={estado.t === "enviando"}><span className="form__submit-bubble" aria-hidden="true">💬</span><span>{estado.t === "enviando" ? "ENVIANDO SOLICITUD…" : submitLabel ?? "RECLAMAR DESCUENTO EN WHATSAPP"}</span><Icon name="der" size={18} /></button>

@@ -16,7 +16,8 @@ function Reserva() {
   );
 }
 
-export function LazyLotStack() {
+/** `origen`: "promocion" en la landing de /promocion, para que la ficha completa del lote vuelva allí. */
+export function LazyLotStack({ origen }: { origen?: string } = {}) {
   const host = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -46,7 +47,7 @@ export function LazyLotStack() {
 
   return (
     <div ref={host}>
-      {mounted ? <LotStack /> : <Reserva />}
+      {mounted ? <LotStack origen={origen} /> : <Reserva />}
       <noscript>
         <p className="lot-notice">El plano interactivo necesita JavaScript. Revisa la tabla de precios más abajo o pide el plano a un asesor.</p>
       </noscript>

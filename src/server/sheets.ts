@@ -1,4 +1,5 @@
 import { createSign } from "node:crypto";
+import type { Landing, LandingId } from "@/content/landings";
 
 /* Hoja de cálculo de leads (Google Sheets), igual que en DLC (docs/0013). /api/lead agrega una fila por registro y
    responde ok SOLO cuando Google confirma la fila; recién entonces el navegador envía CompleteRegistration a los
@@ -21,13 +22,17 @@ export const SHEET_TIKTOK = "LEADS TIKTOK";
 
 export type SheetConfig = { id: string; sheet: string; email: string; key: string };
 
-/** null si falta alguna variable: sin otro destino, el formulario responde 503 y no inventa un éxito. */
-export function sheetConfig(source?: string): SheetConfig | null {
-  const id = process.env.GOOGLE_SHEETS_ID?.trim(), email = process.env.GOOGLE_SHEETS_CLIENT_EMAIL?.trim();
+/** null si falta alguna variable: sin otro destino, el formulario responde 503 y no inventa un éxito.
+ *  La landing de /promocion (Lima, docs/0017) escribe en OTRO archivo: GOOGLE_SHEETS_ID_PROMOCION (y su pestaña
+ *  fija opcional GOOGLE_SHEETS_HOJA_PROMOCION), con la misma cuenta de servicio. Nunca cae en la hoja de Lambayeque. */
+export function sheetConfig(source?: string, landing: LandingId = "lambayeque"): SheetConfig | null {
+  const promo = landing !== "lambayeque";
+  const id = (promo ? process.env.GOOGLE_SHEETS_ID_PROMOCION : process.env.GOOGLE_SHEETS_ID)?.trim(), email = process.env.GOOGLE_SHEETS_CLIENT_EMAIL?.trim();
   // Vercel y los .env suelen guardar la clave con "\n" literales y a veces entre comillas.
   const key = process.env.GOOGLE_SHEETS_PRIVATE_KEY?.trim().replace(/^"|"$/g, "").replace(/\\n/g, "\n");
   if (!id || !email || !key) return null;
-  return { id, email, key, sheet: process.env.GOOGLE_SHEETS_HOJA?.trim() || (source === "meta" ? SHEET_META : SHEET_TIKTOK) };
+  const hoja = (promo ? process.env.GOOGLE_SHEETS_HOJA_PROMOCION : process.env.GOOGLE_SHEETS_HOJA)?.trim();
+  return { id, email, key, sheet: hoja || (source === "meta" ? SHEET_META : SHEET_TIKTOK) };
 }
 
 /** Fuente de la visita para la hoja, con los mismos valores que DLC. */
@@ -50,6 +55,17 @@ export type SheetLead = { id: string; date: Date; nombre: string; celular: strin
 export function sheetPhone(celular: string) {
   const d = celular.replace(/\D/g, ""), pe = /^9\d{8}$/.test(d) ? d : /^519\d{8}$/.test(d) ? d.slice(2) : null;
   return pe ? `+51 ${pe.slice(0, 3)} ${pe.slice(3, 6)} ${pe.slice(6)}` : `+${d}`;
+}
+
+/** Encabezados de la hoja de una landing distinta de Lambayeque: A–D de DLC, una columna por pregunta del
+ *  formulario (src/content/landings.ts) y luego las de DLC desde «TikTok Lead ID». Lambayeque sigue con COLUMNS. */
+export function landingColumns(landing: Landing): string[] {
+  return ["NOMBRE DE CAMPAÑA", "FECHA", "NOMBRE", "NUMERO", ...landing.preguntas.map((p) => p.columna), "TikTok Lead ID", "TikTok Lead Status", "Lead creation time", "Lead update time", "ORIGEN", "FUENTE", "LOTE"];
+}
+
+export function landingRow(landing: Landing, l: Omit<SheetLead, "inicial">, respuestas: Record<string, string>): (string | number)[] {
+  const unix = Math.floor(l.date.getTime() / 1000);
+  return [l.campaign ?? "", unix, l.nombre, sheetPhone(l.celular), ...landing.preguntas.map((p) => respuestas[p.id] ?? ""), l.id, "", unix, "", l.origin, l.source, l.lote];
 }
 
 export function leadRow(l: SheetLead): (string | number)[] {
