@@ -34,6 +34,9 @@ La tarea del servidor se le pidió a la otra sesión: es `docs/0027`.
 
 ### 2. El botón flotante del asesor lleva al formulario
 
+> **Corregido en 0029:** esto no era lo pedido. El botón flotante debía abrir su propio formulario, como el chat
+> de DLC, y a Lima le faltaba una pregunta (la de la zona, que va primero).
+
 - Antes abría WhatsApp en otra pestaña. Ahora hace lo mismo que «Consultar este lote» del plano (0025): sube al
   formulario de la portada y pone el cursor en «Nombres y apellidos». Vale para las dos landings. Conserva su aspecto
   (asesor en línea, círculo de WhatsApp), porque el formulario pide el WhatsApp y el asesor responde por ahí.

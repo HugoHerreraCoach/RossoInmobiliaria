@@ -16,7 +16,11 @@ export type Landing = {
   ruta: "/" | "/promocion";
   /** Fuente del formulario en la medición, el CRM y la columna ORIGEN de la hoja. */
   source: "hero-form" | "promocion-form";
+  /** Fuente del formulario del chat flotante (docs/0029): las mismas preguntas, con su propio ORIGEN en la hoja. */
+  chat: "chat-form" | "promocion-chat";
   preguntas: Pregunta[];
+  /** Pregunta cuya respuesta acompaña al evento de los píxeles (parámetro `inicial`). */
+  preguntaPixel: string;
   /** Evento de conversión que el navegador envía cuando la hoja confirma el registro: el mismo nombre y el mismo id de
    *  evento en Meta y en TikTok. */
   evento: string;
@@ -47,9 +51,17 @@ const INICIAL: Pregunta = {
   marcada: `Inicial de ${RANGO}`,
 };
 
-/** La pregunta de Lima (pedido del cliente, 2026-10-24, docs/0026), con su texto tal cual. Los montos salen de la lista:
- *  el contado más bajo con promoción y la inicial mínima. Sin opción marcada, para que la respuesta mida la preferencia
- *  del visitante y no el valor por defecto. */
+/** Primera pregunta de Lima (pedido del cliente, 2026-10-24, docs/0029), con su texto tal cual. Las preguntas de Lima
+ *  van sin opción marcada, para que la respuesta mida la preferencia del visitante y no el valor por defecto. */
+const ZONA: Pregunta = {
+  id: "zona",
+  texto: "El proyecto está en el Valle Zaña (a 30 min de Chiclayo y 5 min de Sipán). ¿Es la zona que buscas?",
+  columna: "ZONA",
+  opciones: ["Sí, me interesa el Valle Zaña.", "Me puedo adecuar"].map((valor) => ({ valor, etiqueta: valor })),
+};
+
+/** Segunda pregunta de Lima (pedido del cliente, 2026-10-24, docs/0026), con su texto tal cual. Los montos salen de la
+ *  lista: el contado más bajo con promoción y la inicial mínima. */
 const MODALIDAD: Pregunta = {
   id: "modalidad",
   texto: "Para asegurar tu lote en Sipán – Valle Zaña, ¿qué modalidad de preventa prefieres?",
@@ -62,15 +74,19 @@ export const LANDINGS: Record<LandingId, Landing> = {
     id: "lambayeque",
     ruta: "/",
     source: "hero-form",
+    chat: "chat-form",
     preguntas: [INICIAL],
+    preguntaPixel: INICIAL.id,
     evento: REGISTRATION_EVENT,
   },
   lima: {
     id: "lima",
     ruta: "/promocion",
     source: "promocion-form",
-    // Su respuesta viaja en `respuestas` (el formato de esta landing) y va a su propia columna de la hoja.
-    preguntas: [MODALIDAD],
+    chat: "promocion-chat",
+    // Sus respuestas viajan en `respuestas` (el formato de esta landing), cada una en su columna de la hoja, en este orden.
+    preguntas: [ZONA, MODALIDAD],
+    preguntaPixel: MODALIDAD.id,
     // Distinto al de Lambayeque y el mismo en los dos píxeles (pedido del cliente, docs/0021), para medir y optimizar
     // cada campaña por separado. SubmitApplication es estándar en Meta y en TikTok. Nunca "Lead" ni "SubmitForm"
     // (TikTok lo cuenta como Lead): Lead lo envía solo el servidor cuando ConexiGO confirma el mensaje.
@@ -79,7 +95,7 @@ export const LANDINGS: Record<LandingId, Landing> = {
 };
 
 export function landingPorSource(source: unknown): Landing {
-  return source === LANDINGS.lima.source ? LANDINGS.lima : LANDINGS.lambayeque;
+  return source === LANDINGS.lima.source || source === LANDINGS.lima.chat ? LANDINGS.lima : LANDINGS.lambayeque;
 }
 
 /** Respuestas válidas de una landing: solo preguntas conocidas y opciones existentes. Devuelve los errores por campo. */

@@ -30,7 +30,9 @@ export async function POST(req:Request){
     if(claim!.state==="done")return json(claim!.result);
     if(claim!.state==="conflict")throw new HttpError(409,"Identificador usado por otra solicitud.");
     if(claim!.state==="busy")throw new HttpError(409,"Tu solicitud se está procesando. Espera antes de volver a enviar.");
-    const source=elegidas?landing.source:b.source==="contacto-form"?"contacto-form":"hero-form";
+    // Fuente del formulario: el de la portada, el del chat flotante (docs/0029) o, en Lambayeque, el de contacto.
+    const fuentes:string[]=[landing.source,landing.chat,...(landing.id==="lambayeque"?["contacto-form"]:[])];
+    const source=fuentes.includes(b.source as string)?b.source as string:landing.source;
     const intent=await createIntent(req,b.tracking,"form",submission,{source,lot:lead.lote});
     // El CRM va primero: aplica Idempotency-Key, así que un reintento tras fallar la hoja no lo duplica.
     if(destination){let response:Response;

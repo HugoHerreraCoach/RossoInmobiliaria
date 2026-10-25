@@ -16,7 +16,7 @@ export const PROYECTO = {
     tramos: [
       { lugar: "Saltur", minutos: 6 },
       { lugar: "Cayaltí", minutos: 8 },
-      { lugar: "Chiclayo", minutos: 35 },
+      { lugar: "Chiclayo", minutos: 30 },
     ],
     /** PENDIENTE: enlace exacto de Google Maps (el documento comercial lo trae cortado). */
     mapsUrl: (process.env.NEXT_PUBLIC_MAPS_URL?.trim() || null) as string | null,

@@ -325,7 +325,7 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId }) {
         </div>
       </footer>
 
-      <AsesorFlotante />
+      <AsesorFlotante landing={landing} />
     </>
   );
 }

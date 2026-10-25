@@ -26,12 +26,12 @@ Generar contactos calificados (leads) para la venta de lotes de La Campiña y ll
 
 ## Positioning
 
-Lotes campestres de 500 m² o más, con escritura pública y áreas comunes, en el Valle de Zaña, a 35 minutos de Chiclayo. Se pueden pagar en cuotas sin intereses, y la obra avanza a la vista (entrega en julio de 2027).
+Lotes campestres de 500 m² o más, con escritura pública y áreas comunes, en el Valle de Zaña, a 30 minutos de Chiclayo. Se pueden pagar en cuotas sin intereses, y la obra avanza a la vista (entrega en julio de 2027).
 
 Diferenciales confirmados:
 
 - **Obra visible y avanzada**: avance real documentado con fotos, video y drone ("Proyecto con avances de obra").
-- **Ubicación / entorno**: frente al Valle de Zaña, al borde de la vía a San Nicolás; a 6 min de Saltur, 8 min de Cayaltí y 35 min de Chiclayo.
+- **Ubicación / entorno**: frente al Valle de Zaña, al borde de la vía a San Nicolás; a 6 min de Saltur, 8 min de Cayaltí y 30 min de Chiclayo.
 - **Precio / financiamiento**: precio por m² desde S/ 42; financiamiento directo sin intereses sobre el precio de lista; descuento por pago al contado.
 - **Trayectoria de la empresa**: confirmada como diferencial, pero **sin datos todavía** (años, proyectos entregados).
 
