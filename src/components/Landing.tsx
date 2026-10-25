@@ -29,7 +29,6 @@ const DISFRUTAR = [
   { src: "/media/render-gimnasio.jpg", titulo: "Gimnasio al aire libre y senderos", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D del circuito de calistenia y gimnasio al aire libre" },
   { src: "/media/render-cancha.jpg", titulo: "Cancha deportiva de grass natural", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D de la cancha multiusos de grass natural en La Campiña" },
 ];
-const PROYECTADAS = ["Cancha de grass natural", "Zona de parrillas", "Zona de hamacas", "Juegos para niños", "Gimnasio al aire libre", "Agua de pozo tubular", "Vías con iluminación solar"];
 
 const EJEMPLOS = ["G18", "C3", "C9", "E4", "F11"].map((id) => loteById(id)!).filter((l) => l.precio);
 
@@ -211,17 +210,11 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
                 </figure>
               ))}
             </div>
-            <div className="planned">
-              <p>Proyectado para {PROYECTO.entrega}:</p>
-              <ul className="chips chips--left">
-                {PROYECTADAS.map((p) => <li key={p}>{p}</li>)}
-              </ul>
-            </div>
           </div>
         </section>
 
         {/* Galería y video de la obra */}
-        <section id="avance" className="section" aria-labelledby="t-avance">
+        <section id="avance" className="section section--tight" aria-labelledby="t-avance">
           <div className="wrap">
             <Stagger className="section__head">
               <p className="eyebrow" data-part>Obra a la vista</p>
