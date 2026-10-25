@@ -40,7 +40,8 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
   const tramos = PROYECTO.ubicacion.tramos;
   const chiclayo = tramos.find((t) => t.lugar === "Chiclayo")!;
   const { telefono } = PROYECTO.contacto;
-  const origen = landing === "lima" ? "promocion" : undefined;
+  const esLima = landing === "lima";
+  const origen = esLima ? "promocion" : undefined;
 
   const PESTANAS: Pestana[] = [
     {
@@ -54,7 +55,7 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
             {tramos.map((t) => <li key={t.lugar}><Icon name="check" size={16} /> {t.minutos} minutos de {t.lugar}</li>)}
             <li><Icon name="check" size={16} /> Tiempos aproximados; varían según la ruta y el tránsito</li>
           </ul>
-          <a className="btn btn--ghost" href="#formulario"><Icon name="pin" size={18} /> Pide la ubicación exacta</a>
+          <a className="btn btn--ghost" href="#formulario"><Icon name="pin" size={18} /> {esLima ? "Agendar videollamada y ver ubicación" : "Pide la ubicación exacta"}</a>
         </div>
       ),
     },
@@ -93,6 +94,9 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
               </table>
             </div>
           </details>
+          {esLima ? (
+            <a className="btn btn--ghost" href="#formulario"><Icon name="calculator" size={18} /> Agendar videollamada y simular cuotas</a>
+          ) : null}
         </div>
       ),
     },
@@ -108,7 +112,7 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
             <li><Icon name="check" size={16} /> Precios de la lista vigente del {LISTA_FECHA}</li>
             <li><Icon name="check" size={16} /> Entrega programada para {PROYECTO.entrega}</li>
           </ul>
-          <a className="btn btn--ghost" href="#formulario"><Icon name="plano" size={18} /> Pide la documentación</a>
+          <a className="btn btn--ghost" href="#formulario"><Icon name="plano" size={18} /> {esLima ? "Revisar documentación por videollamada" : "Pide la documentación"}</a>
         </div>
       ),
     },
@@ -219,7 +223,11 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
             <Stagger className="section__head">
               <p className="eyebrow" data-part>Obra a la vista</p>
               <h2 id="t-avance" className="h2" data-part>Así avanza <em>La Campiña</em></h2>
-              <p className="lead" data-part>Vuelos de drone y fotos fechadas del propio terreno, para que lo conozcas antes de tu visita.</p>
+              <p className="lead" data-part>
+                {esLima
+                  ? "Vuelos de drone y fotos reales del propio terreno. Agenda una videollamada con un asesor para recorrer el proyecto en vivo desde donde estés."
+                  : "Vuelos de drone y fotos fechadas del propio terreno, para que lo conozcas antes de tu visita."}
+              </p>
             </Stagger>
           </div>
           <div className="wrap wrap--wide">
@@ -227,7 +235,10 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
           </div>
           <div className="wrap">
             <div className="actions actions--center">
-              <a className="btn btn--ghost" href="#formulario"><Icon name="drone" size={18} /> ¿Estás lejos? Pide una videollamada</a>
+              <a className={esLima ? "btn btn--primary" : "btn btn--ghost"} href="#formulario">
+                <Icon name="drone" size={18} />{" "}
+                {esLima ? "Agendar videollamada para conocer el proyecto" : "¿Estás lejos? Pide una videollamada"}
+              </a>
             </div>
           </div>
         </section>
@@ -274,13 +285,28 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
           <div className="wrap">
             <Stagger className="section__head section__head--center">
               <h2 id="t-contacto" className="h2" data-part>Da el <em>primer paso</em> hoy</h2>
-              <p className="lead" data-part>Un asesor de {PROYECTO.empresa} te envía el plano, tu plan de cuotas y los horarios de visita. Sin compromiso.</p>
+              <p className="lead" data-part>
+                {esLima
+                  ? `Agenda una videollamada personalizada: un asesor de ${PROYECTO.empresa} te mostrará el proyecto, el avance de obra y tu plan de cuotas sin compromiso.`
+                  : `Un asesor de ${PROYECTO.empresa} te envía el plano, tu plan de cuotas y los horarios de visita. Sin compromiso.`}
+              </p>
             </Stagger>
             <div className="channels">
-              <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="calendario" size={20} /></span><span className="channel__text"><strong>Agenda tu visita</strong><small>Visitas guiadas los fines de semana</small></span></a>
-              <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="drone" size={20} /></span><span className="channel__text"><strong>¿Estás lejos?</strong><small>Pide una videollamada desde tu ciudad</small></span></a>
-              <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="pin" size={20} /></span><span className="channel__text"><strong>Ubicación</strong><small>Vía a San Nicolás, {PROYECTO.valle}, Lambayeque</small></span></a>
-              {telefono ? <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="fono" size={20} /></span><span className="channel__text"><strong>Llámanos</strong><small>{telefono}</small></span></a> : null}
+              {esLima ? (
+                <>
+                  <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="drone" size={20} /></span><span className="channel__text"><strong>Agenda tu videollamada</strong><small>Conoce el proyecto en vivo con un asesor</small></span></a>
+                  <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="plano" size={20} /></span><span className="channel__text"><strong>Recorrido virtual y plano</strong><small>Revisa los lotes disponibles y el avance de obra</small></span></a>
+                  <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="calendario" size={20} /></span><span className="channel__text"><strong>¿Viajas a Chiclayo?</strong><small>Agenda tu visita guiada los fines de semana</small></span></a>
+                  {telefono ? <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="fono" size={20} /></span><span className="channel__text"><strong>Llámanos</strong><small>{telefono}</small></span></a> : null}
+                </>
+              ) : (
+                <>
+                  <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="calendario" size={20} /></span><span className="channel__text"><strong>Agenda tu visita</strong><small>Visitas guiadas los fines de semana</small></span></a>
+                  <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="drone" size={20} /></span><span className="channel__text"><strong>¿Estás lejos?</strong><small>Pide una videollamada desde tu ciudad</small></span></a>
+                  <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="pin" size={20} /></span><span className="channel__text"><strong>Ubicación</strong><small>Vía a San Nicolás, {PROYECTO.valle}, Lambayeque</small></span></a>
+                  {telefono ? <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="fono" size={20} /></span><span className="channel__text"><strong>Llámanos</strong><small>{telefono}</small></span></a> : null}
+                </>
+              )}
             </div>
           </div>
         </section>
@@ -299,12 +325,12 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
           </nav>
           <nav aria-label="La Campiña">
             <p className="site-footer__label">La Campiña</p>
-            <ul><li><a href="#por-que">Financiamiento</a></li><li><a href="#formulario">Pide el plano</a></li><li><a href="#formulario">Videollamada</a></li><li><a href="#por-que">Documentación</a></li></ul>
+            <ul><li><a href="#por-que">Financiamiento</a></li><li><a href="#formulario">Pide el plano</a></li><li><a href="#formulario">Agendar videollamada</a></li><li><a href="#por-que">Documentación</a></li></ul>
           </nav>
           <div>
             <p className="site-footer__label">Contacto</p>
             <ul>
-              <li><a href="#formulario"><Icon name="calendario" size={16} /> Agenda tu visita</a></li>
+              <li><a href="#formulario"><Icon name={esLima ? "drone" : "calendario"} size={16} /> {esLima ? "Agendar videollamada" : "Agenda tu visita"}</a></li>
               <li><span><Icon name="pin" size={16} /> Vía a San Nicolás, {PROYECTO.valle}, Lambayeque</span></li>
               {telefono ? <li><a href={`tel:${telefono}`}><Icon name="fono" size={16} /> {telefono}</a></li> : null}
             </ul>

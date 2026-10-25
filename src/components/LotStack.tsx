@@ -158,8 +158,7 @@ function getLotFill(l: Lote, colorMode: ColorMode, isSelected: boolean, isHovere
  * - En la portada (sin props) lee y escribe ?vista=&lote= en la URL y avisa al formulario.
  * - En /lote/[id] (`lote` + `onLote`) arranca en ese lote y deja que la página cambie de lote.
  */
-export function LotStack({ lote, onLote, origen: _origen }: { lote?: Lote; onLote?: (l: Lote) => void; origen?: string } = {}) {
-  void _origen;
+export function LotStack({ lote, onLote, origen }: { lote?: Lote; onLote?: (l: Lote) => void; origen?: string } = {}) {
   const enPortada = !onLote;
   // En /lote/[id] el plano abre completo (el lote va resaltado) para poder tocar cualquier otro.
   const [vista, setVista] = useState<Vista>(TODAS);
@@ -567,7 +566,7 @@ export function LotStack({ lote, onLote, origen: _origen }: { lote?: Lote; onLot
         )}
         <div key={flip}>
           {sel ? (
-            enPortada ? <Ficha lote={sel} onPedir={(l) => anunciarLote(l.id)} /> : <Ficha lote={sel} showFullLink={false} />
+            enPortada ? <Ficha lote={sel} onPedir={(l) => anunciarLote(l.id)} origen={origen} /> : <Ficha lote={sel} showFullLink={false} origen={origen} />
           ) : (
             <div className="ficha__empty">
               <Icon name="plano" size={40} />
