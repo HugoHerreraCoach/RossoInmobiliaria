@@ -95,11 +95,6 @@ export function ObraBand({ tomas }: { tomas: Toma4[] }) {
                 aria-hidden="true"
               />
             ) : null}
-            {i === 0 ? <h3 className="obra-band__title">{t.titulo}</h3> : null}
-            <figcaption className="obra-band__label">
-              {i === 0 ? null : <span>{t.titulo}</span>}
-              <span>{t.fecha}</span>
-            </figcaption>
             {m.video ? (
               <button
                 type="button"

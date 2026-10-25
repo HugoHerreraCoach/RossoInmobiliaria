@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Icon, type IconName } from "./Icon";
 
 export type Pestana = { id: string; etiqueta: string; icon: IconName; contenido: ReactNode };
@@ -10,6 +10,19 @@ export type Pestana = { id: string; etiqueta: string; icon: IconName; contenido:
 export function DecisionTabs({ pestanas }: { pestanas: Pestana[] }) {
   const [sel, setSel] = useState(0);
   const botones = useRef<(HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    const syncHash = () => {
+      if (window.location.hash === "#ubicacion") {
+        const idx = pestanas.findIndex((p) => p.id === "ubicacion");
+        if (idx >= 0) setSel(idx);
+      }
+    };
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    return () => window.removeEventListener("hashchange", syncHash);
+  }, [pestanas]);
+
   const teclado = (e: React.KeyboardEvent<HTMLButtonElement>, i: number) => {
     const n = pestanas.length;
     const next = e.key === "ArrowRight" ? (i + 1) % n : e.key === "ArrowLeft" ? (i - 1 + n) % n : e.key === "Home" ? 0 : e.key === "End" ? n - 1 : null;
@@ -20,7 +33,7 @@ export function DecisionTabs({ pestanas }: { pestanas: Pestana[] }) {
   };
   const actual = pestanas[sel];
   return (
-    <div className="tabs">
+    <div id="ubicacion" className="tabs">
       <div className="tabs__nav" role="tablist" aria-label="Lo que necesitas para decidir">
         {pestanas.map((p, i) => (
           <button

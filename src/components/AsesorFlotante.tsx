@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { LandingId } from "@/content/landings";
 import { CUOTAS, DESDE_CONTADO, DISPONIBLES, soles0 } from "@/content/lotes";
@@ -8,117 +7,135 @@ import { PROYECTO } from "@/content/proyecto";
 import { ContactForm } from "./ContactForm";
 import { Icon } from "./Icon";
 
-const KEY = "rosso.saludo.v1";
 const INICIAL_MIN = Math.min(...DISPONIBLES.map((l) => l.precio!.inicial));
+const MINUTOS_CHICLAYO = PROYECTO.ubicacion.tramos.find((t) => t.lugar === "Chiclayo")!.minutos;
 
-/** Botón flotante del asesor, como el chat flotante de DLC (pedido del cliente, docs/0029): abre su propio
- *  formulario, con las mismas preguntas del formulario principal de la landing (Lambayeque o Lima). Registra el lead
- *  con su propio ORIGEN en la hoja, envía el evento de la landing y abre WhatsApp con el mensaje del registro.
- *  En escritorio el botón es una tarjeta "Asesor en línea · ¡Hablemos!" con el círculo de WhatsApp; en el móvil,
- *  solo el círculo. La foto del asesor aparece cuando el cliente entregue una real (PROYECTO.contacto.asesorFoto).
- *  A los pocos segundos muestra un saludo que se puede cerrar y no vuelve en la misma sesión. */
-export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId }) {
-  const [saludo, setSaludo] = useState(false);
+/** Widchat flotante del asesor: cerrado muestra la burbuja compacta "Asesor en línea";
+ *  al hacer clic se despliega la ventana de chat con el formulario integrado (variante="chat"). */
+export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId } = {}) {
   const [abierto, setAbierto] = useState(false);
-  // El chat se monta al abrirlo por primera vez y luego solo se oculta: cerrarlo no borra lo que se escribió.
   const [montado, setMontado] = useState(false);
-  const panel = useRef<HTMLDivElement>(null);
-  const boton = useRef<HTMLButtonElement>(null);
-  const foto = PROYECTO.contacto.asesorFoto;
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const foto = PROYECTO.contacto.asesorFoto || "/media/asesora-perfil.jpg";
 
-  useEffect(() => {
-    let visto = false;
-    try { visto = sessionStorage.getItem(KEY) === "1"; } catch {}
-    if (visto) return;
-    const t = setTimeout(() => setSaludo(true), 5000);
-    return () => clearTimeout(t);
-  }, []);
-
-  // Escape cierra el chat y devuelve el foco al botón.
   useEffect(() => {
     if (!abierto) return;
-    panel.current?.focus({ preventScroll: true });
-    const alTeclear = (e: KeyboardEvent) => { if (e.key === "Escape") cerrarChat(); };
-    window.addEventListener("keydown", alTeclear);
-    return () => window.removeEventListener("keydown", alTeclear);
+    const t = setTimeout(() => {
+      const input = document.getElementById("widchat-nombre");
+      if (input instanceof HTMLElement) input.focus({ preventScroll: true });
+    }, 120);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAbierto(false);
+    };
+    const onDown = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setAbierto(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDown);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onDown);
+    };
   }, [abierto]);
 
-  const cerrarSaludo = () => {
-    setSaludo(false);
-    try { sessionStorage.setItem(KEY, "1"); } catch {}
-  };
-  const cerrarChat = () => {
-    setAbierto(false);
-    boton.current?.focus({ preventScroll: true });
-  };
-  const alternar = () => {
-    cerrarSaludo();
+  const abrir = () => {
     setMontado(true);
-    setAbierto((a) => !a);
+    setAbierto(true);
   };
-
-  const avatar = (
-    <span className="asesor__avatar" aria-hidden="true">
-      {foto ? <Image src={foto} alt="" width={48} height={48} /> : <Icon name="asesor" size={24} />}
-      <i />
-    </span>
-  );
 
   return (
-    <div className="asesor">
+    <div className={`asesor ${abierto ? "is-open" : ""}`} ref={wrapRef}>
       {montado ? (
-        <div className="asesor-chat" id="asesor-chat" role="dialog" aria-labelledby="asesor-chat-titulo" ref={panel} tabIndex={-1} hidden={!abierto}>
-          <div className="asesor-chat__head">
-            {avatar}
-            <div className="asesor-chat__who">
-              <strong id="asesor-chat-titulo">Asesor de {PROYECTO.empresa}</strong>
-              <small><i aria-hidden="true" /> En línea · {PROYECTO.nombre}</small>
+        <div
+          className="asesor__panel"
+          id="asesor-chat"
+          role="dialog"
+          aria-label={`Chat con asesora de ${PROYECTO.empresa}`}
+          hidden={!abierto}
+        >
+          <div className="asesor__panel-head">
+            <div className="asesor__panel-avatar" aria-hidden="true">
+              <img src={foto} alt="" width={46} height={46} />
+              <i className="asesor__panel-status-dot" />
             </div>
-            <button type="button" className="asesor-chat__cerrar" onClick={cerrarChat} aria-label="Cerrar el chat">
+            <div className="asesor__panel-title">
+              <strong>Asesora {PROYECTO.empresa}</strong>
+              <span><i aria-hidden="true" /> En línea · {PROYECTO.nombre}</span>
+            </div>
+            <button
+              type="button"
+              className="asesor__panel-close"
+              onClick={() => setAbierto(false)}
+              aria-label="Cerrar chat"
+            >
               <Icon name="close" size={18} />
             </button>
           </div>
-          <div className="asesor-chat__body">
-            <div className="asesor-chat__msg">
-              <p>¡Hola! 👋 Soy tu asesor de <strong>{PROYECTO.empresa}</strong>.</p>
-              <p>
-                Estamos en preventa de lotes campestres en el {PROYECTO.valle}: al contado desde{" "}
-                <strong>{soles0(DESDE_CONTADO)}</strong> o con inicial desde <strong>{soles0(INICIAL_MIN)}</strong> y {CUOTAS} cuotas
-                sin intereses. ¿Cómo te podemos ayudar hoy?
-              </p>
+
+          <div className="asesor__panel-body">
+            <div className="asesor__chat">
+              <img
+                className="asesor__chat-avatar"
+                src={foto}
+                alt=""
+                width={30}
+                height={30}
+                aria-hidden="true"
+              />
+              <div className="asesor__bubble">
+                <p>
+                  ¡Hola! <span aria-hidden="true">👋</span> Soy tu asesora en <strong>{PROYECTO.empresa}</strong>.
+                </p>
+                <p>
+                  Estamos en preventa de terrenos campestres desde <strong className="asesor__bubble-price">{soles0(DESDE_CONTADO)}</strong> o con inicial desde <strong>{soles0(INICIAL_MIN)}</strong> y {CUOTAS} cuotas sin intereses, a {MINUTOS_CHICLAYO} min de Chiclayo en el {PROYECTO.valle}. ¿Cómo te podemos ayudar hoy?
+                </p>
+              </div>
             </div>
-            <p className="asesor-chat__intro">Déjanos tus datos y un asesor te escribirá por WhatsApp:</p>
-            <ContactForm idPrefix="chat" landing={landing} variante="chat" />
+
+            <p className="asesor__prompt">Déjanos tus datos y un asesor te escribirá por WhatsApp:</p>
+
+            <ContactForm
+              idPrefix="widchat"
+              landing={landing}
+              variante="chat"
+              submitLabel="CONTINUAR EN WHATSAPP"
+              footerNote="Te atenderemos directamente por WhatsApp sin compromiso"
+            />
           </div>
         </div>
       ) : null}
 
-      {saludo && !abierto ? (
-        <div className="asesor__saludo" role="status">
-          <span>¿Quieres el plano y los precios de los lotes?</span>
-          <button type="button" onClick={cerrarSaludo} aria-label="Cerrar el saludo">
-            <Icon name="close" size={14} />
-          </button>
-        </div>
+      {!abierto ? (
+        <button
+          type="button"
+          className="asesor__btn"
+          data-track="float-contact"
+          aria-expanded={false}
+          aria-controls="asesor-chat"
+          onClick={abrir}
+        >
+          <span className="asesor__icon asesor__icon--avatar" aria-hidden="true">
+            <img
+              src={foto}
+              alt=""
+              width={46}
+              height={46}
+              loading="eager"
+            />
+          </span>
+          <span className="asesor__text">
+            <small><i aria-hidden="true" /> ASESOR EN LÍNEA</small>
+            <strong>¡Hablemos! <span className="asesor__wave" aria-hidden="true">👋</span></strong>
+          </span>
+          <span className="asesor__wa" aria-hidden="true">
+            <Icon name="chat" size={19} />
+            <b className="asesor__wa-unread">1</b>
+          </span>
+        </button>
       ) : null}
-
-      <button
-        type="button"
-        className="asesor__btn"
-        data-track="float-contact"
-        ref={boton}
-        onClick={alternar}
-        aria-expanded={abierto}
-        aria-controls="asesor-chat"
-        aria-label={abierto ? "Cerrar el chat con el asesor" : "Abrir el chat con un asesor en línea"}
-      >
-        {avatar}
-        <span className="asesor__text" aria-hidden="true">
-          <small>Asesor en línea</small>
-          <strong>¡Hablemos!</strong>
-        </span>
-        <span className="asesor__wa" aria-hidden="true"><Icon name="whatsapp" size={26} /></span>
-      </button>
     </div>
   );
 }

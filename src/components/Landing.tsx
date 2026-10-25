@@ -1,7 +1,7 @@
 import Image from "next/image";
-import { AVANCE, MEDIA } from "@/content/avance";
-import { CUOTAS, DESDE, DESDE_CONTADO, DISPONIBLES, LISTA_FECHA, M2_MAX, M2_MIN, loteById, m2, resumen, soles, soles0 } from "@/content/lotes";
+import { MEDIA } from "@/content/avance";
 import type { LandingId } from "@/content/landings";
+import { CUOTAS, DESDE, DESDE_CONTADO, DISPONIBLES, LISTA_FECHA, M2_MAX, M2_MIN, loteById, m2, resumen, soles, soles0 } from "@/content/lotes";
 import { PROYECTO } from "@/content/proyecto";
 import { AsesorFlotante } from "@/components/AsesorFlotante";
 import { ContactForm } from "@/components/ContactForm";
@@ -12,36 +12,28 @@ import { LazyLotStack } from "@/components/LazyLotStack";
 import { MotionToggle } from "@/components/MotionExperience";
 import { ObraBand, type Toma4 } from "@/components/ObraBand";
 import { SiteHeader } from "@/components/SiteHeader";
-import { WhatsAppCta } from "@/components/WhatsAppCta";
 import { Reveal, Stagger } from "@/components/motion/Reveal";
 
-// Estructura guiada por la landing de Grupo DLC (grupodlc.conexigo.com): portada con formulario,
-// plano de lotes con simulador, galería y video, pestañas para decidir y contacto. Todo botón de
-// contacto abre WhatsApp con un mensaje listo (WhatsAppCta); el formulario de la portada sigue al CRM. Con la marca, las fotos y
-// los datos de La Campiña. Toda cifra sale de src/content (lista de precios y proyecto).
-// La misma landing sirve en "/" (Lambayeque) y en "/promocion" (Lima, docs/0017): solo cambian las preguntas
-// del formulario, la hoja de leads y los eventos de los píxeles (src/content/landings.ts).
-
 const VUELOS: Toma4[] = [
-  { toma: "general-jul", titulo: "Las 8 manzanas, de punta a punta", fecha: "21 jul 2026", grow: 5, alt: "Vista de drone del trazado completo de La Campiña con el verde del valle al fondo" },
-  { toma: "portico", titulo: "El pórtico de ingreso", fecha: "11 abr 2026", grow: 2, alt: "Pórtico de ingreso de La Campiña sobre la vía a San Nicolás" },
-  { toma: "cerco-jun", titulo: "El frente sobre la vía", fecha: "jun 2026", grow: 3, alt: "Frente del proyecto con su cerco, visto desde el drone" },
-  { toma: "trazado-jun", titulo: "Los lotes trazados con cal", fecha: "25 jun 2026", grow: 2, alt: "Lotes y vías marcados con cal sobre la tierra" },
+  { toma: "hero", titulo: "Las 8 manzanas, de punta a punta", fecha: "21 jul 2026", grow: 5, alt: "Vista aérea de drone del trazado completo de lotes de La Campiña" },
+  { toma: "trazado-jun", titulo: "Los lotes trazados con cal", fecha: "25 jun 2026", grow: 3, alt: "Lotes y vías marcados con cal sobre la tierra con áreas verdes" },
+  { toma: "portico", titulo: "El pórtico y jardines de ingreso", fecha: "11 abr 2026", grow: 2, alt: "Vista cenital del pórtico de ingreso y jardines de La Campiña" },
+  { toma: "cerco-jun", titulo: "El frente sobre la vía", fecha: "jun 2026", grow: 2, alt: "Frente del proyecto con su cerco de caña y cielo despejado" },
 ];
 
-// Renders de las áreas comunes proyectadas (docs/0024): imágenes referenciales, no fotos.
 const DISFRUTAR = [
-  { toma: "render-hamacas" as const, titulo: "Zona de hamacas", estado: "Imagen referencial · julio 2027", alt: "Render de la zona de hamacas bajo un árbol, en un parque de La Campiña" },
-  { toma: "render-juegos" as const, titulo: "Juegos para niños", estado: "Imagen referencial · julio 2027", alt: "Render del área de juegos para niños, con columpios y tobogán" },
-  { toma: "render-gimnasio" as const, titulo: "Gimnasio al aire libre", estado: "Imagen referencial · julio 2027", alt: "Render del gimnasio al aire libre junto a una alameda con palmeras" },
+  { src: "/media/render-portico.jpg", titulo: "Pórtico de ingreso y seguridad", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D del pórtico de ingreso y caseta de vigilancia de La Campiña" },
+  { src: "/media/render-alameda.jpg", titulo: "Alameda central y casas de campo", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D panorámico del ingreso, pérgolas y casas de campo en La Campiña" },
+  { src: "/media/render-juegos.jpg", titulo: "Juegos para niños y zona de hamacas", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D de la zona de juegos infantiles de madera y área de hamacas" },
+  { src: "/media/render-parques.jpg", titulo: "Parques y zona de picnic familiar", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D de las áreas verdes con mesas de picnic y sombrillas" },
+  { src: "/media/render-gimnasio.jpg", titulo: "Gimnasio al aire libre y senderos", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D del circuito de calistenia y gimnasio al aire libre" },
+  { src: "/media/render-cancha.jpg", titulo: "Cancha deportiva de grass natural", estado: "Proyección 3D · Entrega jul. 2027", alt: "Render 3D de la cancha multiusos de grass natural en La Campiña" },
 ];
 const PROYECTADAS = ["Cancha de grass natural", "Zona de parrillas", "Zona de hamacas", "Juegos para niños", "Gimnasio al aire libre", "Agua de pozo tubular", "Vías con iluminación solar"];
 
 const EJEMPLOS = ["G18", "C3", "C9", "E4", "F11"].map((id) => loteById(id)!).filter((l) => l.precio);
 
-export function Landing({ landing = "lambayeque" }: { landing?: LandingId }) {
-  // Desde /promocion, la ficha completa del lote vuelve a /promocion y no a la landing de Lambayeque.
-  const origen = landing === "lima" ? "promocion" : undefined;
+export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}) {
   const r = resumen();
   const desde = DESDE.precio!;
   const inicialMin = Math.min(...DISPONIBLES.map((l) => l.precio!.inicial));
@@ -49,7 +41,7 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId }) {
   const tramos = PROYECTO.ubicacion.tramos;
   const chiclayo = tramos.find((t) => t.lugar === "Chiclayo")!;
   const { telefono } = PROYECTO.contacto;
-  const maps = PROYECTO.ubicacion.mapsUrl;
+  const origen = landing === "lima" ? "promocion" : undefined;
 
   const PESTANAS: Pestana[] = [
     {
@@ -63,11 +55,7 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId }) {
             {tramos.map((t) => <li key={t.lugar}><Icon name="check" size={16} /> {t.minutos} minutos de {t.lugar}</li>)}
             <li><Icon name="check" size={16} /> Tiempos aproximados; varían según la ruta y el tránsito</li>
           </ul>
-          {maps ? (
-            <a className="btn btn--ghost" href={maps} target="_blank" rel="noopener noreferrer"><Icon name="pin" size={18} /> Ver en Google Maps</a>
-          ) : (
-            <WhatsAppCta mensaje="Hola, ¿me envían la ubicación exacta de La Campiña?" className="btn btn--ghost" track="decision-whatsapp" icon="pin">Pide la ubicación exacta</WhatsAppCta>
-          )}
+          <a className="btn btn--ghost" href="#formulario"><Icon name="pin" size={18} /> Pide la ubicación exacta</a>
         </div>
       ),
     },
@@ -94,7 +82,7 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId }) {
                 <tbody>
                   {EJEMPLOS.map((l) => (
                     <tr key={l.id}>
-                      <th scope="row"><a href={`/lote/${l.id}`} aria-label={`Ver ficha del lote ${l.id}`}>{l.id}</a></th>
+                      <th scope="row"><a href="#formulario" aria-label={`Consultar lote ${l.id} en el formulario`}>{l.id}</a></th>
                       <td>{m2(l.m2)}</td>
                       <td>{soles0(l.precio!.financiado)}</td>
                       <td>{soles0(l.precio!.inicial)}</td>
@@ -121,7 +109,7 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId }) {
             <li><Icon name="check" size={16} /> Precios de la lista vigente del {LISTA_FECHA}</li>
             <li><Icon name="check" size={16} /> Entrega programada para {PROYECTO.entrega}</li>
           </ul>
-          <WhatsAppCta mensaje="Hola, quiero revisar la documentación de un lote de La Campiña." className="btn btn--ghost" track="decision-whatsapp" icon="plano">Pide la documentación</WhatsAppCta>
+          <a className="btn btn--ghost" href="#formulario"><Icon name="plano" size={18} /> Pide la documentación</a>
         </div>
       ),
     },
@@ -142,33 +130,53 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId }) {
       <SiteHeader />
 
       <main id="contenido">
-        {/* Portada (diseño del cliente): titular y beneficios, video de drone con miniaturas y formulario.
-            En escritorio, el formulario va bajo el titular y el video a la derecha; en el móvil, el video
-            va antes del formulario. */}
+        {/* Portada: titular, beneficios, formulario y fotos reales de la obra */}
         <section id="inicio" className="hero" aria-labelledby="t-inicio">
           <div className="hero__bg" aria-hidden="true">
-            <Image src={MEDIA["general-jul"].color} alt="" fill priority sizes="100vw" />
+            <Image src={MEDIA["ingreso-abr"].color} alt="" fill priority sizes="100vw" />
           </div>
-          <div className="hero__layout">
-            <div className="hero__intro">
-              <p className="eyebrow">{PROYECTO.valle} · A {chiclayo.minutos} min de Chiclayo</p>
-              <h1 id="t-inicio" className="hero__title">
-                <span>Tu casa en</span> <span>club privado</span> <span className="hero__name" translate="no">{PROYECTO.nombre}</span>
-              </h1>
-              <p className="hero__sub">Lotes campestres desde <b>{m2(M2_MIN)}</b> con <b>{PROYECTO.titulo.toLowerCase()}</b>.</p>
-              <ul className="hero__facts" aria-label="Beneficios">
-                <li><Icon name="tarjeta" size={24} /><span><span>{CUOTAS} cuotas</span> <span>sin intereses</span></span></li>
-                <li><Icon name="casco" size={24} /><span><span>Obra en</span> <span>marcha</span></span></li>
-                <li><Icon name="calendario" size={24} /><span><span>Entrega</span> <span>{PROYECTO.entrega}</span></span></li>
-              </ul>
-            </div>
-            <div className="hero__media">
-              <HeroCarousel />
-            </div>
-            <div className="form-card" id="formulario">
-              <h2 className="form-card__title">Recibe el plano y los precios.</h2>
-              <p className="form-card__promo"><Icon name="etiqueta" size={18} /><span>Contado desde {soles0(DESDE_CONTADO)}</span> <span>·</span> <span>{conPromo} lotes</span></p>
-              <ContactForm idPrefix="hero" landing={landing} />
+          <div className="wrap hero__inner">
+            <p className="eyebrow eyebrow--center">
+              <a href="#ubicacion" className="eyebrow__loc" aria-label={`Ver ubicación: A ${chiclayo.minutos} min de Chiclayo, ${PROYECTO.valle}`}>
+                <span className="eyebrow__pin" aria-hidden="true"><Icon name="pin" size={13} /></span>
+                <span>A {chiclayo.minutos} min de Chiclayo · {PROYECTO.valle}</span>
+              </a>
+            </p>
+            <h1 id="t-inicio" className="hero__title">
+              <span className="hero__big">
+                <span className="hero__big-sans">LOTES</span>{" "}
+                <em className="hero__big-serif">Amplios</em>
+              </span>
+              <span className="hero__mid">
+                <span className="hero__mid-light">para tu</span>{" "}
+                <strong className="hero__mid-bold">CASA DE CAMPO</strong>
+              </span>
+              <span className="hero__post">
+                desde <b>500 m²</b> en <b>club privado</b>
+              </span>
+            </h1>
+            <ul className="chips" aria-label="Beneficios">
+              <li><span className="chip__check" aria-hidden="true"><Icon name="check" size={11} /></span> {CUOTAS} cuotas sin interés</li>
+              <li><span className="chip__check" aria-hidden="true"><Icon name="check" size={11} /></span> Desde S/ 17 mil</li>
+              <li><span className="chip__check" aria-hidden="true"><Icon name="check" size={11} /></span> Entrega jul. 2027</li>
+            </ul>
+
+            <div className="hero__grid">
+              <div className="hero__media">
+                <HeroCarousel />
+              </div>
+              <div className="hero__form-wrap">
+                <a href="#formulario" className="hero__form-cue">
+                  <span>REGISTRA TUS DATOS AQUÍ</span>
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+                </a>
+                <div className="form-card" id="formulario">
+                  <p className="form-card__title">Déjanos tus datos para<br /><strong>reclamar tu regalo.</strong></p>
+                  <p className="form-card__promo"><Icon name="gift" size={18} /> ¡Bono de regalo: Descuento exclusivo!</p>
+                  <ContactForm idPrefix="hero" landing={landing} />
+                  <p className="form-card__foot"><Icon name="shield" size={15} /> Canal oficial de comunicación</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -184,23 +192,21 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId }) {
               </p>
             </Stagger>
 
-            <p className="notice"><Icon name="info" size={17} /> Toca un lote del plano para ver su precio y simular tu cuota. {r.disponibles} lotes disponibles según la lista del {LISTA_FECHA}. El plano reproduce el plano de lotización del proyecto y es referencial: confirma la ubicación, las medidas y la disponibilidad con un asesor.</p>
+            <section id="lotes" className="plan-block" aria-label="Plano de lotes disponibles">
+              <p className="notice"><Icon name="info" size={17} /> Toca cualquier lote disponible en el plano para seleccionarlo y solicitar su información completa con un asesor. {r.disponibles} lotes disponibles.</p>
+              <LazyLotStack origen={origen} />
+            </section>
           </div>
-
-          {/* El plano va a todo el ancho de la pantalla y la ficha del lote debajo (docs/0025). */}
-          <section id="lotes" className="plan-block" aria-label="Plano de lotes y simulador de cuotas">
-            <LazyLotStack origen={origen} />
-          </section>
         </section>
 
         {/* Lo que vas a disfrutar: fotos reales de lo construido y lo proyectado */}
-        <section id="areas" className="section section--tight section--glow-left" aria-labelledby="t-areas">
+        <section id="areas" className="section section--tight" aria-labelledby="t-areas">
           <div className="wrap">
             <Reveal as="h2" id="t-areas" className="h3">Lo que vas a <em>disfrutar</em></Reveal>
             <div className="photo-cards">
               {DISFRUTAR.map((d) => (
                 <figure key={d.titulo} className="photo-card">
-                  <Image src={MEDIA[d.toma].color} alt={d.alt} fill sizes="(max-width: 899px) 90vw, 33vw" />
+                  <Image src={d.src} alt={d.alt} fill sizes="(max-width: 899px) 90vw, 33vw" />
                   <figcaption><strong>{d.titulo}</strong><span>{d.estado}</span></figcaption>
                 </figure>
               ))}
@@ -227,12 +233,8 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId }) {
             <ObraBand tomas={VUELOS} />
           </div>
           <div className="wrap">
-            <ol className="timeline" aria-label="Bitácora de obra">
-              {AVANCE.map((h) => <li key={h.toma}><span>{h.fecha ?? "Inicio de obra"}</span><strong>{h.titulo}</strong></li>)}
-              <li className="is-next"><span>{PROYECTO.entrega}</span><strong>Entrega programada</strong></li>
-            </ol>
             <div className="actions actions--center">
-              <WhatsAppCta mensaje="Hola, estoy lejos y quiero una videollamada para conocer La Campiña." className="btn btn--ghost" track="obra-whatsapp" icon="drone">¿Estás lejos? Pide una videollamada</WhatsAppCta>
+              <a className="btn btn--ghost" href="#formulario"><Icon name="drone" size={18} /> ¿Estás lejos? Pide una videollamada</a>
             </div>
           </div>
         </section>
@@ -257,7 +259,7 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId }) {
         </section>
 
         {/* Preguntas frecuentes */}
-        <section id="preguntas" className="section section--glow-left" aria-labelledby="t-preguntas">
+        <section id="preguntas" className="section" aria-labelledby="t-preguntas">
           <div className="wrap faq">
             <Stagger className="section__head section__head--left">
               <p className="eyebrow" data-part>Preguntas frecuentes</p>
@@ -274,22 +276,18 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId }) {
           </div>
         </section>
 
-        {/* Contacto: canales; los de contacto abren WhatsApp */}
+        {/* Contacto: canales; todos llevan al formulario de la portada */}
         <section id="contacto" className="section section--contact" aria-labelledby="t-contacto">
           <div className="wrap">
             <Stagger className="section__head section__head--center">
               <h2 id="t-contacto" className="h2" data-part>Da el <em>primer paso</em> hoy</h2>
-              <p className="lead" data-part>Escríbenos por WhatsApp: un asesor de {PROYECTO.empresa} te envía el plano, tu plan de cuotas y los horarios de visita. Sin compromiso.</p>
+              <p className="lead" data-part>Un asesor de {PROYECTO.empresa} te envía el plano, tu plan de cuotas y los horarios de visita. Sin compromiso.</p>
             </Stagger>
             <div className="channels">
-              <WhatsAppCta mensaje="Hola, quiero agendar una visita a La Campiña." className="channel" track="contact-whatsapp" icon={null}><span className="channel__icon"><Icon name="calendario" size={20} /></span><span className="channel__text"><strong>Agenda tu visita</strong><small>Visitas guiadas los fines de semana, por WhatsApp</small></span></WhatsAppCta>
-              <WhatsAppCta mensaje="Hola, estoy lejos y quiero una videollamada para conocer La Campiña." className="channel" track="contact-whatsapp" icon={null}><span className="channel__icon"><Icon name="drone" size={20} /></span><span className="channel__text"><strong>¿Estás lejos?</strong><small>Pide una videollamada por WhatsApp</small></span></WhatsAppCta>
-              {maps ? (
-                <a className="channel" href={maps} target="_blank" rel="noopener noreferrer"><span className="channel__icon"><Icon name="pin" size={20} /></span><span className="channel__text"><strong>Ubicación</strong><small>Vía a San Nicolás, {PROYECTO.valle}</small></span></a>
-              ) : (
-                <div className="channel"><span className="channel__icon"><Icon name="pin" size={20} /></span><span className="channel__text"><strong>Ubicación</strong><small>Vía a San Nicolás, {PROYECTO.valle}, Lambayeque</small></span></div>
-              )}
-              {telefono ? <a className="channel" href={`tel:${telefono}`}><span className="channel__icon"><Icon name="fono" size={20} /></span><span className="channel__text"><strong>Llámanos</strong><small>{telefono}</small></span></a> : null}
+              <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="calendario" size={20} /></span><span className="channel__text"><strong>Agenda tu visita</strong><small>Visitas guiadas los fines de semana</small></span></a>
+              <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="drone" size={20} /></span><span className="channel__text"><strong>¿Estás lejos?</strong><small>Pide una videollamada desde tu ciudad</small></span></a>
+              <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="pin" size={20} /></span><span className="channel__text"><strong>Ubicación</strong><small>Vía a San Nicolás, {PROYECTO.valle}, Lambayeque</small></span></a>
+              {telefono ? <a className="channel" href="#formulario"><span className="channel__icon"><Icon name="fono" size={20} /></span><span className="channel__text"><strong>Llámanos</strong><small>{telefono}</small></span></a> : null}
             </div>
           </div>
         </section>
@@ -308,19 +306,19 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId }) {
           </nav>
           <nav aria-label="La Campiña">
             <p className="site-footer__label">La Campiña</p>
-            <ul><li><a href="#por-que">Financiamiento</a></li><li><WhatsAppCta mensaje="Hola, ¿me envían el plano y los precios de La Campiña?" className="" track="footer-whatsapp" icon={null}>Pide el plano</WhatsAppCta></li><li><WhatsAppCta mensaje="Hola, estoy lejos y quiero una videollamada para conocer La Campiña." className="" track="footer-whatsapp" icon={null}>Videollamada</WhatsAppCta></li><li><a href="#por-que">Documentación</a></li></ul>
+            <ul><li><a href="#por-que">Financiamiento</a></li><li><a href="#formulario">Pide el plano</a></li><li><a href="#formulario">Videollamada</a></li><li><a href="#por-que">Documentación</a></li></ul>
           </nav>
           <div>
             <p className="site-footer__label">Contacto</p>
             <ul>
-              <li><WhatsAppCta mensaje="Hola, quiero agendar una visita a La Campiña." className="" track="footer-whatsapp" icon={null}><Icon name="whatsapp" size={16} /> Agenda tu visita</WhatsAppCta></li>
+              <li><a href="#formulario"><Icon name="calendario" size={16} /> Agenda tu visita</a></li>
               <li><span><Icon name="pin" size={16} /> Vía a San Nicolás, {PROYECTO.valle}, Lambayeque</span></li>
               {telefono ? <li><a href={`tel:${telefono}`}><Icon name="fono" size={16} /> {telefono}</a></li> : null}
             </ul>
           </div>
         </div>
         <div className="wrap site-footer__legal">
-          <p>© 2026 {PROYECTO.empresa}. Fotografías y videos del propio proyecto; las imágenes marcadas como referenciales son renders o fotos retocadas. Precios, áreas y estados de los {r.total} lotes según la lista del {LISTA_FECHA}, sujetos a confirmación comercial. El plano interactivo se basa en el plano de lotización oficial y no lo sustituye.</p>
+          <p>© 2026 {PROYECTO.empresa}. Fotografías y videos del propio proyecto. Precios, áreas y estados de los {r.total} lotes según la lista del {LISTA_FECHA}, sujetos a confirmación comercial. El plano interactivo es un esquema y no sustituye al plano oficial.</p>
           <div className="site-footer__links"><a href="/privacidad">Privacidad</a><MotionToggle /><a href="#inicio">Volver arriba</a></div>
         </div>
       </footer>

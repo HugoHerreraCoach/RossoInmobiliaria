@@ -1,83 +1,83 @@
 {
   "hero": {
-    "color": "/media/hero.webp",
+    "color": "/media/editada-aerea-lotes.jpg",
     "colorSize": [
       1600,
       900
     ],
-    "video": "/media/hero.mp4",
-    "source": "Recursos/drive/Tomas de Drone/VIDEOS/DJI_0718.MP4 @3s"
+    "video": null,
+    "source": "ROSSO EDITADAS/WhatsApp Image 2026-10-24 at 17.03.57 (1).jpeg"
   },
   "apertura": {
-    "color": "/media/apertura.webp",
+    "color": "/media/editada-trazado-cielo.jpg",
     "colorSize": [
       1600,
-      2400
+      900
     ],
     "video": null,
-    "source": "Recursos/drive/Fotos de avances de obra/Avance de Obra /Día 01/Fotos/DSC00597.JPG"
+    "source": "ROSSO EDITADAS/WhatsApp Image 2026-10-24 at 17.03.57.jpeg"
   },
   "ingreso-abr": {
-    "color": "/media/ingreso-abr.webp",
+    "color": "/media/editada-areas-verdes.jpg",
     "colorSize": [
       1600,
       900
     ],
-    "video": "/media/ingreso-abr.mp4",
-    "source": "Recursos/drive/Tomas de Drone/drone campiña 27.05/DJI_20260411105716_0015_D.MP4 @2s"
+    "video": null,
+    "source": "ROSSO EDITADAS/WhatsApp Image 2026-10-24 at 17.05.46.jpeg"
   },
   "portico": {
-    "color": "/media/portico.webp",
+    "color": "/media/editada-portico-zenital.jpg",
     "colorSize": [
       1600,
       900
     ],
-    "video": "/media/portico.mp4",
-    "source": "Recursos/drive/Tomas de Drone/drone campiña 27.05/DJI_20260411105904_0021_D.MP4 @3s"
+    "video": null,
+    "source": "ROSSO EDITADAS/WhatsApp Image 2026-10-24 at 17.03.57 (3).jpeg"
   },
   "trazado-jun": {
-    "color": "/media/trazado-jun.webp",
+    "color": "/media/editada-trazado-cielo.jpg",
     "colorSize": [
       1600,
       900
     ],
-    "video": "/media/trazado-jun.mp4",
-    "source": "Recursos/drive/Tomas de Drone/VIDEOS/DJI_0773.MP4 @7s"
+    "video": null,
+    "source": "ROSSO EDITADAS/WhatsApp Image 2026-10-24 at 17.03.57.jpeg"
   },
   "cerco-jun": {
-    "color": "/media/cerco-jun.webp",
+    "color": "/media/editada-cerco-cana.jpg",
     "colorSize": [
       1600,
       900
     ],
-    "video": "/media/cerco-jun.mp4",
-    "source": "Recursos/drive/Tomas de Drone/VIDEOS/DJI_0811.MP4 @7s"
+    "video": null,
+    "source": "ROSSO EDITADAS/WhatsApp Image 2026-10-24 at 17.05.47 (1).jpeg"
   },
   "general-jul": {
-    "color": "/media/general-jul.webp",
+    "color": "/media/editada-ingreso-sol.jpg",
     "colorSize": [
       1600,
       900
     ],
-    "video": "/media/general-jul.mp4",
-    "source": "Recursos/drive/Tomas de Drone/DJI_0992.MP4 @2s"
+    "video": null,
+    "source": "ROSSO EDITADAS/WhatsApp Image 2026-10-24 at 12.18.36 (1).jpeg"
   },
   "estructura-set": {
-    "color": "/media/estructura-set.webp",
-    "colorSize": [
-      1600,
-      1200
-    ],
-    "video": null,
-    "source": "Recursos/drive/Fotos de avances de obra/Fotos/100GOPRO/G0062336.JPG"
-  },
-  "banderas": {
-    "color": "/media/banderas.webp",
+    "color": "/media/editada-areas-verdes.jpg",
     "colorSize": [
       1600,
       900
     ],
     "video": null,
-    "source": "Recursos/drive/Fotos del proyecto/CAMPIÑA/campiña 3.jpg"
+    "source": "ROSSO EDITADAS/WhatsApp Image 2026-10-24 at 17.05.46.jpeg"
+  },
+  "banderas": {
+    "color": "/media/editada-ingreso-sol.jpg",
+    "colorSize": [
+      1600,
+      900
+    ],
+    "video": null,
+    "source": "ROSSO EDITADAS/WhatsApp Image 2026-10-24 at 12.18.36 (1).jpeg"
   }
 }
