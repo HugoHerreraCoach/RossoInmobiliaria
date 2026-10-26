@@ -135,6 +135,20 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
   return (
     <LotesProvider lotes={lotes}>
       <a className="skip" href="#contenido">Saltar al contenido</a>
+      <a href="#formulario" className="top-ticker" aria-label="Preventa exclusiva: solo quedan 70 lotes disponibles. Reclama tu descuento exclusivo">
+        <div className="top-ticker__track" aria-hidden="true">
+          {[0, 1, 2, 3].map((i) => (
+            <span className="top-ticker__item" key={i}>
+              <i className="top-ticker__dot" />
+              <strong>¡SOLO QUEDAN 70 LOTES DISPONIBLES!</strong>
+              <span className="top-ticker__sep">·</span>
+              <span>PREVENTA CON DESCUENTO EXCLUSIVO</span>
+              <span className="top-ticker__sep">·</span>
+              <span className="top-ticker__cta">RECLAMAR AQUÍ →</span>
+            </span>
+          ))}
+        </div>
+      </a>
       <SiteHeader />
 
       <main id="contenido">
@@ -154,9 +168,9 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
               <span className="hero__big">
                 <span className="hero__big-sans">LOTES</span>{" "}
                 <span className="hero__big-highlight">
-                  <span className="hero__big-serif">DESDE 500 M²</span>
+                  <span className="hero__big-serif">DESDE 500 <span className="hero__unit">m²</span></span>
                   <svg className="hero__underline" viewBox="0 0 210 16" fill="none" aria-hidden="true" preserveAspectRatio="none">
-                    <path d="M4 12.5C65 3.5 145 3.5 206 11" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+                    <path d="M4 12.5C65 3.5 145 3.5 206 11" stroke="currentColor" strokeWidth="5.5" strokeLinecap="round" />
                   </svg>
                 </span>
               </span>
@@ -165,13 +179,12 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
                 <strong className="hero__mid-bold">CASA DE CAMPO</strong>
               </span>
               <span className="hero__post">
-                en <b>club privado</b> · <b>¡Solo quedan 70 lotes disponibles!</b>
+                en <b>club privado</b> con <b>escritura pública</b>
               </span>
             </h1>
             <ul className="chips" aria-label="Beneficios">
               <li><span className="chip__check" aria-hidden="true"><Icon name="check" size={11} /></span> {CUOTAS} cuotas sin interés</li>
               <li><span className="chip__check" aria-hidden="true"><Icon name="check" size={11} /></span> Desde S/ 17 mil</li>
-              <li className="chip--scarcity"><span className="chip__pulse" aria-hidden="true" /> ¡Solo quedan 70 lotes disponibles!</li>
             </ul>
 
             <div className="hero__grid">
@@ -182,7 +195,7 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
                 </a>
                 <div className="form-card" id="formulario">
                   <p className="form-card__title">Déjanos tus datos para<br /><strong>recibir tu descuento exclusivo.</strong></p>
-                  <p className="form-card__promo"><Icon name="gift" size={18} /> ¡Bono: Descuento exclusivo · Quedan 70 lotes!</p>
+                  <p className="form-card__promo"><Icon name="gift" size={18} /> ¡Bono de regalo: Descuento exclusivo!</p>
                   <ContactForm idPrefix="hero" landing={landing} />
                   <p className="form-card__foot"><Icon name="shield" size={15} /> Canal oficial de comunicación</p>
                 </div>
@@ -211,7 +224,7 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
             </Stagger>
 
             <section id="lotes" className="plan-block" aria-label="Plano de lotes disponibles">
-              <p className="notice"><Icon name="info" size={17} /> Toca cualquier lote disponible en el plano para seleccionarlo y reclamar tu descuento exclusivo con un asesor. <strong>¡Solo quedan 70 lotes disponibles!</strong></p>
+              <p className="notice"><Icon name="info" size={17} /> Toca cualquier lote disponible en el plano para seleccionarlo y reclamar tu descuento exclusivo con un asesor.</p>
               <LazyLotStack origen={origen} />
             </section>
           </div>
