@@ -135,16 +135,12 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
   return (
     <LotesProvider lotes={lotes}>
       <a className="skip" href="#contenido">Saltar al contenido</a>
-      <a href="#formulario" className="top-ticker" aria-label="Preventa exclusiva: solo quedan 70 lotes disponibles. Reclama tu descuento exclusivo">
+      <a href="#formulario" className="top-ticker" aria-label="Solo quedan 70 lotes disponibles">
         <div className="top-ticker__track" aria-hidden="true">
-          {[0, 1, 2, 3].map((i) => (
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
             <span className="top-ticker__item" key={i}>
               <i className="top-ticker__dot" />
               <strong>¡SOLO QUEDAN 70 LOTES DISPONIBLES!</strong>
-              <span className="top-ticker__sep">·</span>
-              <span>PREVENTA CON DESCUENTO EXCLUSIVO</span>
-              <span className="top-ticker__sep">·</span>
-              <span className="top-ticker__cta">RECLAMAR AQUÍ →</span>
             </span>
           ))}
         </div>
@@ -155,7 +151,7 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
         {/* Portada: titular, beneficios, formulario y fotos reales de la obra */}
         <section id="inicio" className="hero" aria-labelledby="t-inicio">
           <div className="hero__bg" aria-hidden="true">
-            <Image src={MEDIA["ingreso-abr"].color} alt="" fill priority sizes="100vw" />
+            <Image src="/media/render-ingreso.webp" alt="" fill priority sizes="100vw" />
           </div>
           <div className="wrap hero__inner">
             <p className="eyebrow eyebrow--center">

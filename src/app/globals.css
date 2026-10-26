@@ -319,19 +319,26 @@ html[data-ui="rosso"] .hero__underline {
   justify-content: center;
   gap: 8px;
   margin-inline: auto;
-  padding: 4px 10px;
-  color: #a3e635;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(15, 23, 18, 0.72);
+  border: 1px solid rgba(253, 224, 71, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fde047;
   font-family: var(--display);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.45);
 }
 html[data-ui="rosso"] .hero__form-cue {
-  color: #fbbf24;
+  color: #fde047;
 }
 .hero__form-cue svg {
+  color: #ffffff;
   animation: cue-bounce 1.6s ease-in-out infinite;
 }
 @media (max-width: 959px) {
@@ -1296,13 +1303,14 @@ html[data-ui="verde"] .hero__bg img,
 html[data-ui="rosso"] .hero__bg img {
   display: block;
   object-fit: cover;
-  object-position: 50% 38%;
+  object-position: 50% 42%;
+  filter: saturate(1.12) contrast(1.04);
 }
 
 html[data-ui="verde"] .hero__bg::after {
   background:
-    radial-gradient(ellipse 90% 55% at 50% 18%, rgba(11, 22, 14, 0.48) 0%, rgba(11, 22, 14, 0.78) 68%, var(--bg) 100%),
-    linear-gradient(180deg, rgba(8, 18, 11, 0.62) 0%, rgba(11, 22, 14, 0.78) 54%, var(--bg) 96%);
+    radial-gradient(ellipse 85% 42% at 50% 16%, rgba(6, 16, 10, 0.76) 0%, rgba(6, 16, 10, 0.52) 58%, rgba(11, 22, 14, 0.84) 100%),
+    linear-gradient(180deg, rgba(6, 16, 10, 0.72) 0%, rgba(8, 20, 12, 0.56) 46%, var(--bg) 96%);
 }
 
 html[data-ui="rosso"] .hero__bg::after {
