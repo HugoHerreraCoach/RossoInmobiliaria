@@ -153,7 +153,12 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
             <h1 id="t-inicio" className="hero__title">
               <span className="hero__big">
                 <span className="hero__big-sans">LOTES</span>{" "}
-                <span className="hero__big-serif">AMPLIOS</span>
+                <span className="hero__big-highlight">
+                  <span className="hero__big-serif">AMPLIOS</span>
+                  <svg className="hero__underline" viewBox="0 0 210 16" fill="none" aria-hidden="true" preserveAspectRatio="none">
+                    <path d="M4 12.5C65 3.5 145 3.5 206 11" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+                  </svg>
+                </span>
               </span>
               <span className="hero__mid">
                 <span className="hero__mid-light">PARA TU</span>{" "}
@@ -166,7 +171,6 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
             <ul className="chips" aria-label="Beneficios">
               <li><span className="chip__check" aria-hidden="true"><Icon name="check" size={11} /></span> {CUOTAS} cuotas sin interés</li>
               <li><span className="chip__check" aria-hidden="true"><Icon name="check" size={11} /></span> Desde S/ 17 mil</li>
-              <li><span className="chip__check" aria-hidden="true"><Icon name="check" size={11} /></span> Entrega jul. 2027</li>
             </ul>
 
             <div className="hero__grid">
