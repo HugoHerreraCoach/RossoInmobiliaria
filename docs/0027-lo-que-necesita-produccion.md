@@ -106,7 +106,7 @@ las preguntas de Lima, cambian estas columnas: hay que revisarlas antes de cada 
 
 - **Navegador:** al confirmarse la fila, envía un evento a los dos píxeles, con el id del envío como id del evento.
   - Lambayeque envía `CompleteRegistration` (0013).
-  - Lima envía `SubmitApplication` (0021).
+  - Lima envía `Contact` (0030; antes `SubmitApplication`, que TikTok no deja usar para optimizar).
   - Esto no necesita tokens, solo los IDs de los píxeles.
 - **Servidor:** el `Lead` se envía solo cuando ConexiGO confirma el primer mensaje de WhatsApp
   (`/api/conexigo/conversiones`). Va a Meta (CAPI) y a TikTok (Events API) desde una cola en la base.
@@ -217,7 +217,7 @@ y la validación se revisan antes.
 4. **Registro de prueba en `/promocion`:**
    - una fila **solo** en la hoja de Lima, con ZONA y MODALIDAD en sus columnas;
    - lo mismo desde el chat del botón flotante, que además abre WhatsApp con el código `R-`;
-   - `SubmitApplication` en los dos píxeles.
+   - `Contact` en los dos píxeles (0030).
 5. Un `POST /api/lead` vacío desde el dominio da 422, no 403 ni 503.
 6. Con la tarea configurada, el registro de Vercel muestra `/api/tracking/drain` con 200.
 7. Borrar las filas de prueba de las hojas.
@@ -227,7 +227,7 @@ y la validación se revisan antes.
 - **0010 y 0013:**
   - confirmar a qué Business Center de TikTok pertenece `DBDTQQRC77U4SEFNIUQ0`;
   - verificar el dominio en Meta, que depende del DNS de `conexigo.com`;
-  - optimizar las campañas con `CompleteRegistration` (Lambayeque) y `SubmitApplication` (Lima).
+  - optimizar las campañas con `CompleteRegistration` (Lambayeque) y `Contact` (Lima, 0030).
 - **0019:** lista de disponibilidad al día; la de la web es del 21/08/2026.
 - **0020:** decidir con Rosso:
   - el texto sobre la escritura sin inscripción registral («Papeles claros»);

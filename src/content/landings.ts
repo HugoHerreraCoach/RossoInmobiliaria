@@ -88,9 +88,10 @@ export const LANDINGS: Record<LandingId, Landing> = {
     preguntas: [ZONA, MODALIDAD],
     preguntaPixel: MODALIDAD.id,
     // Distinto al de Lambayeque y el mismo en los dos píxeles (pedido del cliente, docs/0021), para medir y optimizar
-    // cada campaña por separado. SubmitApplication es estándar en Meta y en TikTok. Nunca "Lead" ni "SubmitForm"
-    // (TikTok lo cuenta como Lead): Lead lo envía solo el servidor cuando ConexiGO confirma el mensaje.
-    evento: "SubmitApplication",
+    // cada campaña por separado. Contact es estándar en Meta y en TikTok, y TikTok lo acepta para optimizar (CONSULT);
+    // SubmitApplication no (docs/0030). Nunca "Lead" ni "SubmitForm" (TikTok lo cuenta como Lead): Lead lo envía solo
+    // el servidor cuando ConexiGO confirma el mensaje.
+    evento: "Contact",
   },
 };
 

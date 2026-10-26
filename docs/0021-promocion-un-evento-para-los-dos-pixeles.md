@@ -2,6 +2,9 @@
 
 **Fecha:** 2026-10-24 · **Rama:** `jheferson` (sin commit al cerrar este documento)
 
+> **Actualización (0030, 2026-10-26):** TikTok no deja usar `SubmitApplication` («Envío de solicitud») para
+> optimizar. Lima pasó a enviar **`Contact`** en los dos píxeles. Lo de abajo describe la versión anterior.
+
 ## Qué se pidió
 
 > «el evento que se va a registrar en la landing /promocion debe ser el mismo para ambos pixel pero debe ser
@@ -70,7 +73,7 @@ no los estaba tocando.
 
 - [ ] **Dueño:** publicar, junto con 0017. `/promocion` todavía no está en producción, así que nunca envió
       `SubmitForm` a una campaña real.
-- [ ] **Campañas de Lima:** elegir `SubmitApplication` como evento de optimización en Meta y en TikTok. En TikTok,
-      si el píxel no lo muestra aún, aparece después del primer registro real.
+- [x] ~~**Campañas de Lima:** elegir `SubmitApplication` como evento de optimización en Meta y en TikTok. En TikTok,
+      si el píxel no lo muestra aún, aparece después del primer registro real.~~ Reemplazado por `Contact` (0030).
 - [ ] Después del despliegue, comprobar en «Probar eventos» de Meta y TikTok un registro de prueba en
-      `/promocion`: un `SubmitApplication` en cada uno, con el mismo id de evento.
+      `/promocion`: un `Contact` en cada uno (0030), con el mismo id de evento.

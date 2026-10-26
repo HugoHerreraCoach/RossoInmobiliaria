@@ -24,7 +24,7 @@
 1. **Sincronizar:** la rama local `jheferson` avanzó a `main` (`520e468`) en fast-forward, sin conflictos. Todo el
    rediseño queda como está en `main`.
 2. **Apartar el cambio de evento:** el cambio de `/promocion` a `Contact` (0030) estaba sin commit y se guardó aparte
-   (`git stash`) para no mezclarlo. Se aplica solo si el usuario lo confirma.
+   (`git stash`) para no mezclarlo. El usuario lo confirmó después y se aplicó en su propio commit.
 3. **Plano oficial dentro del componente del rediseño (`LotStack.tsx`).** Se cambió solo la geometría del SVG; queda
    todo lo demás del rediseño:
    - barra con «Disponibles», zoom, arrastre y restablecer;
@@ -82,5 +82,5 @@
 ## Pendientes
 
 - [ ] Que el dueño fusione `jheferson` en `main` y despliegue. Hoy producción muestra el esquema a mano.
-- [ ] Decidir si se aplica el evento `Contact` en `/promocion` (0030, guardado aparte).
+- [x] Evento `Contact` en `/promocion`: el usuario lo confirmó y se aplicó (0030).
 - [ ] Decidir el texto o las imágenes de «Así avanza La Campiña».

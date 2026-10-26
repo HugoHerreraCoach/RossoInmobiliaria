@@ -117,7 +117,7 @@ export function pixelEvent(name: EventName, id: string, p: Props={}) {
 }
 /** Registration saved (docs/0013): the landing's event to Meta and TikTok at the same moment with the same event ID
  *  (the submission ID, also written to the sheet). Lambayeque ("/") sends CompleteRegistration; the /promocion
- *  landing sends SubmitApplication, one name for both pixels (src/content/landings.ts, docs/0017, 0021). Call ONLY after /api/lead confirms. No name or phone. */
+ *  landing sends Contact, one name for both pixels (src/content/landings.ts, docs/0017, 0021, 0030). Call ONLY after /api/lead confirms. No name or phone. */
 export function registrationEvent(id: string, p: { source?: string; lot?: string; inicial?: string } = {}) {
   if (!active || !consent?.marketing) return;
   const content={content_name:"La Campiña",content_category:"Lotes campestres"}, origin=SOURCES[p.source||""]||p.source||"";
