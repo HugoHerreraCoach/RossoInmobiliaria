@@ -10,10 +10,11 @@ import { Icon } from "./Icon";
 
 const MINUTOS_CHICLAYO = PROYECTO.ubicacion.tramos.find((t) => t.lugar === "Chiclayo")!.minutos;
 
-/** Widchat flotante del asesor: cerrado muestra la burbuja compacta "Asesor en línea";
- *  al hacer clic se despliega la ventana de chat con el formulario integrado (variante="chat"). */
+/** Widchat flotante del asesor: cerrado muestra un saludo proactivo + la píldora "Asesora en línea";
+ *  al hacer clic despliega la ventana de chat con el formulario integrado (variante="chat"). */
 export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId } = {}) {
   const [abierto, setAbierto] = useState(false);
+  const [saludoVisible, setSaludoVisible] = useState(true);
   // Montos "desde" de los lotes vigentes (docs/0032).
   const cat = useLotes();
   const [montado, setMontado] = useState(false);
@@ -46,6 +47,7 @@ export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId
   const abrir = () => {
     setMontado(true);
     setAbierto(true);
+    setSaludoVisible(false);
   };
 
   return (
@@ -64,8 +66,11 @@ export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId
               <i className="asesor__panel-status-dot" />
             </div>
             <div className="asesor__panel-title">
-              <strong>Asesora {PROYECTO.empresa}</strong>
-              <span><i aria-hidden="true" /> En línea · {PROYECTO.nombre}</span>
+              <strong>
+                Asesora {PROYECTO.empresa}
+                <span className="asesor__verified" aria-label="Canal verificado">✓</span>
+              </strong>
+              <span><i aria-hidden="true" /> En línea ahora · Respuesta inmediata</span>
             </div>
             <button
               type="button"
@@ -83,8 +88,8 @@ export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId
                 className="asesor__chat-avatar"
                 src={foto}
                 alt=""
-                width={30}
-                height={30}
+                width={32}
+                height={32}
                 aria-hidden="true"
               />
               <div className="asesor__bubble">
@@ -92,28 +97,49 @@ export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId
                   ¡Hola! <span aria-hidden="true">👋</span> Soy tu asesora en <strong>{PROYECTO.empresa}</strong>.
                 </p>
                 <p>
-                  Estamos en preventa de terrenos campestres desde <strong className="asesor__bubble-price">{soles0(cat.desdeContado ?? DESDE_CONTADO)}</strong> o con inicial desde <strong>{soles0(cat.inicialMin ?? DESDE.precio!.inicial)}</strong> y {CUOTAS} cuotas sin intereses, a {MINUTOS_CHICLAYO} min de Chiclayo en el {PROYECTO.valle}.{" "}
-                  {landing === "lima"
-                    ? "¿Te gustaría conocer el proyecto por videollamada o recibir el plano?"
-                    : "¿Cómo te podemos ayudar hoy?"}
+                  Separa tu lote de <strong>500 m²</strong> desde <strong className="asesor__bubble-price">{soles0(cat.desdeContado ?? DESDE_CONTADO)}</strong> al contado o con inicial desde <strong>{soles0(cat.inicialMin ?? DESDE.precio!.inicial)}</strong> ({CUOTAS} cuotas sin interés).
                 </p>
+                <span className="asesor__bubble-meta">Ahora · ✓✓</span>
               </div>
             </div>
 
+            <div className="asesor__promo-pill">
+              <Icon name="gift" size={15} />
+              <span>
+                {landing === "lima"
+                  ? "¡Bono Descuento Exclusivo + Videollamada!"
+                  : "¡Bono activado: Descuento exclusivo de preventa!"}
+              </span>
+            </div>
+
             <p className="asesor__prompt">
-              {landing === "lima"
-                ? "Déjanos tus datos para enviarte el plano o agendar una videollamada por WhatsApp:"
-                : "Déjanos tus datos y un asesor te escribirá por WhatsApp:"}
+              Completa tus datos aquí para recibir tu descuento en WhatsApp:
             </p>
 
             <ContactForm
               idPrefix="widchat"
               landing={landing}
               variante="chat"
-              submitLabel="CONTINUAR EN WHATSAPP"
-              footerNote="Te atenderemos directamente por WhatsApp sin compromiso"
+              submitLabel="RECLAMAR DESCUENTO EN WHATSAPP"
+              footerNote="Atención inmediata por WhatsApp · Sin compromiso"
             />
           </div>
+        </div>
+      ) : null}
+
+      {!abierto && saludoVisible ? (
+        <div className="asesor__saludo">
+          <button type="button" className="asesor__saludo-open" onClick={abrir}>
+            🎁 <strong>¿Buscas lote?</strong> Reclama tu descuento aquí
+          </button>
+          <button
+            type="button"
+            className="asesor__saludo-close"
+            onClick={() => setSaludoVisible(false)}
+            aria-label="Cerrar aviso"
+          >
+            <Icon name="close" size={14} />
+          </button>
         </div>
       ) : null}
 
@@ -136,8 +162,8 @@ export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId
             />
           </span>
           <span className="asesor__text">
-            <small><i aria-hidden="true" /> ASESOR EN LÍNEA</small>
-            <strong>¡Hablemos! <span className="asesor__wave" aria-hidden="true">👋</span></strong>
+            <small><i aria-hidden="true" /> ASESORA EN LÍNEA</small>
+            <strong>Reclamar bono <span className="asesor__wave" aria-hidden="true">🎁</span></strong>
           </span>
           <span className="asesor__wa" aria-hidden="true">
             <Icon name="chat" size={19} />
