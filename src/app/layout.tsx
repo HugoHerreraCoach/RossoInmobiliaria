@@ -7,7 +7,6 @@ import "./globals.css";
 import { MotionExperience } from "@/components/MotionExperience";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { TrackingProvider } from "@/components/tracking/TrackingProvider";
-import { UiProposalSwitcher } from "@/components/UiProposalSwitcher";
 
 // Pareja tipográfica de la referencia (landing de Grupo DLC): una geométrica para titulares y cifras,
 // una humanista para el texto y una serif editorial para acentos de casa de campo.
@@ -49,8 +48,8 @@ export const viewport: Viewport = {
 };
 
 // Marca que hay JS antes del primer pintado (los revelados y el hero dependen de html.js) y aplica
-// la pausa de movimiento guardada y la propuesta visual elegida.
-const BOOT = `(function(){var d=document.documentElement;d.classList.add('js');try{if(localStorage.getItem('rosso.motion.v1')==='paused')d.dataset.motion='paused';var u=new URLSearchParams(location.search).get('ui')||localStorage.getItem('rosso.ui.proposal.v2')||'verde';if(u==='verde'||u==='rosso'||u==='oscuro')d.dataset.ui=u;}catch(e){d.dataset.ui='verde';}})();`;
+// la pausa de movimiento guardada y el tema visual por defecto.
+const BOOT = `(function(){var d=document.documentElement;d.classList.add('js');d.dataset.ui='verde';try{if(localStorage.getItem('rosso.motion.v1')==='paused')d.dataset.motion='paused';}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -60,7 +59,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         {children}
-        <UiProposalSwitcher />
         <SmoothScroll />
         <MotionExperience />
         <TrackingProvider />

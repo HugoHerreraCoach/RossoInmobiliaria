@@ -153,10 +153,10 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
             <h1 id="t-inicio" className="hero__title">
               <span className="hero__big">
                 <span className="hero__big-sans">LOTES</span>{" "}
-                <em className="hero__big-serif">Amplios</em>
+                <span className="hero__big-serif">AMPLIOS</span>
               </span>
               <span className="hero__mid">
-                <span className="hero__mid-light">para tu</span>{" "}
+                <span className="hero__mid-light">PARA TU</span>{" "}
                 <strong className="hero__mid-bold">CASA DE CAMPO</strong>
               </span>
               <span className="hero__post">
