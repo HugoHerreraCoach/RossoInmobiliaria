@@ -67,11 +67,12 @@ export function Stagger({ children, className, as: Tag = "div" }: { children: Re
       const parts = gsap.utils.toArray<HTMLElement>("[data-part]", ref.current);
       if (!parts.length) return;
       gsap.from(parts, {
-        y: 24,
-        autoAlpha: 0,
-        duration: 0.9,
-        stagger: 0.08,
-        scrollTrigger: { trigger: ref.current, start: "top 82%", once: true },
+        y: 18,
+        opacity: 0,
+         immediateRender: false,
+        duration: 0.75,
+        stagger: 0.06,
+        scrollTrigger: { trigger: ref.current, start: "top 92%", once: true },
       });
     },
     { scope: ref, dependencies: [ok], revertOnUpdate: true },

@@ -547,11 +547,9 @@ html[data-ui="rosso"] .hero-showcase__loc-pill svg { color: #f36e21; }
 @media (hover: hover) { .ficha__detail:hover { background: var(--lime); color: var(--ink); } }
 .ficha__unavailable { display: grid; gap: 14px; justify-items: start; }
 .ficha__unavailable-badge { padding: 6px 12px; border-radius: 999px; background: var(--surface-2); font-size: 0.9375rem; font-weight: 700; }
-/* Alto medido del plano + ficha (lote G18) en cada ancho, para que montarlo no mueva la página. */
-.lots-placeholder { display: grid; place-items: center; min-height: 1210px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); color: var(--muted); }
-@media (max-width: 1279px) { .lots-placeholder { min-height: 1290px; } }
-@media (max-width: 1023px) { .lots-placeholder { min-height: 1790px; } }
-@media (max-width: 599px) { .lots-placeholder { min-height: 1900px; } }
+.lots-placeholder { display: grid; place-items: center; min-height: 680px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); color: var(--muted); }
+@media (max-width: 1023px) { .lots-placeholder { min-height: 860px; } }
+@media (max-width: 599px) { .lots-placeholder { min-height: 820px; } }
 
 /* ==========================================================================
    Por qué: pestañas y cifras

@@ -79,6 +79,22 @@
   - **390 px, `/promocion`:** 132 contornos y sin desborde horizontal (`scrollWidth` 390).
   - **`/lote/G18`:** 132 contornos con G18 seleccionado.
 
+## Integración posterior de `main` (2026-10-26)
+
+Mientras se hacían 0030 y 0032, `main` sumó 3 commits del rediseño:
+
+- quitó «Proyectado para julio 2027»;
+- cambió los botones de `/promocion` para agendar videollamada desde Lima;
+- agregó al pie la razón social NR Inversiones Inmobiliarias S.A.C. y el RUC.
+
+Se integraron en `jheferson` con una fusión. Hubo dos choques y se combinaron los dos lados:
+
+- **Chat del asesor:** la pregunta distinta para Lima, de `main`, con los montos «desde» de los lotes vigentes (0032).
+- **Pie:** la razón social y el RUC, de `main`, con «según la lista del 21/08/2026 y sus actualizaciones» y «El plano
+  interactivo se basa en el plano de lotización oficial».
+
+`tsc` sin errores; `npm test`: 45 pasan y falla «Global Privacy Control», la de siempre.
+
 ## Pendientes
 
 - [ ] Que el dueño fusione `jheferson` en `main` y despliegue. Hoy producción muestra el esquema a mano.

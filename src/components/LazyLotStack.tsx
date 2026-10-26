@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
+import { ScrollTrigger } from "@/lib/motion";
 
 // El explorador (132 lotes en SVG + ficha + simulador) es lo más pesado de hidratar. Va justo
 // después de la portada, pero se monta cuando el visitante se acerca, o de inmediato si llega con
@@ -20,6 +21,12 @@ function Reserva() {
 export function LazyLotStack({ origen }: { origen?: string } = {}) {
   const host = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const t = setTimeout(() => ScrollTrigger.refresh(), 120);
+    return () => clearTimeout(t);
+  }, [mounted]);
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);

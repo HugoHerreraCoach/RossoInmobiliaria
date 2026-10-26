@@ -92,12 +92,19 @@ export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId
                   ¡Hola! <span aria-hidden="true">👋</span> Soy tu asesora en <strong>{PROYECTO.empresa}</strong>.
                 </p>
                 <p>
-                  Estamos en preventa de terrenos campestres desde <strong className="asesor__bubble-price">{soles0(cat.desdeContado ?? DESDE_CONTADO)}</strong> o con inicial desde <strong>{soles0(cat.inicialMin ?? DESDE.precio!.inicial)}</strong> y {CUOTAS} cuotas sin intereses, a {MINUTOS_CHICLAYO} min de Chiclayo en el {PROYECTO.valle}. ¿Cómo te podemos ayudar hoy?
+                  Estamos en preventa de terrenos campestres desde <strong className="asesor__bubble-price">{soles0(cat.desdeContado ?? DESDE_CONTADO)}</strong> o con inicial desde <strong>{soles0(cat.inicialMin ?? DESDE.precio!.inicial)}</strong> y {CUOTAS} cuotas sin intereses, a {MINUTOS_CHICLAYO} min de Chiclayo en el {PROYECTO.valle}.{" "}
+                  {landing === "lima"
+                    ? "¿Te gustaría conocer el proyecto por videollamada o recibir el plano?"
+                    : "¿Cómo te podemos ayudar hoy?"}
                 </p>
               </div>
             </div>
 
-            <p className="asesor__prompt">Déjanos tus datos y un asesor te escribirá por WhatsApp:</p>
+            <p className="asesor__prompt">
+              {landing === "lima"
+                ? "Déjanos tus datos para enviarte el plano o agendar una videollamada por WhatsApp:"
+                : "Déjanos tus datos y un asesor te escribirá por WhatsApp:"}
+            </p>
 
             <ContactForm
               idPrefix="widchat"

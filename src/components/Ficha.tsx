@@ -9,12 +9,16 @@ import { Icon } from "./Icon";
 export function Ficha({
   lote,
   onPedir,
+  origen,
 }: {
   lote: Lote;
   onPedir?: (l: Lote) => void;
   showFullLink?: boolean;
+  origen?: string;
 }) {
-  const alFormulario = onPedir ? "#formulario" : `/?lote=${lote.id}#formulario`;
+  const esLima = origen === "promocion";
+  const base = esLima ? "/promocion" : "/";
+  const alFormulario = onPedir ? "#formulario" : `${base}?lote=${lote.id}#formulario`;
   const disponible = lote.estado === "disponible";
 
   return (
@@ -52,7 +56,11 @@ export function Ficha({
             </li>
             <li>
               <Icon name="check" size={18} />
-              <span>Un asesor de {PROYECTO.empresa} te enviará el metraje exacto y la cotización por WhatsApp.</span>
+              <span>
+                {esLima
+                  ? `Agenda una videollamada con un asesor de ${PROYECTO.empresa} para conocer el proyecto y cotizar este lote.`
+                  : `Un asesor de ${PROYECTO.empresa} te enviará el metraje exacto y la cotización por WhatsApp.`}
+              </span>
             </li>
           </ul>
 
@@ -65,7 +73,7 @@ export function Ficha({
               onClick={() => onPedir?.(lote)}
             >
               <Icon name="chat" size={20} />
-              Consultar el lote {lote.id} con un asesor
+              {esLima ? `Agendar videollamada por el lote ${lote.id}` : `Consultar el lote ${lote.id} con un asesor`}
             </a>
           </div>
         </>
@@ -84,7 +92,7 @@ export function Ficha({
             onClick={() => onPedir?.(lote)}
           >
             <Icon name="chat" size={18} />
-            Consultar lotes disponibles
+            {esLima ? "Agendar videollamada y ver lotes disponibles" : "Consultar lotes disponibles"}
           </a>
         </div>
       )}
