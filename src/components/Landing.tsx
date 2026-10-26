@@ -318,7 +318,7 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
           </div>
         </div>
         <div className="wrap site-footer__legal">
-          <p>© 2026 {PROYECTO.empresa}. Fotografías y videos del propio proyecto. Precios, áreas y estados de los {r.total} lotes según la lista del {LISTA_FECHA}, sujetos a confirmación comercial. El plano interactivo es un esquema y no sustituye al plano oficial.</p>
+          <p>© 2026 {PROYECTO.empresa}. Fotografías y videos del propio proyecto. Precios, áreas y estados de los {r.total} lotes según la lista del {LISTA_FECHA}, sujetos a confirmación comercial. El plano interactivo se basa en el plano de lotización oficial y no lo sustituye.</p>
           <div className="site-footer__links"><a href="/privacidad">Privacidad</a><MotionToggle /><a href="#inicio">Volver arriba</a></div>
         </div>
       </footer>

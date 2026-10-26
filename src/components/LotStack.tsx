@@ -5,6 +5,7 @@ import { track } from "@/lib/tracking/client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DESDE, DISPONIBLES, LOTES, MANZANAS, loteById, m2, resumen, soles, soles0, type Lote } from "@/content/lotes";
 import { gsap, useGSAP, useMotion } from "@/lib/motion";
+import { PLANO } from "@/content/plano";
 import { Ficha } from "./Ficha";
 import { Icon } from "./Icon";
 
@@ -12,110 +13,13 @@ const TODAS = "TODAS";
 type Vista = string; // "TODAS" | "A"…"H"
 type ColorMode = "estado" | "cuota" | "area";
 
-export type ParcelGeom = {
-  id: string;
-  mz: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  isMacro?: boolean;
-};
-
 const CONTEO = resumen();
 
-/** Conserva el esquema ilustrativo heredado en coordenadas SVG (1160x760); no representa geometría catastral para los 132 lotes (Manzanas A–H). */
-export const MASTERPLAN_GEOM: Record<string, ParcelGeom> = (() => {
-  const map: Record<string, ParcelGeom> = {};
-
-  // Manzana A (9 lotes: A1..A9) — Frente Sur-Oeste junto a Vía San Nicolás
-  for (let i = 0; i < 9; i++) {
-    const id = `A${i + 1}`;
-    map[id] = { id, mz: "A", x: 76 + i * 42, y: 572, w: 40, h: 58 };
-  }
-
-  // Manzana B (9 lotes: B1..B9) — Frente Sur-Este junto a Pórtico de Ingreso
-  for (let i = 0; i < 9; i++) {
-    const id = `B${i + 1}`;
-    map[id] = { id, mz: "B", x: 542 + i * 38, y: 572, w: 36, h: 58 };
-  }
-
-  // Manzana C (20 lotes: C1..C20) — Bloque doble Oeste con macrolotes C6 (1487 m²) y C7 (1382 m²) en cabecera
-  // C1..C5 fila sur (5 lotes), C6 y C7 macrolotes cabecera este, C8..C20 fila norte (13 lotes)
-  for (let i = 0; i < 5; i++) {
-    const id = `C${i + 1}`;
-    map[id] = { id, mz: "C", x: 76 + i * 64, y: 484, w: 62, h: 48 };
-  }
-  map["C6"] = { id: "C6", mz: "C", x: 398, y: 484, w: 56, h: 48, isMacro: true };
-  map["C7"] = { id: "C7", mz: "C", x: 398, y: 432, w: 56, h: 49, isMacro: true };
-  for (let i = 0; i < 13; i++) {
-    const id = `C${i + 8}`;
-    map[id] = { id, mz: "C", x: 76 + i * 24.6, y: 432, w: 23.2, h: 49 };
-  }
-
-  // Manzana D (34 lotes: D1..D34) — Gran bloque central doble con D16 (1647 m²) y D17 (1600 m²) en cabecera
-  // D1..D15 fila sur (15 lotes), D16 y D17 macrolotes cabecera este, D18..D34 fila norte (17 lotes)
-  for (let i = 0; i < 15; i++) {
-    const id = `D${i + 1}`;
-    map[id] = { id, mz: "D", x: 76 + i * 44, y: 344, w: 42.5, h: 48 };
-  }
-  map["D16"] = { id: "D16", mz: "D", x: 738, y: 344, w: 68, h: 48, isMacro: true };
-  map["D17"] = { id: "D17", mz: "D", x: 738, y: 292, w: 68, h: 49, isMacro: true };
-  for (let i = 0; i < 17; i++) {
-    const id = `D${i + 18}`;
-    map[id] = { id, mz: "D", x: 76 + i * 38.8, y: 292, w: 37.3, h: 49 };
-  }
-
-  // Manzana E (8 lotes: E1..E8) — Bloque curvo / Frente al Gran Parque Central y Cancha de Grass
-  for (let i = 0; i < 8; i++) {
-    const id = `E${i + 1}`;
-    map[id] = { id, mz: "E", x: 842, y: 170 + i * 47, w: 68, h: 44.5 };
-  }
-
-  // Manzana F (21 lotes: F1..F21) — Bloque doble Nor-Oeste con macrolotes F11 (1550 m²) y F12 (1658 m²)
-  for (let i = 0; i < 10; i++) {
-    const id = `F${i + 1}`;
-    map[id] = { id, mz: "F", x: 76 + i * 33.5, y: 214, w: 32, h: 45 };
-  }
-  map["F11"] = { id: "F11", mz: "F", x: 413, y: 214, w: 52, h: 45, isMacro: true };
-  map["F12"] = { id: "F12", mz: "F", x: 413, y: 166, w: 52, h: 45, isMacro: true };
-  for (let i = 0; i < 9; i++) {
-    const id = `F${i + 13}`;
-    map[id] = { id, mz: "F", x: 76 + i * 37.2, y: 166, w: 35.6, h: 45 };
-  }
-
-  // Manzana G (21 lotes: G1..G21) — Bloque doble Nor-Este con macrolote G21 (1265 m²)
-  for (let i = 0; i < 10; i++) {
-    const id = `G${i + 1}`;
-    map[id] = { id, mz: "G", x: 522 + i * 24, y: 214, w: 22.6, h: 45 };
-  }
-  for (let i = 0; i < 10; i++) {
-    const id = `G${i + 11}`;
-    map[id] = { id, mz: "G", x: 522 + i * 24, y: 166, w: 22.6, h: 45 };
-  }
-  map["G21"] = { id: "G21", mz: "G", x: 764, y: 166, w: 52, h: 93, isMacro: true };
-
-  // Manzana H (10 lotes: H1..H10) — Bloque Mirador Norte con macrolote H10 (1392 m²)
-  for (let i = 0; i < 9; i++) {
-    const id = `H${i + 1}`;
-    map[id] = { id, mz: "H", x: 110 + i * 64, y: 78, w: 62, h: 54 };
-  }
-  map["H10"] = { id: "H10", mz: "H", x: 688, y: 78, w: 92, h: 54, isMacro: true };
-
-  return map;
-})();
-
-/** Coordenadas de enfoque (viewBox) por cada Manzana para zoom automático. */
+/** Encuadre (viewBox) de cada manzana para el zoom; la vista completa es el lienzo entero.
+ *  La geometría es la del plano de lotización oficial (src/content/plano.ts, docs/0019, 0031). */
 const MZ_VIEWBOX: Record<string, [number, number, number, number]> = {
-  TODAS: [0, 0, 1160, 760],
-  A: [40, 500, 480, 220],
-  B: [490, 500, 450, 220],
-  C: [40, 390, 460, 190],
-  D: [40, 250, 810, 195],
-  E: [760, 130, 380, 460],
-  F: [40, 130, 465, 175],
-  G: [485, 130, 380, 175],
-  H: [70, 40, 760, 150],
+  TODAS: [0, 0, PLANO.ancho, PLANO.alto],
+  ...Object.fromEntries(Object.entries(PLANO.manzanas).map(([mz, m]) => [mz, m.vista])),
 };
 
 /** Avisa al formulario de contacto qué lote eligió el visitante. */
@@ -186,7 +90,7 @@ export function LotStack({ lote, onLote, origen: _origen }: { lote?: Lote; onLot
   useGSAP(
     () => {
       if (!ok || !enPortada) return;
-      const lines = gsap.utils.toArray<SVGRectElement>(".mp-parcel__line", shell.current);
+      const lines = gsap.utils.toArray<SVGGeometryElement>(".mp-parcel__line", shell.current);
       if (!lines.length) return;
       gsap.from(lines, {
         drawSVG: 0,
@@ -286,7 +190,7 @@ export function LotStack({ lote, onLote, origen: _origen }: { lote?: Lote; onLot
                 type="button"
                 className={`mp-pill mp-pill--drone ${droneOverlay ? "is-active" : ""}`}
                 onClick={() => setDroneOverlay((x) => !x)}
-                title="Fotografía de referencia; no está georreferenciada ni alineada al esquema"
+                title="Fotografía de referencia; no está alineada al plano"
               >
                 <Icon name="drone" size={15} />
                 {droneOverlay ? "Ocultar foto" : "Ver foto de referencia"}
@@ -363,96 +267,91 @@ export function LotStack({ lote, onLote, origen: _origen }: { lote?: Lote; onLot
               role="group"
               aria-label="Masterplan interactivo de los 132 lotes de La Campiña"
             >
-              {/* Tierra del terreno; con la foto de referencia se vuelve translúcida. */}
-              <rect x="0" y="0" width="1160" height="760" fill={droneOverlay ? "var(--plan-ground-veil)" : "var(--plan-ground)"} />
-
-              {/* Perímetro del proyecto (cerco) en línea de cal discontinua */}
-              <path
-                d="M 52 62 L 835 62 L 945 140 C 1095 148 1132 255 1132 375 C 1132 505 1090 595 940 612 L 905 648 L 52 648 Z"
-                fill="var(--plan-inner)"
-                stroke="var(--plan-cal)"
-                strokeOpacity="0.55"
-                strokeWidth="2"
-                strokeDasharray="10 6"
+              {/* Tierra alrededor del terreno; con la foto de referencia se vuelve translúcida. */}
+              <rect
+                x={-PLANO.ancho / 2}
+                y={-PLANO.alto / 2}
+                width={PLANO.ancho * 2}
+                height={PLANO.alto * 2}
+                fill={droneOverlay ? "var(--plan-ground-veil)" : "var(--plan-ground)"}
               />
 
-              {/* Vías internas del esquema (sin nombres: no hay nomenclatura oficial) */}
-              <rect x="478" y="138" width="34" height="510" fill="var(--plan-street)" />
-              <rect x="68" y="135" width="755" height="27" fill="var(--plan-street)" />
-              <rect x="68" y="262" width="755" height="27" fill="var(--plan-street)" />
-              <rect x="68" y="396" width="755" height="32" fill="var(--plan-street)" />
-              <rect x="68" y="536" width="820" height="32" fill="var(--plan-street)" />
-
-              {/* Áreas comunes proyectadas (ubicación esquemática) */}
-              <g className="mp-park">
-                <path
-                  d="M 926 156 C 1068 162 1114 256 1114 375 C 1114 494 1068 585 926 592 L 926 156 Z"
-                  fill="var(--plan-park)"
-                  stroke="var(--plan-cal)"
-                  strokeOpacity="0.6"
-                  strokeWidth="1.5"
-                />
-                <rect x="948" y="292" width="96" height="148" fill="var(--plan-grass)" stroke="var(--plan-cal)" strokeOpacity="0.7" strokeWidth="1.2" />
-                <line x1="948" y1="366" x2="1044" y2="366" stroke="var(--plan-cal)" strokeOpacity="0.7" strokeWidth="1" />
-                <circle cx="996" cy="366" r="18" fill="none" stroke="var(--plan-cal)" strokeOpacity="0.7" strokeWidth="1" />
-                <text x="996" y="318" fill="var(--plan-cal)" fontSize="11" textAnchor="middle">Cancha</text>
-                <text x="992" y="242" fill="var(--plan-cal)" fontSize="11" textAnchor="middle">Parrillas y hamacas</text>
-                <text x="994" y="492" fill="var(--plan-cal)" fontSize="11" textAnchor="middle">Juegos y gimnasio</text>
-                <text x="985" y="560" fill="var(--plan-cal)" fontSize="11" textAnchor="middle">Pozo</text>
-              </g>
-
-              {/* Vía a San Nicolás y pórtico de ingreso, en el frente */}
-              <g className="mp-highway">
-                <rect x="20" y="666" width="1120" height="54" fill="var(--plan-road)" />
-                <line x1="40" y1="693" x2="1120" y2="693" stroke="var(--plan-cal)" strokeOpacity="0.5" strokeWidth="2" strokeDasharray="16 12" />
-                <text x="40" y="712" fill="var(--plan-cal)" fontSize="13">← Vía a San Nicolás: Saltur 6 min, Chiclayo 35 min</text>
-                <text x="1120" y="712" fill="var(--plan-cal)" fontSize="13" textAnchor="end">Cayaltí 8 min →</text>
-                <rect x="442" y="634" width="94" height="38" fill="var(--lime)" />
-                <text x="489" y="657" fill="var(--ink)" fontSize="12" fontWeight="600" textAnchor="middle">Pórtico</text>
-              </g>
-
-              {/* Rótulos de Manzanas A–H: acercan el plano a esa manzana */}
-              {[
-                { mz: "A", x: 56, y: 605 },
-                { mz: "B", x: 904, y: 605 },
-                { mz: "C", x: 56, y: 482 },
-                { mz: "D", x: 56, y: 344 },
-                { mz: "E", x: 876, y: 152 },
-                { mz: "F", x: 56, y: 215 },
-                { mz: "G", x: 506, y: 215 },
-                { mz: "H", x: 88, y: 108 },
-              ].map((b) => (
-                <g
-                  key={b.mz}
-                  className="mp-mz-marker"
-                  onClick={() => elegirVista(vista === b.mz ? TODAS : b.mz)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <circle
-                    cx={b.x}
-                    cy={b.y}
-                    r="14"
-                    fill={vista === b.mz ? "var(--lime)" : "var(--plan-road)"}
-                    stroke="var(--plan-cal)"
-                    strokeOpacity="0.7"
-                    strokeWidth="1.5"
-                  />
+              {/* Vía a San Nicolás, por el frente del terreno */}
+              <g className="mp-highway" pointerEvents="none">
+                <path d={PLANO.via} fill="var(--plan-road)" />
+                {PLANO.viaRotulos.map((r, i) => (
                   <text
-                    x={b.x}
-                    y={b.y + 4}
-                    fill={vista === b.mz ? "var(--ink)" : "var(--plan-cal)"}
-                    fontSize="12"
-                    fontWeight="600"
+                    key={r.texto}
+                    x={r.x}
+                    y={r.y}
+                    transform={`rotate(${r.angulo} ${r.x} ${r.y})`}
+                    fill="var(--plan-cal)"
+                    fillOpacity={i ? 0.7 : 1}
+                    fontSize={i ? 7 : 9}
+                    fontWeight={i ? 400 : 600}
                     textAnchor="middle"
+                    dominantBaseline="middle"
                   >
-                    {b.mz}
+                    {r.texto}
                   </text>
-                </g>
-              ))}
+                ))}
+              </g>
 
-              {/* Renderizado de los 132 Lotes individuales (solo código y disponibilidad) */}
+              {/* Terreno (10.98 ha) con su perímetro en cal discontinua: lo que no es lote ni área común son calles y alamedas. */}
+              <path
+                d={PLANO.terreno}
+                fill="var(--plan-street)"
+                stroke="var(--plan-cal)"
+                strokeOpacity="0.55"
+                strokeWidth="1.2"
+                strokeDasharray="6 4"
+              />
+
+              {/* Áreas comunes del plano: bermas con palmeras, 4 parques y reservorio */}
+              <g className="mp-park" pointerEvents="none">
+                {PLANO.bermas.map((d, i) => (
+                  <path key={i} d={d} fill="var(--plan-park)" />
+                ))}
+                {PLANO.parques.map((d, i) => (
+                  <path key={i} d={d} fill="var(--plan-park)" stroke="var(--plan-cal)" strokeOpacity="0.5" strokeWidth="0.8" />
+                ))}
+                <path d={PLANO.reservorio.d} fill="var(--plan-road)" stroke="var(--plan-cal)" strokeOpacity="0.5" strokeWidth="0.8" />
+                <text x={PLANO.reservorio.x} y={PLANO.reservorio.y} fill="var(--plan-cal)" fillOpacity="0.8" fontSize="6.5" textAnchor="middle">
+                  Reservorio
+                </text>
+                {PLANO.amenidades.map((a) => (
+                  <text key={`${a.texto}-${a.x}`} x={a.x} y={a.y} fill="var(--plan-cal)" fillOpacity="0.85" fontSize="4.2" textAnchor="middle">
+                    {a.texto}
+                  </text>
+                ))}
+                {PLANO.calles.map((c) => (
+                  <text
+                    key={c.texto}
+                    x={c.x}
+                    y={c.y}
+                    transform={`rotate(${c.angulo} ${c.x} ${c.y})`}
+                    fill="var(--plan-cal)"
+                    fillOpacity="0.7"
+                    fontSize="5.5"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                  >
+                    {c.texto}
+                  </text>
+                ))}
+              </g>
+
+              {/* Pórtico de ingreso, sobre la vía */}
+              <g className="mp-portico" pointerEvents="none">
+                <circle cx={PLANO.portico.x} cy={PLANO.portico.y} r="4" fill="var(--lime)" />
+                <text x={PLANO.portico.x} y={PLANO.portico.y - 7} fill="var(--plan-cal)" fontSize="7.5" fontWeight="600" textAnchor="middle">
+                  Pórtico de ingreso
+                </text>
+              </g>
+
+              {/* Renderizado de los 132 lotes con su forma real (solo código y disponibilidad) */}
               {LOTES.map((l) => {
-                const g = MASTERPLAN_GEOM[l.id];
+                const g = PLANO.lotes[l.id];
                 if (!g) return null;
                 const isSelected = sel?.id === l.id;
                 const isHovered = hovered?.id === l.id;
@@ -471,22 +370,20 @@ export function LotStack({ lote, onLote, origen: _origen }: { lote?: Lote; onLot
                     onMouseEnter={() => setHovered(l)}
                     style={{ cursor: "pointer" }}
                   >
-                    <rect
+                    <path
                       className="mp-parcel__line"
-                      x={g.x}
-                      y={g.y}
-                      width={g.w}
-                      height={g.h}
+                      d={g.d}
                       fill={fill}
                       stroke={isSelected || isHovered ? "var(--ink)" : "var(--plan-cal)"}
                       strokeOpacity={isSelected || isHovered ? 1 : 0.8}
-                      strokeWidth={isSelected ? 2.6 : isHovered ? 2 : 1}
+                      strokeWidth={isSelected ? 2 : isHovered ? 1.4 : 0.6}
+                      strokeLinejoin="round"
                     />
 
-                    {/* Código del lote centrado y limpio */}
+                    {/* Código del lote, donde el plano rotula su número */}
                     <text
-                      x={g.x + g.w / 2}
-                      y={g.y + g.h / 2 + 3.5}
+                      x={g.x}
+                      y={g.y + g.fs * 0.35}
                       fill={
                         isSelected
                           ? "var(--ink)"
@@ -494,7 +391,7 @@ export function LotStack({ lote, onLote, origen: _origen }: { lote?: Lote; onLot
                             ? "var(--plan-cal-dim)"
                             : "var(--plan-cal)"
                       }
-                      fontSize={g.w < 26 ? "7.8" : g.w < 36 ? "9" : "10.5"}
+                      fontSize={g.fs}
                       fontWeight="700"
                       textAnchor="middle"
                       pointerEvents="none"
@@ -505,11 +402,41 @@ export function LotStack({ lote, onLote, origen: _origen }: { lote?: Lote; onLot
                 );
               })}
 
-              {/* Rosa de los Vientos (Norte) */}
-              <g transform="translate(1105, 68)">
-                <circle cx="0" cy="0" r="22" fill="var(--plan-road)" stroke="var(--plan-cal)" strokeOpacity="0.6" strokeWidth="1.5" />
-                <polygon points="0,-15 5,4 0,0 -5,4" fill="var(--lime)" />
-                <text x="0" y="15" fill="var(--plan-cal)" fontSize="9" fontWeight="600" textAnchor="middle">
+              {/* Rótulos de manzanas A–H: acercan el plano a esa manzana */}
+              {Object.entries(PLANO.manzanas).map(([mz, b]) => (
+                <g
+                  key={mz}
+                  className="mp-mz-marker"
+                  onClick={() => elegirVista(vista === mz ? TODAS : mz)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <circle
+                    cx={b.x}
+                    cy={b.y}
+                    r="10"
+                    fill={vista === mz ? "var(--lime)" : "var(--plan-road)"}
+                    stroke="var(--plan-cal)"
+                    strokeOpacity="0.7"
+                    strokeWidth="1.2"
+                  />
+                  <text x={b.x} y={b.y + 3.5} fill={vista === mz ? "var(--ink)" : "var(--plan-cal)"} fontSize="10" fontWeight="600" textAnchor="middle">
+                    {mz}
+                  </text>
+                </g>
+              ))}
+
+              {/* Norte: el plano está girado para llenar el lienzo; la flecha marca el norte real */}
+              <g transform="translate(1118, 46)" pointerEvents="none">
+                <circle r="18" fill="var(--plan-road)" stroke="var(--plan-cal)" strokeOpacity="0.6" strokeWidth="1.2" />
+                <polygon points="0,-13 4.5,3.5 0,0 -4.5,3.5" fill="var(--lime)" transform={`rotate(${PLANO.norte})`} />
+                <text
+                  x={27 * Math.sin((PLANO.norte * Math.PI) / 180)}
+                  y={-27 * Math.cos((PLANO.norte * Math.PI) / 180) + 3}
+                  fill="var(--plan-cal)"
+                  fontSize="9"
+                  fontWeight="600"
+                  textAnchor="middle"
+                >
                   N
                 </text>
               </g>
