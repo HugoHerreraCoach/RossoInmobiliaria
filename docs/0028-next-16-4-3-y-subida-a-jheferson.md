@@ -40,11 +40,28 @@ Push solo a `origin/jheferson`. No se tocó `main`, no se desplegó y no se camb
 | Recorrido del plano (elegir lote → «Ver detalle de este lote» → botón flotante → «Consultar este lote») en `/` y `/promocion`, con y sin animaciones | Cada destino bajo la cabecera (84 px), el lote en el formulario, sin errores |
 | Formularios | `/promocion`: la pregunta de modalidad sin opción marcada, aviso si no se elige, envía `respuestas.modalidad`; `/`: sin cambios |
 
+## Prueba en producción (después del despliegue)
+
+El usuario desplegó y pidió «lanza la prueba» con datos «Prueba de Jhef» y 999999999. Antes se comprobó que producción
+tenía la versión nueva: `/`, `/promocion` y `/lote/G18` responden 200 y `/promocion` trae la pregunta de modalidad.
+Se envió un formulario en cada landing desde Chrome, con `?utm_source=prueba&utm_campaign=prueba-pixel` para que la
+fila se reconozca en la hoja:
+
+| Landing | /api/lead | Meta | TikTok |
+|---|---|---|---|
+| `/` (Lambayeque), inicial «S/ 3,000 a S/ 10,000» | 200, registro `7ce0b7e3-25b4-41b4-8a2e-8c25385d835b` | PageView, **CompleteRegistration** | LandingPageView, Pageview, **CompleteRegistration**, EngagedSession |
+| `/promocion` (Lima), «Financiado desde S/ 3,000» | 200, registro `4e262a3a-e1e0-4b80-937d-5ce2ed361533` | PageView, **SubmitApplication** | LandingPageView, Pageview, **SubmitApplication**, EngagedSession |
+
+Las dos hojas confirmaron la fila (el evento solo sale después de esa confirmación) y la página mostró «Solicitud
+recibida». Las dos filas de prueba quedan en las hojas con la campaña «prueba-pixel»; se pueden borrar.
+
 ## Pendientes (del dueño, ver `docs/0027`)
 
-- Desplegar desde `jheferson` o fusionarla en `main`, como prefiera el dueño.
-- La hoja de Lima: encabezados con MODALIDAD, compartida con la cuenta de servicio, y `GOOGLE_SHEETS_ID_PROMOCION`.
-- La pestaña «LEADS TIKTOK» en la hoja de Lambayeque.
-- En Vercel: las variables de los píxeles y `NEXT_PUBLIC_SITE_URL`; los tokens de CAPI y TikTok y
-  `CONEXIGO_EMPRESA_ID` antes de las campañas; la tarea diaria a `/api/tracking/drain`.
+Resueltos por la prueba: el despliegue, la hoja de Lima (guarda), la pestaña «LEADS TIKTOK» de Lambayeque (ahí cayó la
+prueba, que no viene de Meta), los píxeles (cargan los dos) y `NEXT_PUBLIC_SITE_URL` (el formulario acepta el origen).
+Quedan, y no se pueden comprobar desde el navegador:
+
+- Antes de las campañas: `META_CAPI_ACCESS_TOKEN`, `TIKTOK_EVENTS_ACCESS_TOKEN` y `CONEXIGO_EMPRESA_ID`.
+- La tarea diaria a `/api/tracking/drain`.
 - Conectar el WhatsApp 941 377 136 en ConexiGO.
+- Borrar las dos filas de prueba («prueba-pixel») de las hojas cuando ya no sirvan.

@@ -15,7 +15,8 @@
    esta carpeta; si no, el despliegue no lo lleva.
 2. **Actualizar Next a 16.4.3** antes de publicar. La 16.4.0 tiene un aviso de seguridad crítico (§10).
 3. **Hoja de Lima:**
-   - crear el archivo con sus dos pestañas y los encabezados de §3;
+   - crear el archivo con sus dos pestañas y los encabezados de §3, con ZONA en E y MODALIDAD en F (si ya existe
+     con MODALIDAD en E, insertar ZONA en E en las dos pestañas);
    - compartirlo con la cuenta de servicio;
    - cargar `GOOGLE_SHEETS_ID_PROMOCION`.
    Sin eso, el formulario de `/promocion` responde 503 y no guarda nada.
@@ -85,16 +86,21 @@ creation time» van en segundos Unix, como en DLC.
 NOMBRE DE CAMPAÑA | FECHA | NOMBRE | NUMERO | INICIAL | TIEMPO DE COMPRA | TikTok Lead ID | TikTok Lead Status | Lead creation time | Lead update time | ORIGEN | FUENTE | LOTE
 ```
 
-**Lima** (`/promocion`, `GOOGLE_SHEETS_ID_PROMOCION`), 12 columnas, A–L. Salen de `landingColumns()` con la
-pregunta MODALIDAD, que la otra sesión dejó hoy en `src/content/landings.ts`:
+**Lima** (`/promocion`, `GOOGLE_SHEETS_ID_PROMOCION`), 13 columnas, A–M. Salen de `landingColumns()` con las dos
+preguntas de Lima de `src/content/landings.ts`: ZONA y MODALIDAD. Las agregó la otra sesión (0026 y 0029):
 
 ```
-NOMBRE DE CAMPAÑA | FECHA | NOMBRE | NUMERO | MODALIDAD | TikTok Lead ID | TikTok Lead Status | Lead creation time | Lead update time | ORIGEN | FUENTE | LOTE
+NOMBRE DE CAMPAÑA | FECHA | NOMBRE | NUMERO | ZONA | MODALIDAD | TikTok Lead ID | TikTok Lead Status | Lead creation time | Lead update time | ORIGEN | FUENTE | LOTE
 ```
 
-MODALIDAD guarda «Al contado S/ 17,000» o «Financiado desde S/ 3,000». ORIGEN dice «Landing · Formulario de
-promoción (Lima)». Si cambian las preguntas de Lima, cambian estas columnas: hay que revisarlas antes de cada
-despliegue.
+- **ZONA** guarda «Sí, me interesa el Valle Zaña.» o «Me puedo adecuar».
+- **MODALIDAD** guarda «Al contado S/ 17,000» o «Financiado desde S/ 3,000».
+- **ORIGEN** dice «Landing · Formulario de promoción (Lima)» o, desde el chat del botón flotante, «Landing · Chat del
+  asesor (Lima)». En Lambayeque, el chat escribe «Landing · Chat del asesor».
+
+**Actualización (0029):** si la hoja de Lima ya se creó con MODALIDAD en la columna E, antes de desplegar hay que
+**insertar la columna ZONA en E en las dos pestañas**. Si no, las respuestas quedan corridas una columna. Si cambian
+las preguntas de Lima, cambian estas columnas: hay que revisarlas antes de cada despliegue.
 
 ## 4. Píxeles y conversiones del servidor
 
@@ -209,7 +215,8 @@ y la validación se revisan antes.
    - una fila en «LEADS META» o «LEADS TIKTOK» de la hoja de Lambayeque;
    - `CompleteRegistration` en los dos píxeles, con el mismo id que la columna «TikTok Lead ID».
 4. **Registro de prueba en `/promocion`:**
-   - una fila **solo** en la hoja de Lima, con MODALIDAD;
+   - una fila **solo** en la hoja de Lima, con ZONA y MODALIDAD en sus columnas;
+   - lo mismo desde el chat del botón flotante, que además abre WhatsApp con el código `R-`;
    - `SubmitApplication` en los dos píxeles.
 5. Un `POST /api/lead` vacío desde el dominio da 422, no 403 ni 503.
 6. Con la tarea configurada, el registro de Vercel muestra `/api/tracking/drain` con 200.

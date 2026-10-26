@@ -845,7 +845,7 @@ a.channel:hover { border-color: var(--lime); }
 .asesor { position: fixed; right: 16px; bottom: 16px; z-index: 55; display: grid; justify-items: end; gap: 10px; }
 .asesor__saludo { display: flex; align-items: center; gap: 10px; max-width: 280px; padding: 10px 12px 10px 16px; border: 1px solid var(--line-strong); border-radius: 16px; background: var(--surface-2); font-size: 0.9375rem; }
 .asesor__saludo button { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; }
-.asesor__btn { display: flex; align-items: center; gap: 12px; padding: 8px 18px 8px 8px; border-radius: 999px; background: var(--paper); color: var(--ink); transition: transform 0.2s var(--ease-out); }
+.asesor__btn { display: flex; align-items: center; gap: 12px; padding: 8px 18px 8px 8px; border: 0; border-radius: 999px; background: var(--paper); color: var(--ink); font: inherit; text-align: left; cursor: pointer; transition: transform 0.2s var(--ease-out); }
 .asesor__btn:hover { transform: translateY(-2px); }
 .asesor__icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--forest); color: #fff; }
 .asesor__text { display: grid; line-height: 1.2; }
@@ -859,6 +859,32 @@ a.channel:hover { border-color: var(--lime); }
   /* En el móvil el saludo taparía lo que se lee: queda solo el botón. */
   .asesor__saludo { display: none; }
 }
+.form-done { display: grid; gap: 12px; }
+/* Chat del asesor (docs/0029), como el chat flotante de DLC: cabecera con el asesor en línea, su saludo y el
+   formulario de la landing en una tarjeta blanca, como el de la portada. Se abre sobre el botón; con el teclado,
+   Escape lo cierra. El botón de envío queda siempre a la vista aunque el formulario se desplace. */
+.asesor-chat { display: flex; flex-direction: column; width: min(390px, calc(100vw - 24px)); max-height: calc(100svh - var(--header-h) - 110px); overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.7); border-radius: 22px; background: var(--paper) var(--grad-paper); color: var(--ink); color-scheme: light; box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.75); }
+.asesor-chat[hidden] { display: none; }
+.asesor-chat:focus { outline: none; }
+.asesor-chat__head { display: flex; align-items: center; gap: 12px; padding: 12px 10px 12px 14px; background: var(--grad-band); color: var(--text); color-scheme: dark; }
+.asesor-chat__head .asesor__avatar { display: grid; width: 44px; height: 44px; }
+.asesor-chat__who { display: grid; flex: 1; min-width: 0; line-height: 1.3; }
+.asesor-chat__who strong { font-family: var(--display); font-size: 1rem; }
+.asesor-chat__who small { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.8125rem; }
+.asesor-chat__who small i { width: 8px; height: 8px; border-radius: 50%; background: #1fa463; }
+.asesor-chat__cerrar { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--text); cursor: pointer; }
+@media (hover: hover) { .asesor-chat__cerrar:hover { background: rgba(255, 255, 255, 0.1); } }
+.asesor-chat__body { display: grid; gap: 14px; padding: 16px; overflow-y: auto; overscroll-behavior: contain; }
+.asesor-chat__msg { padding: 12px 14px; border-radius: 16px 16px 16px 4px; background: #eaf4e4; font-size: 0.9375rem; line-height: 1.5; }
+.asesor-chat__msg p + p { margin-top: 6px; }
+.asesor-chat__intro { color: var(--ink-soft); font-size: 0.875rem; font-weight: 600; }
+.asesor-chat .form { gap: 12px; }
+.asesor-chat .field__group, .asesor-chat .choice { min-height: 48px; }
+.asesor-chat .choice { flex-basis: 100%; }
+/* Franja sólida del color del fondo alrededor del botón: lo que se desplaza por detrás no se asoma. */
+.asesor-chat .form__submit { position: sticky; bottom: 0; z-index: 1; min-height: 52px; font-size: 1rem; box-shadow: 0 0 0 16px #f3f7ee; }
+.form-done__again { color: var(--ink-soft); font-size: 0.9375rem; text-align: center; }
+.form-done__again button { padding: 0; border: 0; background: none; color: var(--forest); font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
 
 /* ==========================================================================
    Pie

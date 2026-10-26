@@ -54,7 +54,7 @@ línea, palabra clave del titular en lima.
 | Preguntas | `preguntas` | seis respuestas con datos de `PRODUCT.md` |
 | Contacto | `contacto` | canales que abren WhatsApp |
 | Pie | — | marca, columnas, aviso legal, pausar animaciones |
-| Flotante | — | escritorio: tarjeta "Asesor en línea · ¡Hablemos!" con círculo de WhatsApp; móvil: solo el círculo. Sube al formulario de la portada, como «Consultar este lote» del plano (docs/0026) |
+| Flotante | — | escritorio: tarjeta "Asesor en línea · ¡Hablemos!" con círculo de WhatsApp; móvil: solo el círculo. Abre su propio chat, como el de DLC: cabecera del asesor, saludo y el formulario de la landing; al registrar abre WhatsApp (docs/0029) |
 
 En escritorio (desde 1200 px), titular y formulario a la izquierda y video a la derecha; la columna del video ocupa
 todo el alto de la izquierda (empieza con el antetítulo y sus miniaturas terminan con el formulario, sin hueco: 0018); en el móvil, titular → video →

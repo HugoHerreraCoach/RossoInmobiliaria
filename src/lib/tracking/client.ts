@@ -145,12 +145,20 @@ function loadPixels() {
     const script=document.createElement("script");script.id="rosso-tiktok-pixel";script.async=true;t.grantConsent();script.src=`https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=${encodeURIComponent(tiktok)}&lib=ttq`;document.head.append(script);
   } else if(tiktok) window.ttq?.grantConsent?.();
 }
-export async function trackedWhatsApp(link: HTMLAnchorElement, properties: Props) {
-  const context=trackingContext(); if(!context) return false;
-  // Keep browser user activation: opening happens synchronously, before the network request.
-  const tab=window.open("about:blank","_blank"); if(tab) tab.opener=null;
-  let target=link.href;
+/** WhatsApp link carrying the intent code ("Ref: R-…") so ConexiGO can attribute the chat; records the intent and the
+ *  WhatsAppClick pixel event. Without active tracking it returns the link unchanged. Used by trackedWhatsApp and by the
+ *  advisor chat, which opens WhatsApp after the registration (docs/0029). */
+export async function whatsappConRef(href: string, properties: Props): Promise<string> {
+  const context=trackingContext(); if(!context) return href;
+  let target=href;
   try { const id=crypto.randomUUID(); const r=await fetch("/api/tracking/intent",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id,context,properties}),signal:AbortSignal.timeout(3500)});const data=await r.json();if(r.ok && /^R-[A-F0-9]{16}$/.test(data.code)){const url=new URL(target);url.searchParams.set("text",`${url.searchParams.get("text")||"Hola, quiero conocer La Campiña."}\nRef: ${data.code}`);target=url.toString();pixelEvent("whatsapp_click",data.id,properties);} }
   catch { /* Contact remains available even if analytics fails. */ }
-  if(tab) tab.location.href=target;else window.location.assign(target); void flush(true); return true;
+  void flush(true); return target;
+}
+export async function trackedWhatsApp(link: HTMLAnchorElement, properties: Props) {
+  if(!trackingContext()) return false;
+  // Keep browser user activation: opening happens synchronously, before the network request.
+  const tab=window.open("about:blank","_blank"); if(tab) tab.opener=null;
+  const target=await whatsappConRef(link.href, properties);
+  if(tab) tab.location.href=target;else window.location.assign(target); return true;
 }

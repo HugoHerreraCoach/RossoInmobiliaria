@@ -55,7 +55,8 @@
      Rosso Inmobiliaria), proyectos@rosso.pe.
    - Hay que reescribirla y que Rosso la apruebe.
 3. **Tiempo a Chiclayo.** Las fuentes no coinciden: Copys dice 35 min; Info Corta (la más nueva) dice
-   30 min; Info Extendida dice 35/40. La web dice 35.
+   30 min; Info Extendida dice 35/40. La web decía 35.
+   **Resuelto:** el usuario eligió 30 min y la web dice 30 en todas partes (0029 §4).
 4. **Sin fuente que lo confirme:** «Visitas guiadas los fines de semana» y la videollamada. En Info
    Extendida no se puede leer qué casillas marcaron («Atienden fines de semana»).
 5. **Nombres de las áreas comunes en el plano.** Los rótulos del plano oficial dicen «Campo multiuso» y

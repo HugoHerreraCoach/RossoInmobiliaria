@@ -2,16 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { LandingId } from "@/content/landings";
-import { DESDE_CONTADO, soles0 } from "@/content/lotes";
+import { CUOTAS, DESDE_CONTADO, DISPONIBLES, soles0 } from "@/content/lotes";
 import { PROYECTO } from "@/content/proyecto";
 import { ContactForm } from "./ContactForm";
 import { Icon } from "./Icon";
 
-/** Widchat flotante: cerrado muestra únicamente la burbuja compacta "Asesor en línea";
- *  al hacer clic se despliega la ventana de chat con el formulario integrado. */
+const INICIAL_MIN = Math.min(...DISPONIBLES.map((l) => l.precio!.inicial));
+const MINUTOS_CHICLAYO = PROYECTO.ubicacion.tramos.find((t) => t.lugar === "Chiclayo")!.minutos;
+
+/** Widchat flotante del asesor: cerrado muestra la burbuja compacta "Asesor en línea";
+ *  al hacer clic se despliega la ventana de chat con el formulario integrado (variante="chat"). */
 export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId } = {}) {
   const [abierto, setAbierto] = useState(false);
+  const [montado, setMontado] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const foto = PROYECTO.contacto.asesorFoto || "/media/asesora-perfil.jpg";
 
   useEffect(() => {
     if (!abierto) return;
@@ -36,13 +41,24 @@ export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId
     };
   }, [abierto]);
 
+  const abrir = () => {
+    setMontado(true);
+    setAbierto(true);
+  };
+
   return (
     <div className={`asesor ${abierto ? "is-open" : ""}`} ref={wrapRef}>
-      {abierto ? (
-        <div className="asesor__panel" role="dialog" aria-label={`Chat con asesora de ${PROYECTO.empresa}`}>
+      {montado ? (
+        <div
+          className="asesor__panel"
+          id="asesor-chat"
+          role="dialog"
+          aria-label={`Chat con asesora de ${PROYECTO.empresa}`}
+          hidden={!abierto}
+        >
           <div className="asesor__panel-head">
             <div className="asesor__panel-avatar" aria-hidden="true">
-              <img src="/media/asesora-perfil.jpg" alt="" width={46} height={46} />
+              <img src={foto} alt="" width={46} height={46} />
               <i className="asesor__panel-status-dot" />
             </div>
             <div className="asesor__panel-title">
@@ -63,7 +79,7 @@ export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId
             <div className="asesor__chat">
               <img
                 className="asesor__chat-avatar"
-                src="/media/asesora-perfil.jpg"
+                src={foto}
                 alt=""
                 width={30}
                 height={30}
@@ -74,7 +90,7 @@ export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId
                   ¡Hola! <span aria-hidden="true">👋</span> Soy tu asesora en <strong>{PROYECTO.empresa}</strong>.
                 </p>
                 <p>
-                  Estamos en preventa de terrenos campestres desde <strong className="asesor__bubble-price">{soles0(DESDE_CONTADO)}</strong> a 35 min de Chiclayo, en el {PROYECTO.valle}.{" "}
+                  Estamos en preventa de terrenos campestres desde <strong className="asesor__bubble-price">{soles0(DESDE_CONTADO)}</strong> o con inicial desde <strong>{soles0(INICIAL_MIN)}</strong> y {CUOTAS} cuotas sin intereses, a {MINUTOS_CHICLAYO} min de Chiclayo en el {PROYECTO.valle}.{" "}
                   {landing === "lima"
                     ? "¿Te gustaría conocer el proyecto por videollamada o recibir el plano?"
                     : "¿Cómo te podemos ayudar hoy?"}
@@ -91,23 +107,26 @@ export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId
             <ContactForm
               idPrefix="widchat"
               landing={landing}
-              openWhatsApp
-              submitLabel="RECLAMAR DESCUENTO EN WHATSAPP"
+              variante="chat"
+              submitLabel="CONTINUAR EN WHATSAPP"
               footerNote="Te atenderemos directamente por WhatsApp sin compromiso"
             />
           </div>
         </div>
-      ) : (
+      ) : null}
+
+      {!abierto ? (
         <button
           type="button"
           className="asesor__btn"
           data-track="float-contact"
           aria-expanded={false}
-          onClick={() => setAbierto(true)}
+          aria-controls="asesor-chat"
+          onClick={abrir}
         >
           <span className="asesor__icon asesor__icon--avatar" aria-hidden="true">
             <img
-              src="/media/asesora-perfil.jpg"
+              src={foto}
               alt=""
               width={46}
               height={46}
@@ -123,7 +142,7 @@ export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId
             <b className="asesor__wa-unread">1</b>
           </span>
         </button>
-      )}
+      ) : null}
     </div>
   );
 }

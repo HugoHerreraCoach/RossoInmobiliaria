@@ -17,6 +17,7 @@ export const SOURCES: Record<string, string> = {
   "promocion-form": "Formulario de promoción (Lima)",
   "decision-whatsapp": "Por qué · WhatsApp", "obra-whatsapp": "Obra · videollamada", "footer-whatsapp": "Pie de página · WhatsApp",
   "map-form": "Plano · consultar este lote", "map-detail": "Plano · ver detalle del lote",
+  "chat-form": "Chat del asesor", "promocion-chat": "Chat del asesor (Lima)",
 };
 export type Consent = { analytics: boolean; marketing: boolean; version: "2026-10-13" };
 export type Touch = { source: string; medium?: string; campaign?: string; content?: string; term?: string; campaign_id?: string; adset_id?: string; ad_id?: string; referrer?: string; landing?: string };

@@ -8,6 +8,8 @@ export const WHATSAPP_ROSSO = "51941377136";
 export const PROYECTO = {
   nombre: "La Campiña",
   empresa: "Rosso Inmobiliaria",
+  razonSocial: "NR INVERSIONES INMOBILIARIAS S.A.C.",
+  ruc: "20606039761",
   valle: "Valle de Zaña",
   entrega: "julio 2027",
   titulo: "Escritura pública",
@@ -16,7 +18,7 @@ export const PROYECTO = {
     tramos: [
       { lugar: "Saltur", minutos: 6 },
       { lugar: "Cayaltí", minutos: 8 },
-      { lugar: "Chiclayo", minutos: 35 },
+      { lugar: "Chiclayo", minutos: 30 },
     ],
     /** PENDIENTE: enlace exacto de Google Maps (el documento comercial lo trae cortado). */
     mapsUrl: (process.env.NEXT_PUBLIC_MAPS_URL?.trim() || null) as string | null,

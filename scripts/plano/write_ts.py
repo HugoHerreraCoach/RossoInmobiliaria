@@ -21,7 +21,7 @@ L.append(f'  metrosPorUnidad: {g["m_per_unit"]},')
 L.append(f'  terreno: {J(g["site"])},')
 L.append(f'  via: {J(g["road"])},')
 x,y,a=g['via']; x2,y2,a2=g['via2']
-L.append(f'  viaRotulos: [{{ texto: "Vía a San Nicolás", x: {x}, y: {y}, angulo: {a} }}, {{ texto: "Saltur 6 min · Cayaltí 8 min · Chiclayo 35 min", x: {x2}, y: {y2}, angulo: {a2} }}] as Rotulo[],')
+L.append(f'  viaRotulos: [{{ texto: "Vía a San Nicolás", x: {x}, y: {y}, angulo: {a} }}, {{ texto: "Saltur 6 min · Cayaltí 8 min · Chiclayo 30 min", x: {x2}, y: {y2}, angulo: {a2} }}] as Rotulo[],')
 L.append(f'  portico: {{ x: {g["portico"][0]}, y: {g["portico"][1]} }},')
 L.append(f'  parques: {J(g["parks"])},')
 rx,ry=g['reservoir_label']

@@ -317,6 +317,7 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
           <div className="site-footer__brand">
             <p className="brand" translate="no">La Campiña<span>Valle de Zaña · {PROYECTO.empresa}</span></p>
             <p>Lotes campestres con {PROYECTO.titulo.toLowerCase()} y financiamiento directo, a {chiclayo.minutos} minutos de Chiclayo.</p>
+            <p className="site-footer__company"><strong>{PROYECTO.razonSocial}</strong> · RUC: {PROYECTO.ruc}</p>
             <span className="badge badge--lime">Desde {soles(desde.cuota)} al mes</span>
           </div>
           <nav aria-label="Explora">
@@ -337,7 +338,7 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
           </div>
         </div>
         <div className="wrap site-footer__legal">
-          <p>© 2026 {PROYECTO.empresa}. Fotografías y videos del propio proyecto. Precios, áreas y estados de los {r.total} lotes según la lista del {LISTA_FECHA}, sujetos a confirmación comercial. El plano interactivo es un esquema y no sustituye al plano oficial.</p>
+          <p>© 2026 {PROYECTO.empresa} — <strong>{PROYECTO.razonSocial} · RUC: {PROYECTO.ruc}</strong>. Fotografías y videos del propio proyecto. Precios, áreas y estados de los {r.total} lotes según la lista del {LISTA_FECHA}, sujetos a confirmación comercial. El plano interactivo es un esquema y no sustituye al plano oficial.</p>
           <div className="site-footer__links"><a href="/privacidad">Privacidad</a><MotionToggle /><a href="#inicio">Volver arriba</a></div>
         </div>
       </footer>
