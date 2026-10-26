@@ -154,7 +154,7 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
               <span className="hero__big">
                 <span className="hero__big-sans">LOTES</span>{" "}
                 <span className="hero__big-highlight">
-                  <span className="hero__big-serif">AMPLIOS</span>
+                  <span className="hero__big-serif">DESDE 500 M²</span>
                   <svg className="hero__underline" viewBox="0 0 210 16" fill="none" aria-hidden="true" preserveAspectRatio="none">
                     <path d="M4 12.5C65 3.5 145 3.5 206 11" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
                   </svg>
@@ -165,29 +165,35 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
                 <strong className="hero__mid-bold">CASA DE CAMPO</strong>
               </span>
               <span className="hero__post">
-                desde <b>500 m²</b> en <b>club privado</b>
+                en <b>club privado</b> · <b>¡Solo quedan 70 lotes disponibles!</b>
               </span>
             </h1>
             <ul className="chips" aria-label="Beneficios">
               <li><span className="chip__check" aria-hidden="true"><Icon name="check" size={11} /></span> {CUOTAS} cuotas sin interés</li>
               <li><span className="chip__check" aria-hidden="true"><Icon name="check" size={11} /></span> Desde S/ 17 mil</li>
+              <li className="chip--scarcity"><span className="chip__pulse" aria-hidden="true" /> ¡Solo quedan 70 lotes disponibles!</li>
             </ul>
 
             <div className="hero__grid">
-              <div className="hero__media">
-                <HeroCarousel />
-              </div>
               <div className="hero__form-wrap">
                 <a href="#formulario" className="hero__form-cue">
                   <span>REGISTRA TUS DATOS AQUÍ</span>
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                 </a>
                 <div className="form-card" id="formulario">
-                  <p className="form-card__title">Déjanos tus datos para<br /><strong>reclamar tu regalo.</strong></p>
-                  <p className="form-card__promo"><Icon name="gift" size={18} /> ¡Bono de regalo: Descuento exclusivo!</p>
+                  <p className="form-card__title">Déjanos tus datos para<br /><strong>recibir tu descuento exclusivo.</strong></p>
+                  <p className="form-card__promo"><Icon name="gift" size={18} /> ¡Bono: Descuento exclusivo · Quedan 70 lotes!</p>
                   <ContactForm idPrefix="hero" landing={landing} />
                   <p className="form-card__foot"><Icon name="shield" size={15} /> Canal oficial de comunicación</p>
                 </div>
+              </div>
+              <div className="hero__media">
+                <HeroCarousel />
+                <a href="#formulario" className="btn btn--primary hero__media-cta" data-track="hero-carousel-cta">
+                  <Icon name="gift" size={19} />
+                  <span>RECLAMAR DESCUENTO EXCLUSIVO</span>
+                  <Icon name="der" size={18} />
+                </a>
               </div>
             </div>
           </div>
@@ -205,7 +211,7 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
             </Stagger>
 
             <section id="lotes" className="plan-block" aria-label="Plano de lotes disponibles">
-              <p className="notice"><Icon name="info" size={17} /> Toca cualquier lote disponible en el plano para seleccionarlo y solicitar su información completa con un asesor. {r.disponibles} lotes disponibles.</p>
+              <p className="notice"><Icon name="info" size={17} /> Toca cualquier lote disponible en el plano para seleccionarlo y reclamar tu descuento exclusivo con un asesor. <strong>¡Solo quedan 70 lotes disponibles!</strong></p>
               <LazyLotStack origen={origen} />
             </section>
           </div>
@@ -234,7 +240,7 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
               <h2 id="t-avance" className="h2" data-part>Así avanza <em>La Campiña</em></h2>
               <p className="lead" data-part>
                 {esLima
-                  ? "Vuelos de drone y fotos reales del propio terreno. Agenda una videollamada con un asesor para recorrer el proyecto en vivo desde donde estés."
+                  ? "Vuelos de drone y fotos reales del propio terreno. Registra tus datos para recibir tu descuento exclusivo y agendar una videollamada con un asesor."
                   : "Vuelos de drone y fotos fechadas del propio terreno, para que lo conozcas antes de tu visita."}
               </p>
             </Stagger>
@@ -244,9 +250,9 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
           </div>
           <div className="wrap">
             <div className="actions actions--center">
-              <a className={esLima ? "btn btn--primary" : "btn btn--ghost"} href="#formulario">
-                <Icon name="drone" size={18} />{" "}
-                {esLima ? "Agendar videollamada para conocer el proyecto" : "¿Estás lejos? Pide una videollamada"}
+              <a className="btn btn--primary" href="#formulario">
+                <Icon name="gift" size={18} />{" "}
+                {esLima ? "Reclamar descuento exclusivo y agendar videollamada" : "Reclamar mi descuento exclusivo"}
               </a>
             </div>
           </div>
@@ -266,7 +272,7 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
               <div><dt>lotes desde</dt><dd>{M2_MIN}<small> m²</small></dd></div>
               <div><dt>de Chiclayo</dt><dd>{chiclayo.minutos}<small> min</small></dd></div>
               <div><dt>para pagar sin intereses</dt><dd>{CUOTAS}<small> meses</small></dd></div>
-              <div><dt>lotes disponibles en la lista</dt><dd>{r.disponibles}</dd></div>
+              <div><dt>últimos lotes disponibles</dt><dd>70</dd></div>
             </dl>
           </div>
         </section>
@@ -340,9 +346,10 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
           <div>
             <p className="site-footer__label">Contacto</p>
             <ul>
+              <li><a href="#formulario"><Icon name="gift" size={16} /> Reclamar descuento exclusivo</a></li>
               <li><a href="#formulario"><Icon name={esLima ? "drone" : "calendario"} size={16} /> {esLima ? "Agendar videollamada" : "Agenda tu visita"}</a></li>
               <li><span><Icon name="pin" size={16} /> Vía a San Nicolás, {PROYECTO.valle}, Lambayeque</span></li>
-              {telefono ? <li><a href={`tel:${telefono}`}><Icon name="fono" size={16} /> {telefono}</a></li> : null}
+              {telefono ? <li><a href="#formulario"><Icon name="fono" size={16} /> {telefono}</a></li> : null}
             </ul>
           </div>
         </div>

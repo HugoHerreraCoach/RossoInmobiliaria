@@ -220,9 +220,37 @@ html[data-ui="rosso"] .hero__underline {
 .hero__post b { color: var(--lime); font-weight: 700; }
 .hero .chips { margin-top: 12px; gap: 8px; }
 .hero .chips li { padding: 6px 13px; font-size: 0.84375rem; gap: 6px; }
-.hero__grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 28px; align-items: start; margin-top: 18px; text-align: left; }
-.hero__grid .hero__media { order: 1; }
-.hero__grid .hero__form-wrap, .hero__grid .form-card { order: 2; }
+.hero__grid { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: 28px; align-items: start; margin-top: 18px; text-align: left; }
+.hero__grid .hero__form-wrap, .hero__grid .form-card { order: 1; }
+.hero__grid .hero__media { order: 2; display: grid; gap: 14px; }
+.hero__media-cta {
+  width: 100%;
+  min-height: 56px;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 18px;
+  font-family: var(--display);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.hero .chips li.chip--scarcity {
+  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%) !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+  font-weight: 700;
+}
+.chip__pulse {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-inline: 3px 1px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.28);
+  flex: none;
+}
 .hero__form-wrap { display: grid; gap: 10px; }
 @keyframes cue-bounce {
   0%, 100% { transform: translateY(0); }
@@ -251,10 +279,10 @@ html[data-ui="rosso"] .hero__form-cue {
 }
 @media (max-width: 959px) {
   .hero { padding-top: 92px; }
-  .hero__grid { grid-template-columns: 1fr; gap: 16px; margin-top: 14px; }
-  /* Debajo de los botones de beneficios va el carrusel de fotos y luego el formulario. */
-  .hero__grid .hero__media { order: 1; }
-  .hero__grid .hero__form-wrap, .hero__grid .form-card { order: 2; }
+  .hero__grid { grid-template-columns: 1fr; gap: 18px; margin-top: 14px; }
+  /* Debajo de los beneficios va primero el formulario y luego el carrusel de fotos con su botón CTA. */
+  .hero__grid .hero__form-wrap, .hero__grid .form-card { order: 1; }
+  .hero__grid .hero__media { order: 2; }
 }
 
 /* Tarjeta del formulario (blanca, con borde verde tipo barra de progreso alrededor mientras completan) */

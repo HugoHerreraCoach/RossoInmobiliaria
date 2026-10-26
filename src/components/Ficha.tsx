@@ -72,8 +72,8 @@ export function Ficha({
               href={alFormulario}
               onClick={() => onPedir?.(lote)}
             >
-              <Icon name="chat" size={20} />
-              {esLima ? `Agendar videollamada por el lote ${lote.id}` : `Consultar el lote ${lote.id} con un asesor`}
+              <Icon name="gift" size={20} />
+              {`Reclamar descuento exclusivo · Lote ${lote.id}`}
             </a>
           </div>
         </>
@@ -81,8 +81,8 @@ export function Ficha({
         <div className="ficha__unavailable">
           <p>
             {lote.estado === "vendido"
-              ? `El lote ${lote.id} en la Manzana ${lote.manzana} ya no está disponible. Elige otro lote en verde en el plano o consulta con un asesor las mejores ubicaciones libres.`
-              : `El lote ${lote.id} figura como reservado. Puedes consultar con un asesor por si se libera o para ver lotes disponibles en la Manzana ${lote.manzana}.`}
+              ? `El lote ${lote.id} en la Manzana ${lote.manzana} ya no está disponible. Solo quedan 70 lotes disponibles: elige otro lote en verde o consulta las mejores ubicaciones libres.`
+              : `El lote ${lote.id} figura como reservado. Solo quedan 70 lotes disponibles: consulta con un asesor para ver lotes libres en la Manzana ${lote.manzana}.`}
           </p>
           <a
             className="btn btn--primary ficha__cta-main"
@@ -91,8 +91,8 @@ export function Ficha({
             href={alFormulario}
             onClick={() => onPedir?.(lote)}
           >
-            <Icon name="chat" size={18} />
-            {esLima ? "Agendar videollamada y ver lotes disponibles" : "Consultar lotes disponibles"}
+            <Icon name="gift" size={18} />
+            Reclamar descuento en lotes disponibles
           </a>
         </div>
       )}

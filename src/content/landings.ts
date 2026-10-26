@@ -26,46 +26,50 @@ export type Landing = {
   evento: string;
 };
 
-// Montos: la inicial mínima y el contado más bajo salen de la lista de precios; el tope del rango de inicial
-// (S/ 10,000) lo fijó el cliente. El valor que se guarda usa espacios normales; en pantalla, espacio duro
-// para que "S/" no quede solo al final de la línea.
+// Montos: la inicial mínima y el contado más bajo salen de la lista de precios.
+// El valor que se guarda usa espacios normales; en pantalla, espacio duro para que "S/" no quede solo al final de la línea.
 const INICIAL_MIN = Math.min(...DISPONIBLES.map((l) => l.precio!.inicial));
-const INICIAL_TOPE = 10000;
 const normal = (s: string) => s.replace(/\u00a0/g, " ");
 const pegado = (s: string) => s.replace(/S\/ /g, "S/\u00a0").replace(/ mil\b/g, "\u00a0mil");
-const RANGO = normal(`${soles0(INICIAL_MIN)} a ${soles0(INICIAL_TOPE)}`);
+const DESDE_INICIAL = `Desde S/ ${Math.round(INICIAL_MIN / 1000)} mil`;
 const CONTADO = `Pago al contado S/ ${Math.round(DESDE_CONTADO / 1000)} mil`;
 const AL_CONTADO = normal(`Al contado ${soles0(DESDE_CONTADO)}`);
 const FINANCIADO = normal(`Financiado desde ${soles0(INICIAL_MIN)}`);
 
-/** La pregunta del formulario de Lambayeque (pedido del cliente, 2026-10-24). Su respuesta viaja en `busca` (texto
+/** La pregunta del formulario de Lambayeque ("/"). Su respuesta viaja en `busca` (texto
  *  libre, 40 caracteres): el contrato original de /api/lead. */
 const INICIAL: Pregunta = {
   id: "busca",
   texto: "¿Con cuánto cuentas de inicial?",
   columna: "INICIAL",
   opciones: [
-    { valor: `Inicial de ${RANGO}`, etiqueta: pegado(RANGO) },
+    { valor: DESDE_INICIAL, etiqueta: pegado(DESDE_INICIAL) },
     { valor: CONTADO, etiqueta: pegado(CONTADO) },
   ],
-  marcada: `Inicial de ${RANGO}`,
+  marcada: DESDE_INICIAL,
 };
 
-/** Primera pregunta de Lima (pedido del cliente, 2026-10-24, docs/0029), con la primera opción pre-seleccionada por defecto. */
+/** Primera pregunta de Lima ("/promocion"), corta y directa, con la primera opción pre-seleccionada por defecto. */
 const ZONA: Pregunta = {
   id: "zona",
-  texto: "El proyecto está en el Valle Zaña (a 30 min de Chiclayo y 5 min de Sipán). ¿Es la zona que buscas?",
+  texto: "¿Buscas lote en Valle Zaña (a 30 min de Chiclayo)?",
   columna: "ZONA",
-  opciones: ["Sí, me interesa el Valle Zaña.", "Me puedo adecuar"].map((valor) => ({ valor, etiqueta: valor })),
+  opciones: [
+    { valor: "Sí, me interesa el Valle Zaña.", etiqueta: "Sí, me interesa" },
+    { valor: "Me puedo adecuar", etiqueta: "Me puedo adecuar" },
+  ],
   marcada: "Sí, me interesa el Valle Zaña.",
 };
 
-/** Segunda pregunta de Lima (pedido del cliente, 2026-10-24, docs/0026), con la primera opción pre-seleccionada por defecto. */
+/** Segunda pregunta de Lima ("/promocion"), corta y directa, con la primera opción pre-seleccionada por defecto. */
 const MODALIDAD: Pregunta = {
   id: "modalidad",
-  texto: "Para asegurar tu lote en Sipán – Valle Zaña, ¿qué modalidad de preventa prefieres?",
+  texto: "¿Qué modalidad de preventa prefieres?",
   columna: "MODALIDAD",
-  opciones: [AL_CONTADO, FINANCIADO].map((valor) => ({ valor, etiqueta: pegado(valor) })),
+  opciones: [
+    { valor: AL_CONTADO, etiqueta: pegado(`Contado S/ ${Math.round(DESDE_CONTADO / 1000)} mil`) },
+    { valor: FINANCIADO, etiqueta: pegado(`Inicial desde S/ ${Math.round(INICIAL_MIN / 1000)} mil`) },
+  ],
   marcada: AL_CONTADO,
 };
 

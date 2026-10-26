@@ -406,7 +406,7 @@ export function ContactForm({
           {estado.t === "enviando"
             ? "ENVIANDO SOLICITUD…"
             : lote
-              ? `CONSULTAR LOTE ${lote}`
+              ? `RECLAMAR DESCUENTO · LOTE ${lote}`
               : submitLabel ?? "RECLAMAR DESCUENTO EN WHATSAPP"}
         </span>
         <Icon name="der" size={18} />
