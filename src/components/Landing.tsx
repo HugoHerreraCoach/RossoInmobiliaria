@@ -262,7 +262,7 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
               <div><dt>lotes desde</dt><dd>{M2_MIN}<small> m²</small></dd></div>
               <div><dt>de Chiclayo</dt><dd>{chiclayo.minutos}<small> min</small></dd></div>
               <div><dt>para pagar sin intereses</dt><dd>{CUOTAS}<small> meses</small></dd></div>
-              <div><dt>lotes disponibles</dt><dd>{r.disponibles}</dd></div>
+              <div><dt>lotes disponibles en la lista</dt><dd>{r.disponibles}</dd></div>
             </dl>
           </div>
         </section>
@@ -343,7 +343,7 @@ export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: L
           </div>
         </div>
         <div className="wrap site-footer__legal">
-          <p>© 2026 {PROYECTO.empresa} — <strong>{PROYECTO.razonSocial} · RUC: {PROYECTO.ruc}</strong>. Fotografías y videos del propio proyecto. Precios, áreas y estados de los {r.total} lotes según la lista del {LISTA_FECHA} y sus actualizaciones, sujetos a confirmación comercial. El plano interactivo se basa en el plano de lotización oficial y no lo sustituye.</p>
+          <p>© 2026 {PROYECTO.empresa} — <strong>{PROYECTO.razonSocial} · RUC: {PROYECTO.ruc}</strong>. Fotografías y videos del propio proyecto. Precios, áreas y estados de los {r.total} lotes según la lista del {LISTA_FECHA}, sujetos a confirmación comercial. El plano interactivo es un esquema y no sustituye al plano oficial.</p>
           <div className="site-footer__links"><a href="/privacidad">Privacidad</a><MotionToggle /><a href="#inicio">Volver arriba</a></div>
         </div>
       </footer>

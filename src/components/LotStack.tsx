@@ -190,7 +190,7 @@ export function LotStack({ lote, onLote, origen }: { lote?: Lote; onLote?: (l: L
                 type="button"
                 className={`mp-pill mp-pill--drone ${droneOverlay ? "is-active" : ""}`}
                 onClick={() => setDroneOverlay((x) => !x)}
-                title="Fotografía de referencia; no está alineada al plano"
+                title="Fotografía de referencia; no está georreferenciada ni alineada al esquema"
               >
                 <Icon name="drone" size={15} />
                 {droneOverlay ? "Ocultar foto" : "Ver foto de referencia"}

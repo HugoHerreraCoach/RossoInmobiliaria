@@ -2,6 +2,10 @@
 
 **Fecha:** 2026-10-26 · **Rama:** `jheferson` (sobre 0031) · sin commit al cerrar este documento
 
+
+> **Actualización (0033):** a pedido del usuario, los textos de la landing volvieron a como están en producción; respecto de
+> producción solo cambia el dibujo del mapa.
+
 ## Qué se pidió
 
 > «Y en /panel para el administrador que pueda ingresar a ver los lotes y que pueda marcar un lote como vendido y que

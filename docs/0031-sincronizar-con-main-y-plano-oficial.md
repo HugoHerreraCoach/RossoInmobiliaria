@@ -2,6 +2,10 @@
 
 **Fecha:** 2026-10-26 · **Rama:** `jheferson`
 
+
+> **Actualización (0033):** a pedido del usuario, los textos de la landing volvieron a como están en producción; respecto de
+> producción solo cambia el dibujo del mapa.
+
 ## Qué se pidió
 
 > «Ahora main ha incluido un rediseño de toda la landing en ambas landing, lo que quiero es que sincronices main con
