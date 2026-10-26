@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit, Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
 import { PROYECTO, SITE_URL } from "@/content/proyecto";
-import { DESDE, soles } from "@/content/lotes";
+import { DESDE, catalogo, soles } from "@/content/lotes";
+import { lotesVigentes } from "@/server/lotes";
 import "./globals.css";
 import { MotionExperience } from "@/components/MotionExperience";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
@@ -14,29 +15,32 @@ const outfit = Outfit({ subsets: ["latin"], weight: ["400", "500", "600", "700",
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-text", display: "swap" });
 const playfair = Playfair_Display({ subsets: ["latin"], weight: ["600", "700"], style: ["normal", "italic"], variable: "--font-serif", display: "swap" });
 
-const descripcion = `Club de campo privado y ecológico con lotes desde 510 m² en el ${PROYECTO.valle}, a ${PROYECTO.ubicacion.tramos.find((t) => t.lugar === "Chiclayo")!.minutos} minutos de Chiclayo. Desde ${soles(DESDE.precio!.cuota)} al mes en 48 cuotas sin intereses. Consulta condiciones y documentación. Entrega ${PROYECTO.entrega}.`;
-
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: {
-    default: `${PROYECTO.nombre} · Club Privado en el ${PROYECTO.valle} | Rosso Inmobiliaria`,
-    template: `%s · ${PROYECTO.nombre}`,
-  },
-  description: descripcion,
-  openGraph: {
-    type: "website",
-    locale: "es_PE",
-    siteName: PROYECTO.nombre,
-    title: `${PROYECTO.nombre} · Club de Campo en el ${PROYECTO.valle}`,
+// La cuota "desde" sale de los lotes vigentes (lista + cambios de /panel, docs/0032).
+export async function generateMetadata(): Promise<Metadata> {
+  const desde = catalogo(await lotesVigentes()).desde ?? DESDE;
+  const descripcion = `Club de campo privado y ecológico con lotes desde 510 m² en el ${PROYECTO.valle}, a ${PROYECTO.ubicacion.tramos.find((t) => t.lugar === "Chiclayo")!.minutos} minutos de Chiclayo. Desde ${soles(desde.precio!.cuota)} al mes en 48 cuotas sin intereses. Consulta condiciones y documentación. Entrega ${PROYECTO.entrega}.`;
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: `${PROYECTO.nombre} · Club Privado en el ${PROYECTO.valle} | Rosso Inmobiliaria`,
+      template: `%s · ${PROYECTO.nombre}`,
+    },
     description: descripcion,
-    images: [
-      {
-        url: "/media/hero.webp",
-        alt: "Vista aérea de drone de los lotes trazados en La Campiña, Valle de Zaña",
-      },
-    ],
-  },
-};
+    openGraph: {
+      type: "website",
+      locale: "es_PE",
+      siteName: PROYECTO.nombre,
+      title: `${PROYECTO.nombre} · Club de Campo en el ${PROYECTO.valle}`,
+      description: descripcion,
+      images: [
+        {
+          url: "/media/hero.webp",
+          alt: "Vista aérea de drone de los lotes trazados en La Campiña, Valle de Zaña",
+        },
+      ],
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",

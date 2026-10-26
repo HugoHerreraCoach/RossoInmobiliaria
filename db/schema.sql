@@ -5,7 +5,7 @@
 begin;
 create table if not exists landing_rosso.rosso_tracking_records (
   site text not null,
-  kind text not null check (kind in ('event','intent','conversion','delivery','rate','revoked','form_operation')),
+  kind text not null check (kind in ('event','intent','conversion','delivery','rate','revoked','form_operation','lot')),
   id text not null,
   data jsonb not null check (jsonb_typeof(data) = 'object'),
   created_at timestamptz not null default now(),
@@ -15,6 +15,14 @@ create index if not exists rosso_records_time_idx on landing_rosso.rosso_trackin
 create index if not exists rosso_event_time_idx on landing_rosso.rosso_tracking_records(site, (data->>'at')) where kind = 'event';
 create unique index if not exists rosso_intent_code_unique on landing_rosso.rosso_tracking_records(site, (data->>'code')) where kind = 'intent';
 create unique index if not exists rosso_conversion_contact_unique on landing_rosso.rosso_tracking_records(site, (data->>'contact_key')) where kind = 'conversion';
+-- Estados de lotes cambiados desde /panel (kind 'lot', docs/0032). En una base ya instalada, la tabla existe con el
+-- check viejo de `kind`: se reemplaza por el nuevo (sin importar el nombre que le dio Postgres).
+do $$ declare c text; begin
+  for c in select conname from pg_constraint where conrelid = 'landing_rosso.rosso_tracking_records'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%kind%' loop
+    execute format('alter table landing_rosso.rosso_tracking_records drop constraint %I', c);
+  end loop;
+end $$;
+alter table landing_rosso.rosso_tracking_records add constraint rosso_tracking_records_kind_check check (kind in ('event','intent','conversion','delivery','rate','revoked','form_operation','lot'));
 alter table landing_rosso.rosso_tracking_records enable row level security;
 revoke all on landing_rosso.rosso_tracking_records from public, anon, authenticated;
 
@@ -108,6 +116,18 @@ begin
     insert into landing_rosso.rosso_tracking_records(site,kind,id,data) values(p_site,'revoked',visitor,'{}') on conflict do nothing;
     update landing_rosso.rosso_tracking_records set data=jsonb_set(jsonb_set(data,'{matching}','{}'),'{event,marketing}','false')||jsonb_build_object('revoked',true) where site=p_site and kind='intent' and data#>>'{event,visitor_id}'=visitor;
     update landing_rosso.rosso_tracking_records set data=data||jsonb_build_object('status','disabled','last_error','consent-revoked','matching','{}'::jsonb) where site=p_site and kind='delivery' and data#>>'{event,visitor_id}'=visitor and data->>'status'<>'sent'; return 'true';
+  elsif p_action = 'lots' then
+    select coalesce(jsonb_object_agg(id, data), '{}'::jsonb) into v from landing_rosso.rosso_tracking_records where site=p_site and kind='lot';
+    return v;
+  elsif p_action = 'lot_set' then
+    if coalesce(p_data->>'id','') !~ '^[A-H][0-9]{1,2}$' then raise exception 'Invalid lot'; end if;
+    if p_data->>'restaurar' = 'true' then
+      delete from landing_rosso.rosso_tracking_records where site=p_site and kind='lot' and id=p_data->>'id'; return 'true';
+    end if;
+    if coalesce(p_data->>'estado','') not in ('disponible','reservado','vendido') then raise exception 'Invalid state'; end if;
+    v=jsonb_build_object('estado',p_data->>'estado','precio',coalesce(p_data->'precio','null'::jsonb),'actualizado',stamp);
+    insert into landing_rosso.rosso_tracking_records(site,kind,id,data) values(p_site,'lot',p_data->>'id',v) on conflict(site,kind,id) do update set data=excluded.data;
+    return 'true';
   elsif p_action = 'prune' then
     delete from landing_rosso.rosso_tracking_records where site=p_site and ((kind='rate' and (data->>'expires')::timestamptz < now()) or (kind in ('event','intent','delivery','form_operation') and created_at < now()-interval '90 days')); get diagnostics n=row_count; return to_jsonb(n);
   else raise exception 'Unknown operation';

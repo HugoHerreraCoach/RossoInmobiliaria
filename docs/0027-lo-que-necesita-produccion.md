@@ -119,7 +119,7 @@ las preguntas de Lima, cambian estas columnas: hay que revisarlas antes de cada 
 ## 5. Base de datos de medición
 
 - `DATABASE_URL` apunta al rol `landing_rosso` de la base de ConexiGO (0009), con pooler de transacción.
-- El esquema es `db/schema.sql`, que **no cambió** desde `main`: no hace falta migrar nada para este despliegue.
+- El esquema es `db/schema.sql`. No cambió hasta 0031. **Desde 0032 (panel de lotes) hay que volver a ejecutarlo** como el rol `landing_rosso`: agrega el `kind` `lot` y las acciones `lots` y `lot_set`, y no borra nada. Sin eso, guardar un estado en `/panel` da 503 y las landings siguen con la lista.
 - En local, sin `DATABASE_URL`, `/api/tracking/*` y el formulario responden 503. Es esperado.
 
 ## 6. ConexiGO y CRM

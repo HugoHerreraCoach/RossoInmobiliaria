@@ -130,6 +130,59 @@ export const resumen = () => ({
   reservados: LOTES.filter((l) => l.estado === "reservado").length,
 });
 
+/* Cambios desde /panel (docs/0032). La lista de arriba es la base; el administrador puede cambiar el estado de
+   cualquier lote y, si lo publica como disponible y la lista no trae su precio, escribe el precio por m², la inicial
+   y la promoción. El resto sale con las mismas reglas de la lista (comprobadas en los 70 lotes con precio):
+   financiado = m² × S/ por m²; cuota = (financiado − inicial) / 48; contado = financiado − 15 %. */
+export type PrecioPanel = { porM2: number; inicial: number; promoContado: number | null };
+export type CambioLote = { estado: Estado; precio?: PrecioPanel | null; actualizado?: string };
+export const DESCUENTO_CONTADO = 0.15;
+const r2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+export function precioDe(area: number, p: PrecioPanel): NonNullable<Lote["precio"]> {
+  const financiado = r2(area * p.porM2);
+  return {
+    porM2: p.porM2,
+    financiado,
+    inicial: p.inicial,
+    cuota: r2((financiado - p.inicial) / CUOTAS),
+    contado: r2(financiado * (1 - DESCUENTO_CONTADO)),
+    promoContado: p.promoContado ?? null,
+  };
+}
+
+/** La lista con los cambios del panel. Solo los disponibles llevan precio; uno sin precio no se publica como disponible. */
+export function aplicarCambios(base: Lote[], cambios: Record<string, CambioLote>): Lote[] {
+  return base.map((l) => {
+    const c = cambios[l.id];
+    if (!c) return l;
+    if (c.estado !== "disponible") return { ...l, estado: c.estado, precio: undefined };
+    const precio = c.precio ? precioDe(l.m2, c.precio) : l.precio;
+    return precio ? { ...l, estado: "disponible", precio } : l;
+  });
+}
+
+/** Todo lo que la web deriva de los lotes vigentes. `desde` es null solo si no queda ningún lote disponible. */
+export function catalogo(lotes: Lote[]) {
+  const disponibles = lotes.filter((l) => l.estado === "disponible" && l.precio);
+  const desde = disponibles.length ? disponibles.reduce((a, b) => (b.precio!.cuota < a.precio!.cuota ? b : a)) : null;
+  return {
+    lotes,
+    disponibles,
+    desde,
+    desdeContado: disponibles.length ? Math.min(...disponibles.map((l) => l.precio!.promoContado ?? l.precio!.contado)) : null,
+    inicialMin: disponibles.length ? Math.min(...disponibles.map((l) => l.precio!.inicial)) : null,
+    resumen: {
+      total: lotes.length,
+      disponibles: disponibles.length,
+      vendidos: lotes.filter((l) => l.estado === "vendido").length,
+      reservados: lotes.filter((l) => l.estado === "reservado").length,
+    },
+    loteById: (id: string) => lotes.find((l) => l.id.toUpperCase() === id.toUpperCase()),
+  };
+}
+export type Catalogo = ReturnType<typeof catalogo>;
+
 const pen = new Intl.NumberFormat("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const pen0 = new Intl.NumberFormat("es-PE", { maximumFractionDigits: 0 });
 // Espacio duro: el símbolo y la unidad no se separan de la cifra al partir la línea.

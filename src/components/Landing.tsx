@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { MEDIA } from "@/content/avance";
 import type { LandingId } from "@/content/landings";
-import { CUOTAS, DESDE, DESDE_CONTADO, DISPONIBLES, LISTA_FECHA, M2_MAX, M2_MIN, loteById, m2, resumen, soles, soles0 } from "@/content/lotes";
+import { CUOTAS, DESDE, DESDE_CONTADO, LISTA_FECHA, LOTES, M2_MAX, M2_MIN, catalogo, m2, soles, soles0, type Lote } from "@/content/lotes";
 import { PROYECTO } from "@/content/proyecto";
 import { AsesorFlotante } from "@/components/AsesorFlotante";
 import { ContactForm } from "@/components/ContactForm";
@@ -9,6 +9,7 @@ import { DecisionTabs, type Pestana } from "@/components/DecisionTabs";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { Icon } from "@/components/Icon";
 import { LazyLotStack } from "@/components/LazyLotStack";
+import { LotesProvider } from "@/components/LotesProvider";
 import { MotionToggle } from "@/components/MotionExperience";
 import { ObraBand, type Toma4 } from "@/components/ObraBand";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -31,13 +32,17 @@ const DISFRUTAR = [
 ];
 const PROYECTADAS = ["Cancha de grass natural", "Zona de parrillas", "Zona de hamacas", "Juegos para niños", "Gimnasio al aire libre", "Agua de pozo tubular", "Vías con iluminación solar"];
 
-const EJEMPLOS = ["G18", "C3", "C9", "E4", "F11"].map((id) => loteById(id)!).filter((l) => l.precio);
-
-export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}) {
-  const r = resumen();
-  const desde = DESDE.precio!;
-  const inicialMin = Math.min(...DISPONIBLES.map((l) => l.precio!.inicial));
-  const conPromo = DISPONIBLES.filter((l) => l.precio!.promoContado).length;
+export function Landing({ landing = "lambayeque", lotes = LOTES }: { landing?: LandingId; lotes?: Lote[] } = {}) {
+  // Lotes vigentes: la lista con los cambios de /panel (docs/0032). Los "desde" de la lista solo quedan si ya no
+  // hubiera ningún lote disponible.
+  const cat = catalogo(lotes);
+  const r = cat.resumen;
+  const desdeLote = cat.desde ?? DESDE;
+  const desde = desdeLote.precio!;
+  const desdeContado = cat.desdeContado ?? DESDE_CONTADO;
+  const inicialMin = cat.inicialMin ?? desde.inicial;
+  const conPromo = cat.disponibles.filter((l) => l.precio!.promoContado).length;
+  const EJEMPLOS = ["G18", "C3", "C9", "E4", "F11"].map((id) => cat.loteById(id)).filter((l): l is Lote => !!l?.precio);
   const tramos = PROYECTO.ubicacion.tramos;
   const chiclayo = tramos.find((t) => t.lugar === "Chiclayo")!;
   const { telefono } = PROYECTO.contacto;
@@ -69,7 +74,7 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
           <ul className="checks">
             <li><Icon name="check" size={16} /> Inicial desde {soles0(inicialMin)}, según el lote</li>
             <li><Icon name="check" size={16} /> Cuota desde {soles(desde.cuota)} al mes</li>
-            <li><Icon name="check" size={16} /> Al contado, alrededor de 15 % menos; {conPromo} lotes con promoción desde {soles0(DESDE_CONTADO)}</li>
+            <li><Icon name="check" size={16} /> Al contado, alrededor de 15 % menos; {conPromo} lotes con promoción desde {soles0(desdeContado)}</li>
           </ul>
           <details className="compare">
             <summary>Compara {EJEMPLOS.length} lotes de la lista</summary>
@@ -116,16 +121,16 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
   ];
 
   const PREGUNTAS = [
-    ["¿Cuánto pago al mes?", `Depende del lote. La cuota más baja de la lista es de ${soles(desde.cuota)} al mes, con ${soles0(desde.inicial)} de inicial y ${CUOTAS} cuotas, en el lote ${DESDE.id} de ${m2(DESDE.m2)}. En el plano puedes simular la cuota de cada lote disponible.`],
+    ["¿Cuánto pago al mes?", `Depende del lote. La cuota más baja de la lista es de ${soles(desde.cuota)} al mes, con ${soles0(desde.inicial)} de inicial y ${CUOTAS} cuotas, en el lote ${desdeLote.id} de ${m2(desdeLote.m2)}. En el plano puedes simular la cuota de cada lote disponible.`],
     ["¿El financiamiento tiene intereses?", "No. Es financiamiento directo con Rosso Inmobiliaria: la cuota es el precio de lista menos la inicial, dividido entre el número de cuotas."],
-    ["¿Y si pago al contado?", `Pagas alrededor de 15 % menos que el precio financiado, y ${conPromo} lotes tienen además una promoción de contado, desde ${soles0(DESDE_CONTADO)}. Confirma su vigencia con un asesor.`],
+    ["¿Y si pago al contado?", `Pagas alrededor de 15 % menos que el precio financiado, y ${conPromo} lotes tienen además una promoción de contado, desde ${soles0(desdeContado)}. Confirma su vigencia con un asesor.`],
     ["¿Los lotes tienen escritura pública?", "Sí, la compra se formaliza con escritura pública. Pide al asesor los documentos del lote que te interesa antes de separarlo."],
     ["¿Cuándo se entrega?", `La entrega está programada para ${PROYECTO.entrega}. Mientras tanto, puedes ver cómo avanza la obra en los vuelos de drone y las fotos fechadas de esta página.`],
     ["¿Puedo comprar si vivo en Lima o Trujillo?", "Sí. Revisa el plano y la ficha de cada lote, pide una videollamada con un asesor desde tu ciudad y coordina la visita al terreno cuando puedas viajar."],
   ];
 
   return (
-    <>
+    <LotesProvider lotes={lotes}>
       <a className="skip" href="#contenido">Saltar al contenido</a>
       <SiteHeader />
 
@@ -253,7 +258,7 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
               <div><dt>lotes desde</dt><dd>{M2_MIN}<small> m²</small></dd></div>
               <div><dt>de Chiclayo</dt><dd>{chiclayo.minutos}<small> min</small></dd></div>
               <div><dt>para pagar sin intereses</dt><dd>{CUOTAS}<small> meses</small></dd></div>
-              <div><dt>lotes disponibles en la lista</dt><dd>{r.disponibles}</dd></div>
+              <div><dt>lotes disponibles</dt><dd>{r.disponibles}</dd></div>
             </dl>
           </div>
         </section>
@@ -318,12 +323,12 @@ export function Landing({ landing = "lambayeque" }: { landing?: LandingId } = {}
           </div>
         </div>
         <div className="wrap site-footer__legal">
-          <p>© 2026 {PROYECTO.empresa}. Fotografías y videos del propio proyecto. Precios, áreas y estados de los {r.total} lotes según la lista del {LISTA_FECHA}, sujetos a confirmación comercial. El plano interactivo se basa en el plano de lotización oficial y no lo sustituye.</p>
+          <p>© 2026 {PROYECTO.empresa}. Fotografías y videos del propio proyecto. Precios, áreas y estados de los {r.total} lotes según la lista del {LISTA_FECHA} y sus actualizaciones, sujetos a confirmación comercial. El plano interactivo se basa en el plano de lotización oficial y no lo sustituye.</p>
           <div className="site-footer__links"><a href="/privacidad">Privacidad</a><MotionToggle /><a href="#inicio">Volver arriba</a></div>
         </div>
       </footer>
 
       <AsesorFlotante landing={landing} />
-    </>
+    </LotesProvider>
   );
 }

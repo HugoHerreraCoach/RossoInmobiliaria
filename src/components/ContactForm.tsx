@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { LANDINGS, type LandingId } from "@/content/landings";
-import { loteById } from "@/content/lotes";
+import { useLotes } from "./LotesProvider";
 import { PROYECTO, whatsappHref } from "@/content/proyecto";
 import { Icon } from "./Icon";
 import { WhatsAppCta } from "./WhatsAppCta";
@@ -52,6 +52,8 @@ export function ContactForm({
 }) {
   const config = LANDINGS[landing];
   const [estado, setEstado] = useState<Estado>({ t: "idle" });
+  // Lotes vigentes (docs/0032): el lote elegido se muestra con su estado actual.
+  const { loteById } = useLotes();
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [lote, setLote] = useState("");
   const [respuestas, setRespuestas] = useState<Record<string, string>>(() =>

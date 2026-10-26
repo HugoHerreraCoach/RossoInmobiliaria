@@ -2,18 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { LandingId } from "@/content/landings";
-import { CUOTAS, DESDE_CONTADO, DISPONIBLES, soles0 } from "@/content/lotes";
+import { CUOTAS, DESDE, DESDE_CONTADO, soles0 } from "@/content/lotes";
+import { useLotes } from "./LotesProvider";
 import { PROYECTO } from "@/content/proyecto";
 import { ContactForm } from "./ContactForm";
 import { Icon } from "./Icon";
 
-const INICIAL_MIN = Math.min(...DISPONIBLES.map((l) => l.precio!.inicial));
 const MINUTOS_CHICLAYO = PROYECTO.ubicacion.tramos.find((t) => t.lugar === "Chiclayo")!.minutos;
 
 /** Widchat flotante del asesor: cerrado muestra la burbuja compacta "Asesor en línea";
  *  al hacer clic se despliega la ventana de chat con el formulario integrado (variante="chat"). */
 export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId } = {}) {
   const [abierto, setAbierto] = useState(false);
+  // Montos "desde" de los lotes vigentes (docs/0032).
+  const cat = useLotes();
   const [montado, setMontado] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const foto = PROYECTO.contacto.asesorFoto || "/media/asesora-perfil.jpg";
@@ -90,7 +92,7 @@ export function AsesorFlotante({ landing = "lambayeque" }: { landing?: LandingId
                   ¡Hola! <span aria-hidden="true">👋</span> Soy tu asesora en <strong>{PROYECTO.empresa}</strong>.
                 </p>
                 <p>
-                  Estamos en preventa de terrenos campestres desde <strong className="asesor__bubble-price">{soles0(DESDE_CONTADO)}</strong> o con inicial desde <strong>{soles0(INICIAL_MIN)}</strong> y {CUOTAS} cuotas sin intereses, a {MINUTOS_CHICLAYO} min de Chiclayo en el {PROYECTO.valle}. ¿Cómo te podemos ayudar hoy?
+                  Estamos en preventa de terrenos campestres desde <strong className="asesor__bubble-price">{soles0(cat.desdeContado ?? DESDE_CONTADO)}</strong> o con inicial desde <strong>{soles0(cat.inicialMin ?? DESDE.precio!.inicial)}</strong> y {CUOTAS} cuotas sin intereses, a {MINUTOS_CHICLAYO} min de Chiclayo en el {PROYECTO.valle}. ¿Cómo te podemos ayudar hoy?
                 </p>
               </div>
             </div>

@@ -3,17 +3,16 @@
 import Image from "next/image";
 import { track } from "@/lib/tracking/client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { DESDE, DISPONIBLES, LOTES, MANZANAS, loteById, m2, resumen, soles, soles0, type Lote } from "@/content/lotes";
+import { MANZANAS, m2, soles, soles0, type Lote } from "@/content/lotes";
 import { gsap, useGSAP, useMotion } from "@/lib/motion";
 import { PLANO } from "@/content/plano";
+import { useLotes } from "./LotesProvider";
 import { Ficha } from "./Ficha";
 import { Icon } from "./Icon";
 
 const TODAS = "TODAS";
 type Vista = string; // "TODAS" | "A"…"H"
 type ColorMode = "estado" | "cuota" | "area";
-
-const CONTEO = resumen();
 
 /** Encuadre (viewBox) de cada manzana para el zoom; la vista completa es el lienzo entero.
  *  La geometría es la del plano de lotización oficial (src/content/plano.ts, docs/0019, 0031). */
@@ -65,6 +64,8 @@ function getLotFill(l: Lote, colorMode: ColorMode, isSelected: boolean, isHovere
 export function LotStack({ lote, onLote, origen: _origen }: { lote?: Lote; onLote?: (l: Lote) => void; origen?: string } = {}) {
   void _origen;
   const enPortada = !onLote;
+  // Lotes vigentes: la lista con los cambios de /panel (docs/0032).
+  const { lotes: LOTES, disponibles: DISPONIBLES, desde: DESDE, resumen: CONTEO, loteById } = useLotes();
   // En /lote/[id] el plano abre completo (el lote va resaltado) para poder tocar cualquier otro.
   const [vista, setVista] = useState<Vista>(TODAS);
   const [colorMode, setColorMode] = useState<ColorMode>("estado");
@@ -507,7 +508,7 @@ export function LotStack({ lote, onLote, origen: _origen }: { lote?: Lote; onLot
                   if (eco) elegirLote(eco);
                 }}
               >
-                {`Seleccionar lote disponible (${DESDE.id})`}
+                {`Seleccionar lote disponible (${(DESDE ?? DISPONIBLES[0])?.id ?? ""})`}
               </button>
             </div>
           )}

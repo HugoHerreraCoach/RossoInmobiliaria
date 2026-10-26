@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CUOTAS, LOTES, loteById, m2, soles } from "@/content/lotes";
+import { CUOTAS, LOTES, m2, soles } from "@/content/lotes";
 import { PROYECTO } from "@/content/proyecto";
 import { LoteDetalle } from "@/components/LoteDetalle";
+import { LotesProvider } from "@/components/LotesProvider";
+import { lotesVigentes } from "@/server/lotes";
 
 export const dynamicParams = false;
+// Estado y precio vigentes (lista + cambios de /panel, docs/0032); el panel revalida estas páginas al guardar.
+export const revalidate = 300;
 
 export function generateStaticParams() {
   return LOTES.map((l) => ({ id: l.id }));
@@ -12,8 +16,13 @@ export function generateStaticParams() {
 
 type Props = { params: Promise<{ id: string }> };
 
+async function buscar(id: string) {
+  const lotes = await lotesVigentes();
+  return { lotes, lote: lotes.find((l) => l.id.toUpperCase() === id.toUpperCase()) };
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const l = loteById((await params).id);
+  const { lote: l } = await buscar((await params).id);
   if (!l) return {};
   const title = `Lote ${l.id} · ${m2(l.m2)} en Manzana ${l.manzana}`;
   const description = l.precio
@@ -27,7 +36,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function LotePage({ params }: Props) {
-  const lote = loteById((await params).id);
+  const { lotes, lote } = await buscar((await params).id);
   if (!lote) notFound();
-  return <LoteDetalle inicial={lote} />;
+  return (
+    <LotesProvider lotes={lotes}>
+      <LoteDetalle inicial={lote} />
+    </LotesProvider>
+  );
 }
