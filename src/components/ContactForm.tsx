@@ -57,7 +57,7 @@ export function ContactForm({
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [lote, setLote] = useState("");
   const [respuestas, setRespuestas] = useState<Record<string, string>>(() =>
-    Object.fromEntries(config.preguntas.map((p) => [p.id, p.marcada ?? ""])),
+    Object.fromEntries(config.preguntas.map((p) => [p.id, p.marcada ?? p.opciones[0]?.valor ?? ""])),
   );
   const [nombreVal, setNombreVal] = useState("");
   const [celularVal, setCelularVal] = useState("");
@@ -143,7 +143,7 @@ export function ContactForm({
       nombre: String(data.get("nombre") ?? "").trim(),
       celular: String(data.get("celular") ?? "").replace(/[^\d+]/g, ""),
       ciudad: "",
-      busca: landing === "lambayeque" ? respuestas.inicial ?? "" : "",
+      busca: landing === "lambayeque" ? respuestas.busca ?? respuestas.inicial ?? "" : "",
       lote,
       visita: false,
       dia: "",

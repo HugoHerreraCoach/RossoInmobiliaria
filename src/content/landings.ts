@@ -51,22 +51,22 @@ const INICIAL: Pregunta = {
   marcada: `Inicial de ${RANGO}`,
 };
 
-/** Primera pregunta de Lima (pedido del cliente, 2026-10-24, docs/0029), con su texto tal cual. Las preguntas de Lima
- *  van sin opción marcada, para que la respuesta mida la preferencia del visitante y no el valor por defecto. */
+/** Primera pregunta de Lima (pedido del cliente, 2026-10-24, docs/0029), con la primera opción pre-seleccionada por defecto. */
 const ZONA: Pregunta = {
   id: "zona",
   texto: "El proyecto está en el Valle Zaña (a 30 min de Chiclayo y 5 min de Sipán). ¿Es la zona que buscas?",
   columna: "ZONA",
   opciones: ["Sí, me interesa el Valle Zaña.", "Me puedo adecuar"].map((valor) => ({ valor, etiqueta: valor })),
+  marcada: "Sí, me interesa el Valle Zaña.",
 };
 
-/** Segunda pregunta de Lima (pedido del cliente, 2026-10-24, docs/0026), con su texto tal cual. Los montos salen de la
- *  lista: el contado más bajo con promoción y la inicial mínima. */
+/** Segunda pregunta de Lima (pedido del cliente, 2026-10-24, docs/0026), con la primera opción pre-seleccionada por defecto. */
 const MODALIDAD: Pregunta = {
   id: "modalidad",
   texto: "Para asegurar tu lote en Sipán – Valle Zaña, ¿qué modalidad de preventa prefieres?",
   columna: "MODALIDAD",
   opciones: [AL_CONTADO, FINANCIADO].map((valor) => ({ valor, etiqueta: pegado(valor) })),
+  marcada: AL_CONTADO,
 };
 
 export const LANDINGS: Record<LandingId, Landing> = {
