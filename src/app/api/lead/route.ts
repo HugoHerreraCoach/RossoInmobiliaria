@@ -39,7 +39,8 @@ export async function POST(req:Request){
     try{response=await fetch(destination,{method:"POST",redirect:"error",signal:AbortSignal.timeout(10000),headers:{"content-type":"application/json","Idempotency-Key":submission,...(process.env.LEAD_WEBHOOK_TOKEN?{authorization:`Bearer ${process.env.LEAD_WEBHOOK_TOKEN}`}:{})},body:JSON.stringify({...lead,proyecto:"La Campiña",origen:"web",fecha:new Date().toISOString(),submission_id:submission,...(intent?{intencion_id:intent.id,codigo:intent.code,atribucion:intent.event.attribution,tracking_consent:{analytics:true,marketing:intent.event.marketing}}:{tracking_consent:{analytics:false,marketing:false}})})});}catch{throw new HttpError(502,"crm");}
     if(!response.ok)throw new HttpError(502,"crm");}
     // La hoja va al final: su fila es la confirmación del registro y con ella el navegador envía el evento de la landing.
-    if(sheet){const campaign=touch?.campaign||touch?.campaign_id||null;
+    if(sheet){const fallbackCampaign=fuente==="meta"?"META":"TIKTOK";
+      const campaign=touch?.campaign||touch?.campaign_id||fallbackCampaign;
       const fila={id:submission,date:new Date(),nombre:lead.nombre,celular:lead.celular,campaign,origin:`Landing · ${SOURCES[source]}`,source:fuente,lote:lead.lote};
       try{await appendRow(sheet,elegidas?landingRow(landing,fila,elegidas.respuestas):leadRow({...fila,inicial:lead.busca}));}
       catch(e){console.error("[lead] no se pudo agregar la fila a la hoja",e);throw new HttpError(502,"hoja");}}

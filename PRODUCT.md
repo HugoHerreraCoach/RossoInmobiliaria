@@ -63,8 +63,8 @@ Diferenciales confirmados:
 
 **Pendientes:**
 
-- WhatsApp de asesores: **941 377 136** (+51), confirmado el 2026-10-23 (`docs/0015`). Falta el teléfono
-  para llamadas, el CRM de destino del formulario y el mecanismo para agendar visitas.
+- WhatsApp oficial ROSSO 3 (ConexiGO CRM): **956 297 399** (+51), actualizado el 2026-10-30. Falta el teléfono
+  para llamadas y el mecanismo para agendar visitas.
 - Enlace exacto de Google Maps (el documento de textos comerciales lo trae cortado).
 - Porcentaje de avance de obra y datos legales (partida registral, habilitación urbana).
 

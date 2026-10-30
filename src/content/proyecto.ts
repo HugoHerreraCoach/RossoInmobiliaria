@@ -2,8 +2,8 @@
 // lista de precios). Lo marcado PENDIENTE no se inventa: mientras sea null, la web
 // lleva todo contacto al formulario y no muestra números.
 
-/** Número de WhatsApp de Rosso para La Campiña (Perú, +51). */
-export const WHATSAPP_ROSSO = "51941377136";
+/** Número oficial de WhatsApp ROSSO 3 conectado a ConexiGO CRM para La Campiña (Perú, +51). */
+export const WHATSAPP_ROSSO = "51956297399";
 
 export const PROYECTO = {
   nombre: "La Campiña",
@@ -24,7 +24,7 @@ export const PROYECTO = {
     mapsUrl: (process.env.NEXT_PUBLIC_MAPS_URL?.trim() || null) as string | null,
   },
   contacto: {
-    /** WhatsApp de asesores que recibe los mensajes (941 377 136, docs/0015), formato internacional sin "+".
+    /** WhatsApp oficial ROSSO 3 conectado a ConexiGO CRM (956 297 399), formato internacional sin "+".
      *  Un NEXT_PUBLIC_WHATSAPP_NUMBER con valor lo reemplaza al compilar. */
     whatsapp: ((process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() || WHATSAPP_ROSSO).replace(/\D/g, "") || null) as string | null,
     /** PENDIENTE: foto real del asesor para el botón flotante (ruta en /public, con su autorización).
